@@ -1,0 +1,9 @@
+dbAddress: localhost:3306
+dbUsername: root
+dbPassword: password
+hbServerPassword: astrongpassword
+motd: Welcome to Archipelo!
+spawnIsland: archipelo
+spawnMap: island
+spawnX: 0.0
+spawnY: 0.0
