@@ -11,8 +11,8 @@ import net.hollowbit.archipeloserver.world.World;
 public class ArchipeloServer {
 
 	public static final float TICK30 = 1 / 30f;
-	public static final float TILE_SIZE = 16;
 	public static final float TICK60 = 1 / 60f;
+	public static final float TILE_SIZE = 16;
 	public static final String VERSION = "0.1a";
 	
 	//Static Methods

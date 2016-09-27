@@ -16,7 +16,6 @@ repositories {
 
 eclipse{
 	project {
-    	name = "Archipelo-server"
         linkedResource name: 'assets-shared', type: '2', location: 'PARENT-1-PROJECT_LOC/ArchipeloClient/core/assets/shared/'
         linkedResource name: 'src-shared', type: '2', location: 'PARENT-1-PROJECT_LOC/ArchipeloClient/src-shared/'
     }
