@@ -1,5 +1,8 @@
 package net.hollowbit.archipeloserver;
 
+import java.net.URISyntaxException;
+
+import net.hollowbit.archipeloserver.hollowbitserver.HollowBitServerConnectivity;
 import net.hollowbit.archipeloserver.network.NetworkManager;
 import net.hollowbit.archipeloserver.tools.Configuration;
 import net.hollowbit.archipeloserver.tools.DatabaseManager;
@@ -28,6 +31,7 @@ public class ArchipeloServer {
 	private DatabaseManager databaseManager;
 	private Configuration config;
 	private PasswordHasher passwordHasher;
+	private HollowBitServerConnectivity hollowBitServerConnectivity;
 	private Logger logger;
 	private World world;
 	private Thread tick30;
@@ -42,6 +46,10 @@ public class ArchipeloServer {
 		networkManager = new NetworkManager(22122);
 		networkManager.start();
 		databaseManager = new DatabaseManager();
+		try {
+			hollowBitServerConnectivity = new HollowBitServerConnectivity();
+			hollowBitServerConnectivity.connect();
+		} catch (URISyntaxException e1) {}
 		
 		world = new World();
 		mapElementManager = new MapElementManager();
@@ -90,6 +98,9 @@ public class ArchipeloServer {
 		});
 		tick60.start();
 		
+		while (!hollowBitServerConnectivity.isConnected()) {}
+		hollowBitServerConnectivity.sendAddServerQuery();
+		
 		logger.info("Server Started!");
 	}
 	
@@ -122,6 +133,8 @@ public class ArchipeloServer {
 	}
 	
 	public void stop () {
+		hollowBitServerConnectivity.sendRemoveServerQuery();
+		hollowBitServerConnectivity.close();
 		running = false;
 		try {
 			if (tick30 != null && tick60 != null) {
