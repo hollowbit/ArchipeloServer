@@ -13,8 +13,11 @@ public class Configuration {
 	public String dbAddress = "localhost:3306";
 	public String dbUsername = "root";
 	public String dbPassword = "password";
+	public String name = "ServerName";
+	public String hbServerAddress = "localhost:22123";
 	public String hbServerPassword = "astrongpassword";
 	public String motd = "Welcome to Archipelo!";
+	public int region = 0;
 	public String spawnIsland = "archipelo";
 	public String spawnMap = "island";
 	public float spawnX = 0;
@@ -51,11 +54,20 @@ public class Configuration {
 			case "dbPassword":
 				this.dbPassword = scanner.nextLine().substring(1);
 				break;
+			case "name":
+				this.name = scanner.nextLine().substring(1);
+				break;
+			case "hbServerAddress":
+				this.hbServerAddress = scanner.nextLine().substring(1);
+				break;
 			case "hbServerPassword":
 				this.hbServerPassword = scanner.nextLine().substring(1);
 				break;
 			case "motd":
 				this.motd = scanner.nextLine().substring(1);
+				break;
+			case "region":
+				this.region = Integer.parseInt(scanner.nextLine().substring(1));
 				break;
 			case "spawnIsland":
 				this.spawnIsland = scanner.nextLine().substring(1);
@@ -86,8 +98,11 @@ public class Configuration {
 			formatter.format("%s: %s\n", "dbAddress", dbAddress);
 			formatter.format("%s: %s\n", "dbUsername", dbUsername);
 			formatter.format("%s: %s\n", "dbPassword", dbPassword);
+			formatter.format("%s: %s\n", "name", name);
+			formatter.format("%s: %s\n", "hbServerAddress", hbServerAddress);
 			formatter.format("%s: %s\n", "hbServerPassword", hbServerPassword);
 			formatter.format("%s: %s\n", "motd", motd);
+			formatter.format("%s: %s\n", "region", region);
 			formatter.format("%s: %s\n", "spawnIsland", spawnIsland);
 			formatter.format("%s: %s\n", "spawnMap", spawnMap);
 			formatter.format("%s: %s\n", "spawnX", spawnX);
