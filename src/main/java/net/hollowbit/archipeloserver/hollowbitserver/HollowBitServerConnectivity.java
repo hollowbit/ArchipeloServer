@@ -132,7 +132,7 @@ public class HollowBitServerConnectivity extends WebSocketClient {
     			newData[0] = "No data";
     		}
 			
-			handlerMap.get(packetId).responceReceived(dataId, newData);//Handle response packet
+			handlerMap.get(packetId).responseReceived(dataId, newData);//Handle response packet
 			handlerMap.remove(packetId);//Remove handler
 		} catch (Exception e) {}
 	}

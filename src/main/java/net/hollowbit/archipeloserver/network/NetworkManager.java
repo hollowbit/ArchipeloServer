@@ -126,6 +126,11 @@ public class NetworkManager extends WebSocketServer {
 
 	@Override
 	public void onMessage(WebSocket conn, String message) {
+		if (message.equals("ping")) {
+			conn.send("pong");
+			return;
+		}
+		
 		String[] packetWrapArray = message.split(";");
 		int type = Integer.parseInt(packetWrapArray[0]);
 		message = packetWrapArray[1];
