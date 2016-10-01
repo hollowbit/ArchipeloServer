@@ -98,9 +98,6 @@ public class ArchipeloServer {
 		});
 		tick60.start();
 		
-		while (!hollowBitServerConnectivity.isConnected()) {}
-		hollowBitServerConnectivity.sendAddServerQuery();
-		
 		logger.info("Server Started!");
 	}
 	

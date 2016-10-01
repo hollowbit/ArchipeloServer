@@ -111,6 +111,8 @@ public class HollowBitServerConnectivity extends WebSocketClient {
 	public void onOpen(ServerHandshake handshakedata) {
 		connected = true;
 		ArchipeloServer.getServer().getLogger().info("Connected to HB!");
+
+		this.sendAddServerQuery();//Once connected, send a query to add this server to the listing
 	}
 
 	@Override

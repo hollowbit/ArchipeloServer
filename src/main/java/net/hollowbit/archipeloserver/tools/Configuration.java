@@ -26,13 +26,11 @@ public class Configuration {
 	public Configuration () {
 		File configFile = new File("config.yml");
 		
-		boolean firstLoad = false;
 		if (!configFile.exists()) {
 			try {
 				configFile.createNewFile();
-				firstLoad = true;
 			} catch (IOException e) {
-				e.printStackTrace();
+				ArchipeloServer.getServer().getLogger().error("Could not create config.yml");
 			}
 		}
 		
@@ -87,8 +85,7 @@ public class Configuration {
 		
 		ArchipeloServer.getServer().getLogger().info("Configuration loaded!");
 		
-		if (firstLoad)
-			save();
+		save();
 	}
 	
 	public void save () {
