@@ -106,6 +106,17 @@ public class HollowBitServerConnectivity extends WebSocketClient {
 		String query = "2;" + name + ";" + password;
 		sendQuery(query, handler);
 	}
+	
+	/**
+	 * Send query to HollowBit server to get data about a user.
+	 * @param name Name of HollowBit user
+	 * @param password Password for user used to authenticate
+	 * @param handler Handles response to queries
+	 */
+	public void sendGetUserDataQuery (String name, String password, HollowBitServerQueryResponseHandler handler) {
+		String query = "5;" + name + ";" + password;
+		sendQuery(query, handler);
+	}
 
 	@Override
 	public void onOpen(ServerHandshake handshakedata) {
@@ -118,7 +129,7 @@ public class HollowBitServerConnectivity extends WebSocketClient {
 	@Override
 	public void onMessage(String message) {
 		try {
-    		String[] splitter = message.split("/");//Split at bracket to seperate uuid
+    		String[] splitter = message.split("/");//Split at bracket to separate uuid
     		String packetId = splitter[0];//Get uuid
     		
     		String[] data = splitter[1].split(";");//split at semi-colon to get data parts

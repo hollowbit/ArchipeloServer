@@ -129,6 +129,10 @@ public class ArchipeloServer {
 		return world;
 	}
 	
+	public HollowBitServerConnectivity getHollowBitServerConnectivity () {
+		return hollowBitServerConnectivity;
+	}
+	
 	public void stop () {
 		hollowBitServerConnectivity.sendRemoveServerQuery();
 		hollowBitServerConnectivity.close();

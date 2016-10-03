@@ -20,6 +20,7 @@ import com.badlogic.gdx.utils.Json;
 
 import net.hollowbit.archipeloserver.ArchipeloServer;
 import net.hollowbit.archipeloserver.entity.living.Player;
+import net.hollowbit.archipeloserver.hollowbitserver.HollowBitUser;
 
 public class NetworkManager extends WebSocketServer {
 	
@@ -30,6 +31,7 @@ public class NetworkManager extends WebSocketServer {
 	private ArrayList<PacketWrapper> packets;
 	
 	private HashMap<String, WebSocket> connections;
+	private HashMap<WebSocket, HollowBitUser> loggedInUsers;
 	
 	Json json;
 	
