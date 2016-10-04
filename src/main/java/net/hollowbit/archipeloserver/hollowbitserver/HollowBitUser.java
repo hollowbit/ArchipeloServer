@@ -4,6 +4,7 @@ import org.java_websocket.WebSocket;
 
 import net.hollowbit.archipeloserver.ArchipeloServer;
 import net.hollowbit.archipeloserver.entity.living.Player;
+import net.hollowbit.archipeloserver.network.packets.LoginPacket;
 
 public class HollowBitUser {
 	
@@ -36,9 +37,9 @@ public class HollowBitUser {
 					user.uuid = data[1];
 					user.points = Integer.parseInt(data[2]);
 					loggedIn = true;
-				} else {
-					//Send invalid login response
 				}
+				
+				ArchipeloServer.getServer().getNetworkManager().sendPacket(new LoginPacket(loggedIn ? LoginPacket.RESULT_LOGIN_SUCCESSFUL : LoginPacket.RESULT_LOGIN_ERROR), conn);//Send response login packet depending on login result
 			}
 		});
 	}

@@ -5,6 +5,7 @@ import java.util.Collection;
 
 import net.hollowbit.archipeloserver.ArchipeloServer;
 import net.hollowbit.archipeloserver.entity.living.Player;
+import net.hollowbit.archipeloserver.hollowbitserver.HollowBitUser;
 import net.hollowbit.archipeloserver.network.LogoutReason;
 import net.hollowbit.archipeloserver.network.Packet;
 import net.hollowbit.archipeloserver.network.PacketHandler;
@@ -159,11 +160,10 @@ public class World implements PacketHandler {
 	}
 	
 	public Player getPlayerByAddress (String address) {
-		for (Player player : getOnlinePlayers()) {
-			if (player.getAddress().equals(address))
-				return player;
-		}
-		return null;
+		HollowBitUser hollowBitUser = ArchipeloServer.getServer().getNetworkManager().getUserByAddress(address);
+		if (hollowBitUser == null)
+			return null;
+		return hollowBitUser.getPlayer();
 	}
 	
 	@Override

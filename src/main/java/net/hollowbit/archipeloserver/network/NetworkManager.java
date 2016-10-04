@@ -19,8 +19,8 @@ import org.java_websocket.server.WebSocketServer;
 import com.badlogic.gdx.utils.Json;
 
 import net.hollowbit.archipeloserver.ArchipeloServer;
-import net.hollowbit.archipeloserver.entity.living.Player;
 import net.hollowbit.archipeloserver.hollowbitserver.HollowBitUser;
+import net.hollowbit.archipeloserver.network.packets.LoginPacket;
 
 public class NetworkManager extends WebSocketServer {
 	
@@ -31,7 +31,7 @@ public class NetworkManager extends WebSocketServer {
 	private ArrayList<PacketWrapper> packets;
 	
 	private HashMap<String, WebSocket> connections;
-	private HashMap<WebSocket, HollowBitUser> loggedInUsers;
+	private HashMap<String, HollowBitUser> users;
 	
 	Json json;
 	
@@ -65,6 +65,7 @@ public class NetworkManager extends WebSocketServer {
 		packetHandlers = new ArrayList<PacketHandler>();
 		connections = new HashMap<String, WebSocket>();
 		packets = new ArrayList<PacketWrapper>();
+		users = new HashMap<String, HollowBitUser>();
 		json = new Json();
 		registerPackets();
 	}
@@ -116,18 +117,21 @@ public class NetworkManager extends WebSocketServer {
 	
 	@Override
 	public void onClose (WebSocket conn, int code, String reason, boolean remote) {
-		Player playerThatLeft = ArchipeloServer.getServer().getWorld().getPlayerByAddress(getAddress(conn));
-		if (playerThatLeft != null)
-			playerThatLeft.remove();//Remove player from game
+		logoutUser(getAddress(conn));
 	}
 
 	@Override
 	public void onError (WebSocket conn, Exception error) {
-		//System.out.println(error.getMessage());
+		ArchipeloServer.getServer().getLogger().error(error.getMessage());
+	}
+	
+	public HollowBitUser getUserByAddress (String address) {
+		return users.get(address);
 	}
 
 	@Override
 	public void onMessage(WebSocket conn, String message) {
+		//Used for ping getter
 		if (message.equals("ping")) {
 			conn.send("pong");
 			return;
@@ -138,7 +142,47 @@ public class NetworkManager extends WebSocketServer {
 		message = packetWrapArray[1];
 		@SuppressWarnings("unchecked")
 		Packet packet = (Packet) json.fromJson(packetMap.get(type), message);
-		addPacket(new PacketWrapper(getAddress(conn), packet));
+		
+		boolean handled = false;
+		
+		//Handle login/logoff packets
+		if (packet.packetType == PacketType.LOGIN) {
+			LoginPacket loginPacket = (LoginPacket) packet;
+			//Check if version is valid
+			if (!loginPacket.version.equals(ArchipeloServer.VERSION)) {
+				loginPacket.version = ArchipeloServer.VERSION;
+				loginPacket.result = LoginPacket.RESULT_BAD_VERSION;
+				sendPacket(loginPacket, conn);
+				return;
+			}
+			
+			//Add user is version is valid
+			HollowBitUser hollowBitUser = null;
+			if (users.containsKey(getAddress(conn)))
+				hollowBitUser = users.get(conn);
+			else {
+				hollowBitUser = new HollowBitUser(conn);
+				users.put(getAddress(conn), hollowBitUser);
+			}
+			hollowBitUser.login(loginPacket.username, loginPacket.password);
+			handled = true;
+		} else if (packet.packetType == PacketType.LOGOUT) {
+			logoutUser(getAddress(conn));
+			handled = true;
+		}
+		
+		if (!handled)
+			addPacket(new PacketWrapper(getAddress(conn), packet));
+	}
+	
+	public void logoutUser (String address) {
+		//If the user is in this list, remove it.
+		if (users.containsKey(address)) {
+			HollowBitUser hollowBitUser = users.get(address);
+			if (hollowBitUser.getPlayer() != null)//Remove the player if there is one.
+				hollowBitUser.getPlayer().remove();
+			users.remove(address);
+		}
 	}
 	
 	private synchronized void addPacket (PacketWrapper packetWrapper) {
