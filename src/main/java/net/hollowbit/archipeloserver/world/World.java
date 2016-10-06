@@ -186,6 +186,13 @@ public class World implements PacketHandler {
 					boolean firstTimeLogin = false;
 					PlayerData pd;
 					if (playerPickPacket.isNew) {
+						//Check if user has too many characters
+						if (ArchipeloServer.getServer().getDatabaseManager().getPlayerCount(hbu.getUUID()) >= ArchipeloServer.MAX_CHARACTERS_PER_PLAYER) {
+							playerPickPacket.result = PlayerPickPacket.RESULT_TOO_MANY_CHARACTERS;
+							playerPickPacket.send(ArchipeloServer.getServer().getNetworkManager().getConnectionByAddress(address));
+							return;
+						}
+						
 						//Check if user name is valid
 						if (!StringValidator.isStringValid(playerPickPacket.name, StringValidator.USERNAME)) {
 							playerPickPacket.result = PlayerPickPacket.RESULT_INVALID_USERNAME;

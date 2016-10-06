@@ -14,6 +14,7 @@ public class PlayerPickPacket extends Packet {
 	public static final int RESULT_INVALID_USERNAME = 3;
 	public static final int RESULT_ALREADY_LOGGED_IN = 4;
 	public static final int RESULT_NO_PLAYER_WITH_NAME = 5;
+	public static final int RESULT_TOO_MANY_CHARACTERS = 6;
 	
 	public static final ItemType[] HAIR_STYLES = {ItemType.HAIR1};
 	public static final ItemType[] FACE_STYLES = {ItemType.FACE1};

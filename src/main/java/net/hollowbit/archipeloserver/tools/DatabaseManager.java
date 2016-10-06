@@ -137,6 +137,27 @@ public class DatabaseManager {
 		thread.start();
 	}
 	
+	/**
+	 * Gets player count for this user
+	 * @param hbUuid UUID of user to test for
+	 * @return
+	 */
+	public int getPlayerCount (String hbUuid) {
+		try {
+			PreparedStatement statement = connection.prepareStatement("select count(*) as 'count' from players where hbUuid = ?");
+			statement.setString(1, hbUuid);
+			ResultSet rs = statement.executeQuery();
+			if (!rs.next())
+				return 0;
+			
+			return rs.getInt("count");
+		} catch (SQLException e) {
+			System.out.println(e.getMessage());
+			ArchipeloServer.getServer().getLogger().caution("Unable to get player count for user " + hbUuid);
+			return 0;
+		}
+	}
+	
 	public static final Date getCurrentDate () {
 		return new Date(Calendar.getInstance().getTime().getTime());
 	}
