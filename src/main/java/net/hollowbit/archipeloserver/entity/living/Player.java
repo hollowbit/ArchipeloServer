@@ -1,11 +1,11 @@
 package net.hollowbit.archipeloserver.entity.living;
 
+import java.sql.Date;
 import java.util.ArrayList;
 import java.util.UUID;
 
 import org.java_websocket.WebSocket;
 
-import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Json;
 
@@ -16,6 +16,7 @@ import net.hollowbit.archipeloserver.entity.EntityInteraction;
 import net.hollowbit.archipeloserver.entity.EntitySnapshot;
 import net.hollowbit.archipeloserver.entity.EntityType;
 import net.hollowbit.archipeloserver.entity.LivingEntity;
+import net.hollowbit.archipeloserver.hollowbitserver.HollowBitUser;
 import net.hollowbit.archipeloserver.items.Item;
 import net.hollowbit.archipeloserver.items.ItemType;
 import net.hollowbit.archipeloserver.network.LogoutReason;
@@ -24,9 +25,9 @@ import net.hollowbit.archipeloserver.network.PacketHandler;
 import net.hollowbit.archipeloserver.network.PacketType;
 import net.hollowbit.archipeloserver.network.packets.ChatMessagePacket;
 import net.hollowbit.archipeloserver.network.packets.ControlsPacket;
-import net.hollowbit.archipeloserver.network.packets.PlayerCreationPacket;
 import net.hollowbit.archipeloserver.network.packets.PopupTextPacket;
 import net.hollowbit.archipeloserver.tools.Configuration;
+import net.hollowbit.archipeloserver.tools.DatabaseManager;
 import net.hollowbit.archipeloserver.tools.HitCalculator;
 import net.hollowbit.archipeloserver.tools.Location;
 import net.hollowbit.archipeloserver.tools.PlayerData;
@@ -62,8 +63,6 @@ public class Player extends LivingEntity implements PacketHandler {
 	public static final float PERMITTED_ERROR_MULTIPLIER = 20;
 	
 	String uuid;
-	byte[] hashedPassword;
-	byte[] salt;
 	String address;
 	boolean firstTimeLogin;
 	boolean[] controls;
@@ -73,15 +72,16 @@ public class Player extends LivingEntity implements PacketHandler {
 	float rollDoubleClickTimer = 0;
 	boolean wasMoving;
 	boolean isSprinting;
-	boolean hasCreatedPlayer;//Keeps track of whether player has customized themselves yet.
 	Item[] equippedInventory;
 	Item[] inventory;
+	Date lastPlayed, creationDate;
+	HollowBitUser hbUser;
 	
 	public Player (String name, String address, boolean firstTimeLogin) {
 		create(name, 0, location, address, firstTimeLogin);
 	}
 	
-	public void create(String name, int style, Location location, String address, boolean firstTimeLogin) {
+	public void create (String name, int style, Location location, String address, boolean firstTimeLogin) {
 		super.create(name, style, location, EntityType.PLAYER);
 		this.address = address;
 		this.firstTimeLogin = firstTimeLogin;
@@ -89,14 +89,14 @@ public class Player extends LivingEntity implements PacketHandler {
 		ArchipeloServer.getServer().getNetworkManager().addPacketHandler(this);
 	}
 	
-	public void load (Map map, PlayerData playerData) {
+	public void load (Map map, PlayerData playerData, HollowBitUser hbUser) {
 		this.uuid = playerData.uuid;
-		this.hashedPassword = playerData.hashedPassword;
-		this.salt = playerData.salt;
 		this.location = new Location(map, new Vector2(playerData.x, playerData.y));
 		this.equippedInventory = playerData.equippedInventory;
 		this.inventory = playerData.inventory;
-		this.hasCreatedPlayer = playerData.hasCreatedPlayer;
+		this.lastPlayed = playerData.lastPlayed;
+		this.creationDate = playerData.creationDate;
+		this.hbUser = hbUser;
 	}
 	
 	@Override
@@ -423,17 +423,6 @@ public class Player extends LivingEntity implements PacketHandler {
 					ArchipeloServer.getServer().getLogger().broadcast("<" + this.getName() + "> " + messagePacket.message, this.getName());
 				}
 				return true;
-			case PacketType.PLAYER_CREATION://Handle player creation packet
-				PlayerCreationPacket creationPacket = (PlayerCreationPacket) packet;
-				this.equippedInventory[EQUIP_INDEX_HAIR] = new Item(PlayerCreationPacket.HAIR_STYLES[creationPacket.selectedHair]);
-				this.equippedInventory[EQUIP_INDEX_HAIR].color = Color.rgba8888(PlayerCreationPacket.HAIR_COLORS[creationPacket.hairColor]);
-				this.equippedInventory[EQUIP_INDEX_FACE] = new Item(PlayerCreationPacket.FACE_STYLES[creationPacket.selectedFace]);
-				this.equippedInventory[EQUIP_INDEX_FACE].color = Color.rgba8888(PlayerCreationPacket.EYE_COLORS[creationPacket.eyeColor]);
-				this.equippedInventory[EQUIP_INDEX_BODY].color = Color.rgba8888(PlayerCreationPacket.BODY_COLORS[creationPacket.bodyColor]);
-				this.hasCreatedPlayer = true;
-				Json json = new Json();
-				this.changes.putString("equipped-inventory", json.toJson(equippedInventory));
-				return true;
 			}
 		}
 		return false;
@@ -461,14 +450,6 @@ public class Player extends LivingEntity implements PacketHandler {
 		return uuid;
 	}
 	
-	public byte[] getHashedPassword () {
-		return hashedPassword;
-	}
-	
-	public byte[] getSalt () {
-		return salt;
-	}
-	
 	public Item[] getEquippedInventory () {
 		return equippedInventory;
 	}
@@ -481,8 +462,16 @@ public class Player extends LivingEntity implements PacketHandler {
 		return firstTimeLogin;
 	}
 	
-	public boolean hasCreatedPlayer () {
-		return hasCreatedPlayer;
+	public Date getLastPlayedDate () {
+		return lastPlayed;
+	}
+	
+	public Date getCreationDate () {
+		return creationDate;
+	}
+	
+	public HollowBitUser getHollowBitUser () {
+		return hbUser;
 	}
 	
 	private boolean doesCurrentPositionCollideWithMap () {
@@ -494,31 +483,30 @@ public class Player extends LivingEntity implements PacketHandler {
 		return false;
 	}
 	
-	public static PlayerData getNewPlayerData (String username, String password, Configuration config) {
+	public static PlayerData getNewPlayerData (String name, String hbUuid, Item hair, Item face, Item body) {
+		Configuration config = ArchipeloServer.getServer().getConfig();
 		PlayerData playerData = new PlayerData();
 		playerData.uuid = UUID.randomUUID().toString();
-		playerData.name = username;
-		playerData.salt = ArchipeloServer.getServer().getPasswordHasher().getNextSalt();
-		playerData.hashedPassword = ArchipeloServer.getServer().getPasswordHasher().hash(password, playerData.salt);
+		playerData.bhUuid = hbUuid;
+		playerData.name = name;
 		playerData.x = config.spawnX;
 		playerData.y = config.spawnY;
 		playerData.island = config.spawnIsland;
 		playerData.map = config.spawnMap;
-		playerData.hasCreatedPlayer = false;
+		playerData.lastPlayed = DatabaseManager.getCurrentDate();
+		playerData.creationDate = DatabaseManager.getCurrentDate();
 		
 		//Default inventory
 		playerData.inventory = new Item[INVENTORY_SIZE];
 		playerData.equippedInventory = new Item[EQUIP_SIZE];
-		playerData.equippedInventory[EQUIP_INDEX_BODY] = new Item(ItemType.BODY);
+		playerData.equippedInventory[EQUIP_INDEX_BODY] = body;
 		playerData.equippedInventory[EQUIP_INDEX_BOOTS] = new Item(ItemType.BOOTS_BASIC);
 		playerData.equippedInventory[EQUIP_INDEX_PANTS] = new Item(ItemType.PANTS_BASIC);
 		playerData.equippedInventory[EQUIP_INDEX_SHIRT] = new Item(ItemType.SHIRT_BASIC);
-		playerData.equippedInventory[EQUIP_INDEX_GLOVES] = new Item(ItemType.GLOVES_BASIC);
-		playerData.equippedInventory[EQUIP_INDEX_SHOULDERPADS] = new Item(ItemType.SHOULDERPADS_BASIC);
-		playerData.equippedInventory[EQUIP_INDEX_HAIR] = new Item(ItemType.HAIR1);
-		playerData.equippedInventory[EQUIP_INDEX_HAIR].color = Color.rgba8888(Color.BROWN);
-		playerData.equippedInventory[EQUIP_INDEX_FACE] = new Item(ItemType.FACE1);
-		playerData.equippedInventory[EQUIP_INDEX_FACE].color = Color.rgba8888(Color.BLUE);
+		playerData.equippedInventory[EQUIP_INDEX_GLOVES] = null;
+		playerData.equippedInventory[EQUIP_INDEX_SHOULDERPADS] = null;
+		playerData.equippedInventory[EQUIP_INDEX_HAIR] = hair;
+		playerData.equippedInventory[EQUIP_INDEX_FACE] = face;
 		playerData.equippedInventory[EQUIP_INDEX_HAT] = null;
 		playerData.equippedInventory[EQUIP_INDEX_USABLE] = null;
 		return playerData;

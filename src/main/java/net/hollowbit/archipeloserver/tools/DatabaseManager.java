@@ -1,10 +1,12 @@
 package net.hollowbit.archipeloserver.tools;
 
 import java.sql.Connection;
+import java.sql.Date;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Calendar;
 
 import com.badlogic.gdx.utils.Json;
 
@@ -41,13 +43,13 @@ public class DatabaseManager {
 			PlayerData pd = new PlayerData();
 			pd.uuid = rs.getString("uuid");
 			pd.name = rs.getString("name");
-			pd.hashedPassword = rs.getBytes("password");
-			pd.salt = rs.getBytes("salt");
+			pd.bhUuid = rs.getString("hbUuid");
 			pd.x = rs.getFloat("x");
 			pd.y = rs.getFloat("y");
 			pd.island = rs.getString("island");
 			pd.map = rs.getString("map");
-			pd.hasCreatedPlayer = rs.getBoolean("hasCreatedPlayer");
+			pd.lastPlayed = rs.getDate("lastPlayed");
+			pd.creationDate = rs.getDate("creationDate");
 			
 			//Inventory
 			Json json = new Json();
@@ -62,29 +64,35 @@ public class DatabaseManager {
 	}
 	
 	public void createPlayer (Player player) {
-		//Insert row to database for player
-		try {
-			PreparedStatement statement = connection.prepareStatement("insert into players (`uuid`, `name`, `password`, `salt`, `x`, `y`, `island`, `map`, `equippedInventory`, `inventory`, `hasCreatedPlayer`) values (?,?,?,?,?,?,?,?,?,?,?)");
-			statement.setString(1, player.getUUID());
-			statement.setString(2, player.getName());
-			statement.setBytes(3, player.getHashedPassword());
-			statement.setBytes(4, player.getSalt());
-			statement.setFloat(5, player.getLocation().getX());
-			statement.setFloat(6, player.getLocation().getY());
-			statement.setString(7, player.getLocation().getIsland().getName());
-			statement.setString(8, player.getLocation().getMap().getName());
-			
-			//Inventory
-			Json json = new Json();
-			statement.setString(9, json.toJson(player.getEquippedInventory()));
-			statement.setString(10, json.toJson(player.getInventory()));
+		Thread thread = new Thread(new Runnable() {//Use a thread so that this task is done asynchronously
+			@Override
+			public void run() {
+				//Insert row to database for player
+				try {
+					PreparedStatement statement = connection.prepareStatement("insert into players (`uuid`, `hbUuid`, `name`, `x`, `y`, `island`, `map`, `equippedInventory`, `inventory`, `lastPlayed`, `creationDate`) values (?,?,?,?,?,?,?,?,?,?,?)");
+					statement.setString(1, player.getUUID());
+					statement.setString(2, player.getHollowBitUser().getUUID());
+					statement.setString(3, player.getName());
+					statement.setFloat(4, player.getLocation().getX());
+					statement.setFloat(5, player.getLocation().getY());
+					statement.setString(6, player.getLocation().getIsland().getName());
+					statement.setString(7, player.getLocation().getMap().getName());
+					
+					//Inventory
+					Json json = new Json();
+					statement.setString(8, json.toJson(player.getEquippedInventory()));
+					statement.setString(9, json.toJson(player.getInventory()));
 
-			statement.setBoolean(11, player.hasCreatedPlayer());
-			
-			statement.executeUpdate();
-		} catch (SQLException e) {
-			ArchipeloServer.getServer().getLogger().caution("Could not save player data to server.");
-		}
+					statement.setDate(10, player.getLastPlayedDate());
+					statement.setDate(11, player.getCreationDate());
+					
+					statement.executeUpdate();
+				} catch (SQLException e) {
+					ArchipeloServer.getServer().getLogger().caution("Could not save player data to server.");
+				}
+			}
+		});
+		thread.start();
 	}
 	
 	public boolean doesPlayerExist (String name) {
@@ -99,29 +107,38 @@ public class DatabaseManager {
 	}
 	
 	public void updatePlayer (Player player) {
-		//Update player row in database
-		try {
-			PreparedStatement statement = connection.prepareStatement("update players set `name`=?, `password`=?, `salt`=?, `x`=?, `y`=?, `island`=?, `map`=?, `equippedInventory`=?, `inventory`=?, `hasCreatedPlayer`=? where uuid = ?");
-			statement.setString(1, player.getName());
-			statement.setBytes(2, player.getHashedPassword());
-			statement.setBytes(3, player.getSalt());
-			statement.setFloat(4, player.getLocation().getX());
-			statement.setFloat(5, player.getLocation().getY());
-			statement.setString(6, player.getLocation().getIsland().getName());
-			statement.setString(7, player.getLocation().getMap().getName());
-			statement.setString(11, player.getUUID());//Update where uuid is the same
-			
-			//Inventory
-			Json json = new Json();
-			statement.setString(8, json.toJson(player.getEquippedInventory()));
-			statement.setString(9, json.toJson(player.getInventory()));
-			
-			statement.setBoolean(10, player.hasCreatedPlayer());
-			
-			statement.executeUpdate();
-		} catch (SQLException e) {
-			ArchipeloServer.getServer().getLogger().caution("Was unable to update player data. " + e.getMessage());
-		}
+		Thread thread = new Thread(new Runnable(){//Use a thread so that this task is done asynchronously
+			@Override
+			public void run() {
+				//Update player row in database
+				try {
+					PreparedStatement statement = connection.prepareStatement("update players set `name`=?, `x`=?, `y`=?, `island`=?, `map`=?, `equippedInventory`=?, `inventory`=?, `lastPlayed`=? where uuid = ?");
+					statement.setString(1, player.getName());
+					statement.setFloat(2, player.getLocation().getX());
+					statement.setFloat(3, player.getLocation().getY());
+					statement.setString(4, player.getLocation().getIsland().getName());
+					statement.setString(5, player.getLocation().getMap().getName());
+					
+					//Inventory
+					Json json = new Json();
+					statement.setString(6, json.toJson(player.getEquippedInventory()));
+					statement.setString(7, json.toJson(player.getInventory()));
+					
+					statement.setDate(8, getCurrentDate());
+					
+					statement.setString(9, player.getUUID());//Update where uuid is the same
+					
+					statement.executeUpdate();
+				} catch (SQLException e) {
+					ArchipeloServer.getServer().getLogger().caution("Was unable to update player data. " + e.getMessage());
+				}
+			}
+		});
+		thread.start();
+	}
+	
+	public static final Date getCurrentDate () {
+		return new Date(Calendar.getInstance().getTime().getTime());
 	}
 	
 }

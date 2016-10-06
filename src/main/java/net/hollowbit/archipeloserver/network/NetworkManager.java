@@ -171,7 +171,11 @@ public class NetworkManager extends WebSocketServer {
 			handled = true;
 		}
 		
-		if (!handled)
+		if (handled)
+			return;
+		
+		//Only handle other packets if the user is logged in
+		if (getUserByAddress(getAddress(conn)).isLoggedIn())
 			addPacket(new PacketWrapper(getAddress(conn), packet));
 	}
 	

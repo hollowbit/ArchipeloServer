@@ -3,20 +3,22 @@ package net.hollowbit.archipeloserver.world;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import com.badlogic.gdx.graphics.Color;
+
 import net.hollowbit.archipeloserver.ArchipeloServer;
 import net.hollowbit.archipeloserver.entity.living.Player;
 import net.hollowbit.archipeloserver.hollowbitserver.HollowBitUser;
+import net.hollowbit.archipeloserver.items.Item;
+import net.hollowbit.archipeloserver.items.ItemType;
 import net.hollowbit.archipeloserver.network.LogoutReason;
 import net.hollowbit.archipeloserver.network.Packet;
 import net.hollowbit.archipeloserver.network.PacketHandler;
 import net.hollowbit.archipeloserver.network.PacketType;
 import net.hollowbit.archipeloserver.network.packets.ChatMessagePacket;
-import net.hollowbit.archipeloserver.network.packets.LoginPacket;
 import net.hollowbit.archipeloserver.network.packets.LogoutPacket;
+import net.hollowbit.archipeloserver.network.packets.PlayerPickPacket;
 import net.hollowbit.archipeloserver.tools.Configuration;
-import net.hollowbit.archipeloserver.tools.DatabaseManager;
 import net.hollowbit.archipeloserver.tools.PlayerData;
-import net.hollowbit.archipeloshared.StringValidator;
 
 public class World implements PacketHandler {
 	
@@ -167,76 +169,46 @@ public class World implements PacketHandler {
 	}
 	
 	@Override
-	public boolean handlePacket(Packet packet, String address) {
+	public boolean handlePacket (Packet packet, String address) {
 		switch(packet.packetType) {
-		case PacketType.LOGIN:
+		case PacketType.PLAYER_PICK:
 			//Use a thread to run code asynchronously since this makes database calls that can overall lag the server.
 			Thread thread = new Thread(new Runnable(){
 
 				@Override
 				public void run() {
-					LoginPacket loginPacket = (LoginPacket) packet;
-					
-					//If the client doesn't have the same version as the server, send an error
-					if (!loginPacket.version.equals(ArchipeloServer.VERSION)) {
-						loginPacket.result = LoginPacket.RESULT_BAD_VERSION;
-						loginPacket.version = ArchipeloServer.VERSION;
-						loginPacket.send(ArchipeloServer.getServer().getNetworkManager().getConnectionByAddress(address));
-						return;
-					}
-					
-					DatabaseManager dbm = ArchipeloServer.getServer().getDatabaseManager();
+					PlayerPickPacket playerPickPacket = (PlayerPickPacket) packet;
 					Configuration config = ArchipeloServer.getServer().getConfig();
 					
+					HollowBitUser hbu = ArchipeloServer.getServer().getNetworkManager().getUserByAddress(address);
+					
 					boolean firstTimeLogin = false;
-			
-					PlayerData playerData = null;		
-					if (!loginPacket.registering) {
-						playerData = dbm.getPlayerData(loginPacket.username);
-						
-						//If player data is null, then there is no user with that name
-						if (playerData == null) {
-							loginPacket.result = LoginPacket.RESULT_NO_USER_WITH_NAME;
-							loginPacket.send(ArchipeloServer.getServer().getNetworkManager().getConnectionByAddress(address));
+					PlayerData pd;
+					if (playerPickPacket.isNew) {
+						//Send error response if name is taken
+						if (ArchipeloServer.getServer().getDatabaseManager().doesPlayerExist(playerPickPacket.name)) {
+							playerPickPacket.result = PlayerPickPacket.RESULT_NAME_ALREADY_TAKEN;
+							playerPickPacket.send(ArchipeloServer.getServer().getNetworkManager().getConnectionByAddress(address));
 							return;
 						}
 						
-						//Check if passwords match
-						if (!ArchipeloServer.getServer().getPasswordHasher().isSamePassword(loginPacket.password, playerData.salt, playerData.hashedPassword)) {
-							loginPacket.result = LoginPacket.RESULT_PASSWORD_WRONG;
-							loginPacket.send(ArchipeloServer.getServer().getNetworkManager().getConnectionByAddress(address));
-							return;
-						}
-						
-						//Check if user is already logged in
-						if (isPlayerOnline(loginPacket.username)) {
-							loginPacket.result = LoginPacket.RESULT_ALREADY_LOGGED_IN;
-							loginPacket.send(ArchipeloServer.getServer().getNetworkManager().getConnectionByAddress(address));
-							return;
-						}
-						firstTimeLogin = false;
-					} else {
-						//Check for invalid characters in username and pass
-						if (!StringValidator.isStringValid(loginPacket.username, StringValidator.USERNAME)) {
-							loginPacket.result = LoginPacket.RESULT_INVALID_USERNAME;
-							loginPacket.send(ArchipeloServer.getServer().getNetworkManager().getConnectionByAddress(address));
-							return;
-						}
-						
-						if (!StringValidator.isStringValid(loginPacket.password, StringValidator.PASSWORD)) {
-							loginPacket.result = LoginPacket.RESULT_INVALID_PASSWORD;
-							loginPacket.send(ArchipeloServer.getServer().getNetworkManager().getConnectionByAddress(address));
-							return;
-						}
-						
-						//Check if username is taken
-						if (dbm.doesPlayerExist(loginPacket.username)) {
-							loginPacket.result = LoginPacket.RESULT_USERNAME_TAKEN;
-							loginPacket.send(ArchipeloServer.getServer().getNetworkManager().getConnectionByAddress(address));
-							return;
-						}
-						playerData = Player.getNewPlayerData(loginPacket.username, loginPacket.password, config);
+						Item body = new Item(ItemType.BODY);
+						body.color = Color.rgba8888(PlayerPickPacket.BODY_COLORS[playerPickPacket.bodyColor]);
+						Item hair = new Item(PlayerPickPacket.HAIR_STYLES[playerPickPacket.selectedHair]);
+						hair.color = Color.rgba8888(PlayerPickPacket.HAIR_COLORS[playerPickPacket.hairColor]);
+						Item face = new Item(PlayerPickPacket.FACE_STYLES[playerPickPacket.selectedFace]);
+						face.color = Color.rgba8888(PlayerPickPacket.EYE_COLORS[playerPickPacket.eyeColor]);
+						pd = Player.getNewPlayerData(playerPickPacket.name, hbu.getUUID(), hair, face, body);
 						firstTimeLogin = true;
+					} else {
+						pd = ArchipeloServer.getServer().getDatabaseManager().getPlayerData(playerPickPacket.name);
+						
+						//If the selected player does not belong to this user, don't allow the user to use it.
+						if (!pd.bhUuid.equals(hbu.getUUID())) {
+							playerPickPacket.result = PlayerPickPacket.RESULT_PLAYER_BELONGS_TO_ANOTHER_HBU;
+							playerPickPacket.send(ArchipeloServer.getServer().getNetworkManager().getConnectionByAddress(address));
+							return;
+						}
 					}
 					
 					Island island = null;
@@ -246,68 +218,57 @@ public class World implements PacketHandler {
 					String mapName = null;
 					
 					//If island isn't loaded already, load it
-					if (!isIslandLoaded(playerData.island)) {
-						if (!loadIsland(playerData.island)) {
+					if (!isIslandLoaded(pd.island)) {
+						if (!loadIsland(pd.island)) {
 							//If island didn't load, send player to (their) spawn
 							if (!isIslandLoaded(config.spawnIsland)) {
 								loadIsland(config.spawnIsland);
 							}
 							islandName = config.spawnIsland;
 						} else {
-							islandName = playerData.island;
+							islandName = pd.island;
 						}
 					} else {
-						islandName = playerData.island;
+						islandName = pd.island;
 					}
 					
 					island = getIsland(islandName);
 					
 					//If map isn't loaded already, load it
-					if (!island.isMapLoaded(playerData.map)) {
-						if (!island.loadMap(playerData.map)) {
+					if (!island.isMapLoaded(pd.map)) {
+						if (!island.loadMap(pd.map)) {
 							//If map didn't load, send player to (their) spawn
 							if (!island.isMapLoaded(config.spawnMap)) {
 								island.loadMap(config.spawnMap);
 							}
 							mapName = config.spawnMap;
 						} else {
-							mapName = playerData.map;
+							mapName = pd.map;
 						}
 					} else {
-						mapName = playerData.map;
+						mapName = pd.map;
 					}
 					
 					map = island.getMap(mapName);
 					
-					Player player = new Player(playerData.name, address, firstTimeLogin);
-					player.load(map, playerData);
+					Player player = new Player(pd.name, address, firstTimeLogin);
+					player.load(map, pd, hbu);
 					if (firstTimeLogin)
-						dbm.createPlayer(player);
+						ArchipeloServer.getServer().getDatabaseManager().createPlayer(player);
 					
 					map.addEntity(player);
 					
 					//Login was successful so tell client
-					loginPacket.result = LoginPacket.RESULT_SUCCESS;
-					loginPacket.hasCreatedPlayer = player.hasCreatedPlayer();//Sends to client whether to enter player creation menu or not
-					player.sendPacket(loginPacket);
+					playerPickPacket.result = PlayerPickPacket.RESULT_SUCCESSFUL;
+					player.sendPacket(playerPickPacket);
 					
+					//Send messages for login
 					ArchipeloServer.getServer().getLogger().info("<Join> " + player.getName());
 					player.sendPacket(new ChatMessagePacket(ArchipeloServer.getServer().getConfig().motd, "server"));
 				}
 				
 			});
 			thread.start();
-			return true;
-		case PacketType.LOGOUT:
-			Thread thread2 = new Thread (new Runnable(){
-				@Override
-				public void run() {
-					LogoutPacket logoutPacket = (LogoutPacket) packet;
-					Player player2 = getPlayerByAddress(address);
-					logoutPlayer(player2, LogoutReason.get(logoutPacket.reason), logoutPacket.alt);
-				}
-			});
-			thread2.start();
 			return true;
 		}
 		return false;
