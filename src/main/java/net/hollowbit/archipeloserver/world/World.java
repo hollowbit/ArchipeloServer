@@ -16,6 +16,7 @@ import net.hollowbit.archipeloserver.network.PacketHandler;
 import net.hollowbit.archipeloserver.network.PacketType;
 import net.hollowbit.archipeloserver.network.packets.ChatMessagePacket;
 import net.hollowbit.archipeloserver.network.packets.LogoutPacket;
+import net.hollowbit.archipeloserver.network.packets.PlayerListPacket;
 import net.hollowbit.archipeloserver.network.packets.PlayerPickPacket;
 import net.hollowbit.archipeloserver.tools.Configuration;
 import net.hollowbit.archipeloserver.tools.PlayerData;
@@ -298,6 +299,43 @@ public class World implements PacketHandler {
 				
 			});
 			thread.start();
+			return true;
+		case PacketType.PLAYER_LIST:
+			Thread thread2 = new Thread (new Runnable() {
+				@Override
+				public void run() {
+					PlayerListPacket playerListPacket = (PlayerListPacket) packet;
+					
+					HollowBitUser hbu = ArchipeloServer.getServer().getNetworkManager().getUserByAddress(address);
+					
+					//Make sure user is only getting player data from players that belong to them
+					if (!playerListPacket.name.equals(hbu.getName())) {
+						playerListPacket.result = PlayerListPacket.RESULT_INVALID_LOGIN;
+						playerListPacket.send(ArchipeloServer.getServer().getNetworkManager().getConnectionByAddress(address));
+						return;
+					}
+					
+					//Get player datas from database and parse them into the packet
+					ArrayList<PlayerData> playerDatas = ArchipeloServer.getServer().getDatabaseManager().getPlayerDataFromUser(hbu.getUUID());
+					playerListPacket.playerEquippedInventories = new Item[playerDatas.size()][playerDatas.get(0).equippedInventory.length];
+					playerListPacket.names = new String[playerDatas.size()];
+					playerListPacket.islands = new String[playerDatas.size()];
+					playerListPacket.lastPlayedDateTimes = new double[playerDatas.size()];
+					playerListPacket.creationDateTimes = new double[playerDatas.size()];
+					
+					for (int i = 0; i < playerDatas.size(); i++) {
+						playerListPacket.playerEquippedInventories[i] = playerDatas.get(i).equippedInventory;
+						playerListPacket.names[i] = playerDatas.get(i).name;
+						playerListPacket.islands[i] = playerDatas.get(i).island;
+						playerListPacket.lastPlayedDateTimes[i] = playerDatas.get(i).lastPlayed.getTime();
+						playerListPacket.creationDateTimes[i] = playerDatas.get(i).creationDate.getTime();
+					}
+					
+					//Send packet with player datas
+					playerListPacket.send(ArchipeloServer.getServer().getNetworkManager().getConnectionByAddress(address));
+				}
+			});
+			thread2.start();
 			return true;
 		}
 		return false;

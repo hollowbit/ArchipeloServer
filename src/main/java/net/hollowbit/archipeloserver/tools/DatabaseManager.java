@@ -6,6 +6,7 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Calendar;
 
 import com.badlogic.gdx.utils.Json;
@@ -30,6 +31,11 @@ public class DatabaseManager {
 		}
 	}
 	
+	/**
+	 * Get player data of a specified player.
+	 * @param name
+	 * @return
+	 */
 	public PlayerData getPlayerData (String name) {
 		//Query database to get info on a player
 		try {
@@ -63,6 +69,47 @@ public class DatabaseManager {
 		}
 	}
 	
+	/**
+	 * Gets player data of all players belonging to the specified user
+	 * @param hbUuid
+	 * @return
+	 */
+	public ArrayList<PlayerData> getPlayerDataFromUser (String hbUuid) {
+		//Query database to get info on a player
+		try {
+			PreparedStatement statement = connection.prepareStatement("select name, island, lastPlayed, creationDate from players where hbUuid = ?");
+			statement.setString(1, hbUuid);
+			ResultSet rs = statement.executeQuery();
+			
+			ArrayList<PlayerData> playerDatas = new ArrayList<PlayerData>();
+			
+			//Loop through rows and add them to list
+			while (rs.next()) {
+				//Fill player data object with info and return
+				PlayerData pd = new PlayerData();
+				pd.name = rs.getString("name");
+				pd.island = rs.getString("island");
+				pd.lastPlayed = rs.getDate("lastPlayed");
+				pd.creationDate = rs.getDate("creationDate");
+				
+				//Inventory
+				Json json = new Json();
+				pd.equippedInventory = json.fromJson(Item[].class, rs.getString("equippedInventory"));
+				
+				playerDatas.add(pd);
+			}
+			return playerDatas;
+		} catch (SQLException e) {
+			System.out.println(e.getMessage());
+			ArchipeloServer.getServer().getLogger().caution("Unable to get user data for user " + hbUuid);
+			return null;
+		}
+	}
+	
+	/**
+	 * Create a new table row with player data
+	 * @param player
+	 */
 	public void createPlayer (Player player) {
 		Thread thread = new Thread(new Runnable() {//Use a thread so that this task is done asynchronously
 			@Override
@@ -95,6 +142,11 @@ public class DatabaseManager {
 		thread.start();
 	}
 	
+	/**
+	 * Returns whether a player with that name exists.
+	 * @param name
+	 * @return
+	 */
 	public boolean doesPlayerExist (String name) {
 		try {
 			PreparedStatement statement = connection.prepareStatement("select * from players where name = ?");
@@ -106,6 +158,10 @@ public class DatabaseManager {
 		}
 	}
 	
+	/**
+	 * Update data of a player.
+	 * @param player
+	 */
 	public void updatePlayer (Player player) {
 		Thread thread = new Thread(new Runnable(){//Use a thread so that this task is done asynchronously
 			@Override
