@@ -30,7 +30,6 @@ public class NetworkManager extends WebSocketServer {
 	
 	private ArrayList<PacketWrapper> packets;
 	
-	private HashMap<String, WebSocket> connections;
 	private HashMap<String, HollowBitUser> users;
 	
 	Json json;
@@ -63,7 +62,6 @@ public class NetworkManager extends WebSocketServer {
 		}
 		
 		packetHandlers = new ArrayList<PacketHandler>();
-		connections = new HashMap<String, WebSocket>();
 		packets = new ArrayList<PacketWrapper>();
 		users = new HashMap<String, HollowBitUser>();
 		json = new Json();
@@ -98,21 +96,32 @@ public class NetworkManager extends WebSocketServer {
 		this.packets.removeAll(packets);
 	}
 	
-	public WebSocket getConnectionByAddress (String address) {
-		return connections.get(address);
+	public synchronized WebSocket getConnectionByAddress (String address) {
+		if (users.containsKey(address))
+			return users.get(address).getConnection();
+		else 
+			return null;
 	}
 	
 	public String getAddress (WebSocket conn) {
 		return conn.getRemoteSocketAddress().toString();
 	}
 	
-	public synchronized String putConnection (WebSocket conn) {
-		connections.put(getAddress(conn), conn);
+	public synchronized String addUser (WebSocket conn) {
+		users.put(getAddress(conn), new HollowBitUser(conn));
 		return getAddress(conn);
 	}
 	
-	public synchronized void removeConnection (String address) {
-		connections.remove(address);
+	public synchronized void removeUser (WebSocket conn) {
+		users.remove(getAddress(conn));
+	}
+	
+	public synchronized boolean containsUser (String address) {
+		return users.containsKey(address);
+	}
+	
+	public synchronized HollowBitUser getUser (String address) {
+		return users.get(address);
 	}
 	
 	@Override
@@ -122,11 +131,8 @@ public class NetworkManager extends WebSocketServer {
 
 	@Override
 	public void onError (WebSocket conn, Exception error) {
-		ArchipeloServer.getServer().getLogger().error(error.getMessage());
-	}
-	
-	public HollowBitUser getUserByAddress (String address) {
-		return users.get(address);
+		//error.printStackTrace();
+		//ArchipeloServer.getServer().getLogger().error(error.getMessage());
 	}
 
 	@Override
@@ -143,8 +149,6 @@ public class NetworkManager extends WebSocketServer {
 		@SuppressWarnings("unchecked")
 		Packet packet = (Packet) json.fromJson(packetMap.get(type), message);
 		
-		boolean handled = false;
-		
 		//Handle login/logoff packets
 		if (packet.packetType == PacketType.LOGIN) {
 			LoginPacket loginPacket = (LoginPacket) packet;
@@ -157,34 +161,20 @@ public class NetworkManager extends WebSocketServer {
 			}
 			
 			//Add user is version is valid
-			HollowBitUser hollowBitUser = null;
-			if (users.containsKey(getAddress(conn)))
-				hollowBitUser = users.get(conn);
-			else {
-				hollowBitUser = new HollowBitUser(conn);
-				users.put(getAddress(conn), hollowBitUser);
-			}
+			HollowBitUser hollowBitUser = users.get(getAddress(conn));
 			hollowBitUser.login(loginPacket.username, loginPacket.password);
-			handled = true;
-		} else if (packet.packetType == PacketType.LOGOUT) {
+		} else if (packet.packetType == PacketType.LOGOUT)
 			logoutUser(getAddress(conn));
-			handled = true;
+		else {
+			//Only handle other packets if the user is logged in
+			if (containsUser(getAddress(conn)) && getUser(getAddress(conn)).isLoggedIn())
+				addPacket(new PacketWrapper(getAddress(conn), packet));
 		}
-		
-		if (handled)
-			return;
-		
-		//Only handle other packets if the user is logged in
-		if (getUserByAddress(getAddress(conn)).isLoggedIn())
-			addPacket(new PacketWrapper(getAddress(conn), packet));
 	}
 	
-	public void logoutUser (String address) {
-		//If the user is in this list, remove it.
+	private synchronized void logoutUser (String address) {
 		if (users.containsKey(address)) {
-			HollowBitUser hollowBitUser = users.get(address);
-			if (hollowBitUser.getPlayer() != null)//Remove the player if there is one.
-				hollowBitUser.getPlayer().remove();
+			users.get(address).logout();
 			users.remove(address);
 		}
 	}
@@ -196,7 +186,7 @@ public class NetworkManager extends WebSocketServer {
 	@Override
 	public void onOpen (WebSocket conn, ClientHandshake handshake) {
 		ArchipeloServer.getServer().getLogger().info("Connection received!");
-		putConnection(conn);
+		addUser(conn);
 	}
 	
 	public void sendPacket (Packet packet, WebSocket conn) {

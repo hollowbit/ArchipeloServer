@@ -6,7 +6,7 @@ hbServerAddress: localhost:22123
 hbServerPassword: astrongpassword
 motd: Welcome to Archipelo!
 region: 0
-spawnIsland: archipelo
-spawnMap: island
+spawnIsland: Archipelo
+spawnMap: Island
 spawnX: 360.0
 spawnY: 400.0

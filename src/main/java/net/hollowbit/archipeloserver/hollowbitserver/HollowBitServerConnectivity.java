@@ -153,11 +153,13 @@ public class HollowBitServerConnectivity extends WebSocketClient {
 	@Override
 	public void onClose(int code, String reason, boolean remote) {
 		ArchipeloServer.getServer().getLogger().info("Disconnected from HB - status: " + code + ", reason: " + reason);
+		System.exit(0);
 	}
 
 	@Override
 	public void onError(Exception ex) {
 		ArchipeloServer.getServer().getLogger().error("Error from HB: " + ex.getMessage());
+		System.exit(0);
 	}
 	
 	public boolean isConnected () {

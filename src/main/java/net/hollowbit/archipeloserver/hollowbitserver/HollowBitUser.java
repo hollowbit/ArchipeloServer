@@ -51,6 +51,11 @@ public class HollowBitUser {
 		thread.start();
 	}
 	
+	public void logout () {
+		if (this.getPlayer() != null)//Remove the player if there is one.
+			this.getPlayer().remove();
+	}
+	
 	public String getUUID () {
 		return uuid;
 	}
@@ -81,6 +86,10 @@ public class HollowBitUser {
 	 */
 	public void setPlayer (Player player) {
 		this.player = player;
+	}
+	
+	public WebSocket getConnection () {
+		return conn;
 	}
 	
 }

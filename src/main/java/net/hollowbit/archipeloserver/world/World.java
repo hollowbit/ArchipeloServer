@@ -166,7 +166,7 @@ public class World implements PacketHandler {
 	}
 	
 	public Player getPlayerByAddress (String address) {
-		HollowBitUser hollowBitUser = ArchipeloServer.getServer().getNetworkManager().getUserByAddress(address);
+		HollowBitUser hollowBitUser = ArchipeloServer.getServer().getNetworkManager().getUser(address);
 		if (hollowBitUser == null)
 			return null;
 		return hollowBitUser.getPlayer();
@@ -184,7 +184,7 @@ public class World implements PacketHandler {
 					PlayerPickPacket playerPickPacket = (PlayerPickPacket) packet;
 					Configuration config = ArchipeloServer.getServer().getConfig();
 					
-					HollowBitUser hbu = ArchipeloServer.getServer().getNetworkManager().getUserByAddress(address);
+					HollowBitUser hbu = ArchipeloServer.getServer().getNetworkManager().getUser(address);
 					
 					boolean firstTimeLogin = false;
 					PlayerData pd;
@@ -281,13 +281,15 @@ public class World implements PacketHandler {
 						mapName = pd.map;
 					}
 					
-					System.out.println("world.java " + island.isMapLoaded(mapName));
 					map = island.getMap(mapName);
 					
 					Player player = new Player(pd.name, address, firstTimeLogin);
 					player.load(map, pd, hbu);
 					if (firstTimeLogin)
 						ArchipeloServer.getServer().getDatabaseManager().createPlayer(player);
+					
+					//set hollowbit user player to this player
+					hbu.setPlayer(player);
 					
 					map.addEntity(player);
 					
@@ -309,7 +311,7 @@ public class World implements PacketHandler {
 				public void run() {
 					PlayerListPacket playerListPacket = (PlayerListPacket) packet;
 					
-					HollowBitUser hbu = ArchipeloServer.getServer().getNetworkManager().getUserByAddress(address);
+					HollowBitUser hbu = ArchipeloServer.getServer().getNetworkManager().getUser(address);
 					
 					//Make sure user is only getting player data from players that belong to them
 					if (!playerListPacket.name.equals(hbu.getName())) {
