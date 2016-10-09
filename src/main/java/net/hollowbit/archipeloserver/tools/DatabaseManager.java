@@ -77,7 +77,7 @@ public class DatabaseManager {
 	public ArrayList<PlayerData> getPlayerDataFromUser (String hbUuid) {
 		//Query database to get info on a player
 		try {
-			PreparedStatement statement = connection.prepareStatement("select name, island, lastPlayed, creationDate from players where hbUuid = ?");
+			PreparedStatement statement = connection.prepareStatement("select name, island, lastPlayed, creationDate, equippedInventory from players where hbUuid = ?");
 			statement.setString(1, hbUuid);
 			ResultSet rs = statement.executeQuery();
 			

@@ -21,27 +21,34 @@ public class HollowBitUser {
 	}
 	
 	/**
-	 * Logs in this user with the given credentials
+	 * Logs in this user with the given credentials. Runs asynchronously
 	 * @param name
 	 * @param password
 	 */
 	public void login (final String name, String password) {
 		final HollowBitUser user = this;
-		ArchipeloServer.getServer().getHollowBitServerConnectivity().sendGetUserDataQuery(name, password, new HollowBitServerQueryResponseHandler() {
-			
-			@Override
-			public void responseReceived(int id, String[] data) {
-				if (id == 3) {//3 means the login was successful
-					user.name = name;
-					user.email = data[0];
-					user.uuid = data[1];
-					user.points = Integer.parseInt(data[2]);
-					loggedIn = true;
-				}
-				
-				ArchipeloServer.getServer().getNetworkManager().sendPacket(new LoginPacket(loggedIn ? LoginPacket.RESULT_LOGIN_SUCCESSFUL : LoginPacket.RESULT_LOGIN_ERROR), conn);//Send response login packet depending on login result
-			}
+		Thread thread = new Thread(new Runnable() {//Make it runs asynchronously
+			public void run() {
+
+				ArchipeloServer.getServer().getHollowBitServerConnectivity().sendGetUserDataQuery(name, password, new HollowBitServerQueryResponseHandler() {
+					
+					@Override
+					public void responseReceived (int id, String[] data) {
+						if (id == 8) {//3 means the login was successful
+							user.name = name;
+							user.email = data[0];
+							user.uuid = data[1];
+							user.points = Integer.parseInt(data[2]);
+							loggedIn = true;
+						}
+						
+						//Send login response.
+						ArchipeloServer.getServer().getNetworkManager().sendPacket(new LoginPacket(loggedIn ? LoginPacket.RESULT_LOGIN_SUCCESSFUL : LoginPacket.RESULT_LOGIN_ERROR), conn);//Send response login packet depending on login result
+					}
+				});
+			};
 		});
+		thread.start();
 	}
 	
 	public String getUUID () {

@@ -39,7 +39,7 @@ public class PacketType {
 			registeredPackets.put(CHAT_MESSAGE, ClassReflection.forName("net.hollowbit.archipeloserver.network.packets.ChatMessagePacket"));
 			registeredPackets.put(TELEPORT, ClassReflection.forName("net.hollowbit.archipeloserver.network.packets.TeleportPacket"));
 			registeredPackets.put(PLAYER_PICK, ClassReflection.forName("net.hollowbit.archipeloserver.network.packets.PlayerPickPacket"));
-			registeredPackets.put(PLAYER_PICK, ClassReflection.forName("net.hollowbit.archipeloserver.network.packets.PlayerListPacket"));
+			registeredPackets.put(PLAYER_LIST, ClassReflection.forName("net.hollowbit.archipeloserver.network.packets.PlayerListPacket"));
 		} catch (Exception e) {
 			ArchipeloServer.getServer().getLogger().error("Was unable to register all packet.");
 			ArchipeloServer.getServer().stop();

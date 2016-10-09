@@ -8,5 +8,5 @@ motd: Welcome to Archipelo!
 region: 0
 spawnIsland: archipelo
 spawnMap: island
-spawnX: 0.0
-spawnY: 0.0
+spawnX: 360.0
+spawnY: 400.0

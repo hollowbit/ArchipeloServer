@@ -1,5 +1,7 @@
 package net.hollowbit.archipeloserver.world;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 
@@ -279,6 +281,7 @@ public class World implements PacketHandler {
 						mapName = pd.map;
 					}
 					
+					System.out.println("world.java " + island.isMapLoaded(mapName));
 					map = island.getMap(mapName);
 					
 					Player player = new Player(pd.name, address, firstTimeLogin);
@@ -317,18 +320,21 @@ public class World implements PacketHandler {
 					
 					//Get player datas from database and parse them into the packet
 					ArrayList<PlayerData> playerDatas = ArchipeloServer.getServer().getDatabaseManager().getPlayerDataFromUser(hbu.getUUID());
-					playerListPacket.playerEquippedInventories = new Item[playerDatas.size()][playerDatas.get(0).equippedInventory.length];
+					playerListPacket.playerEquippedInventories = new Item[playerDatas.size()][Player.EQUIP_SIZE];
 					playerListPacket.names = new String[playerDatas.size()];
 					playerListPacket.islands = new String[playerDatas.size()];
-					playerListPacket.lastPlayedDateTimes = new double[playerDatas.size()];
-					playerListPacket.creationDateTimes = new double[playerDatas.size()];
+					playerListPacket.lastPlayedDateTimes = new String[playerDatas.size()];
+					playerListPacket.creationDateTimes = new String[playerDatas.size()];
+					
+					DateFormat lastPlayedFormat = new SimpleDateFormat("MMM d, yyyy k:m:s");
+					DateFormat createdFormat = new SimpleDateFormat("MMM d, yyyy");
 					
 					for (int i = 0; i < playerDatas.size(); i++) {
 						playerListPacket.playerEquippedInventories[i] = playerDatas.get(i).equippedInventory;
 						playerListPacket.names[i] = playerDatas.get(i).name;
 						playerListPacket.islands[i] = playerDatas.get(i).island;
-						playerListPacket.lastPlayedDateTimes[i] = playerDatas.get(i).lastPlayed.getTime();
-						playerListPacket.creationDateTimes[i] = playerDatas.get(i).creationDate.getTime();
+						playerListPacket.lastPlayedDateTimes[i] = lastPlayedFormat.format(playerDatas.get(i).lastPlayed);
+						playerListPacket.creationDateTimes[i] = createdFormat.format(playerDatas.get(i).creationDate);
 					}
 					
 					//Send packet with player datas
