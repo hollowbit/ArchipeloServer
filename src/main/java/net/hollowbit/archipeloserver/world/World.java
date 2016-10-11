@@ -18,6 +18,7 @@ import net.hollowbit.archipeloserver.network.PacketHandler;
 import net.hollowbit.archipeloserver.network.PacketType;
 import net.hollowbit.archipeloserver.network.packets.ChatMessagePacket;
 import net.hollowbit.archipeloserver.network.packets.LogoutPacket;
+import net.hollowbit.archipeloserver.network.packets.PlayerDeletePacket;
 import net.hollowbit.archipeloserver.network.packets.PlayerListPacket;
 import net.hollowbit.archipeloserver.network.packets.PlayerPickPacket;
 import net.hollowbit.archipeloserver.tools.Configuration;
@@ -305,6 +306,9 @@ public class World implements PacketHandler {
 			});
 			thread.start();
 			return true;
+		case PacketType.PLAYER_DELETE:
+			PlayerDeletePacket playerDeletePacket = (PlayerDeletePacket) packet;
+			break;
 		case PacketType.PLAYER_LIST:
 			Thread thread2 = new Thread (new Runnable() {
 				@Override
