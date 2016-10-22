@@ -9,12 +9,12 @@ import net.hollowbit.archipeloserver.network.packets.LoginPacket;
 public class HollowBitUser {
 	
 	private String uuid;
-	private String name;
 	private String email;
 	private int points;
 	private Player player = null;//If the user selected a character, this will no longer be null
 	private boolean loggedIn = false;
 	private WebSocket conn;
+	private volatile boolean pointsUpToDate = true;
 	
 	public HollowBitUser (WebSocket conn) {
 		this.conn = conn;
@@ -25,17 +25,17 @@ public class HollowBitUser {
 	 * @param name
 	 * @param password
 	 */
-	public void login (final String name, String password) {
+	public void login (final String email, String password) {
 		final HollowBitUser user = this;
 		Thread thread = new Thread(new Runnable() {//Make it runs asynchronously
 			public void run() {
 
-				ArchipeloServer.getServer().getHollowBitServerConnectivity().sendGetUserDataQuery(name, password, new HollowBitServerQueryResponseHandler() {
+				ArchipeloServer.getServer().getHollowBitServerConnectivity().sendGetUserDataQuery(email, password, new HollowBitServerQueryResponseHandler() {
 					
 					@Override
 					public void responseReceived (int id, String[] data) {
-						if (id == 8) {//3 means the login was successful
-							user.name = name;
+						if (id == HollowBitServerConnectivity.USER_DATA_RESPONSE_PACKET_ID) {//Login was successful
+							user.email = email;
 							user.email = data[0];
 							user.uuid = data[1];
 							user.points = Integer.parseInt(data[2]);
@@ -51,6 +51,14 @@ public class HollowBitUser {
 		thread.start();
 	}
 	
+	/**
+	 * Add points to user. You can also remove points by passing a negative number.
+	 * @param pointsToAdd
+	 */
+	public void addPoints (int pointsToAdd) {
+		ArchipeloServer.getServer().getHollowBitServerConnectivity().sendAddUserPoints(email, pointsToAdd);
+	}
+	
 	public void logout () {
 		if (this.getPlayer() != null)//Remove the player if there is one.
 			this.getPlayer().remove();
@@ -60,12 +68,28 @@ public class HollowBitUser {
 		return uuid;
 	}
 	
-	public String getName () {
-		return name;
-	}
-	
 	public String getEmailAddress () {
 		return email;
+	}
+	
+	/**
+	 * Asynchronously updates points for this user object.
+	 * Updates handler when the points are up to date.
+	 */
+	public void updatePoints (HollowBitUserPointsUpdate handler) {
+		HollowBitUser user = this;
+		this.pointsUpToDate = false;
+		ArchipeloServer.getServer().getHollowBitServerConnectivity().sendGetUserPointsQuery(email, new HollowBitServerQueryResponseHandler() {
+			
+			@Override
+			public void responseReceived(int id, String[] data) {
+				if (id == HollowBitServerConnectivity.GET_USER_POINTS_RESPONSE_PACKET) {
+					user.points = Integer.parseInt(data[0]);
+					user.pointsUpToDate = true;
+					handler.pointsUpdated(user.points);
+				}
+			}
+		});
 	}
 	
 	public int getPoints () {
@@ -80,6 +104,10 @@ public class HollowBitUser {
 		return player;
 	}
 	
+	public boolean arePointsUpToDate () {
+		return this.pointsUpToDate;
+	}
+	
 	/**
 	 * Once this account has picked a player, put it here. If the player disconnects, set it to null.
 	 * @param player
@@ -90,6 +118,10 @@ public class HollowBitUser {
 	
 	public WebSocket getConnection () {
 		return conn;
+	}
+	
+	public interface HollowBitUserPointsUpdate {
+		public abstract void pointsUpdated (int points);
 	}
 	
 }

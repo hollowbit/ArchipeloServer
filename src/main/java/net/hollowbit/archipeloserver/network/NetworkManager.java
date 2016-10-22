@@ -162,7 +162,7 @@ public class NetworkManager extends WebSocketServer {
 			
 			//Add user is version is valid
 			HollowBitUser hollowBitUser = users.get(getAddress(conn));
-			hollowBitUser.login(loginPacket.username, loginPacket.password);
+			hollowBitUser.login(loginPacket.email, loginPacket.password);
 		} else if (packet.packetType == PacketType.LOGOUT)
 			logoutUser(getAddress(conn));
 		else {

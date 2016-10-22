@@ -318,7 +318,7 @@ public class World implements PacketHandler {
 					HollowBitUser hbu = ArchipeloServer.getServer().getNetworkManager().getUser(address);
 					
 					//Make sure user is only getting player data from players that belong to them
-					if (!playerListPacket.name.equals(hbu.getName())) {
+					if (!playerListPacket.email.equals(hbu.getEmailAddress())) {
 						playerListPacket.result = PlayerListPacket.RESULT_INVALID_LOGIN;
 						playerListPacket.send(ArchipeloServer.getServer().getNetworkManager().getConnectionByAddress(address));
 						return;

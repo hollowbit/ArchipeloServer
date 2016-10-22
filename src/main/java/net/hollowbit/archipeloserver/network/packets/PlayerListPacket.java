@@ -16,7 +16,7 @@ public class PlayerListPacket extends Packet {
 	public String[] creationDateTimes;
 	public int[] levels;
 	
-	public String name;
+	public String email;
 	public int result = 0;
 	
 	public PlayerListPacket () {

@@ -21,10 +21,24 @@ import net.hollowbit.archipeloserver.tools.Configuration;
 
 public class HollowBitServerConnectivity extends WebSocketClient {
 	
-	private static final int GAME_ID = 0;
+	public static final int GAME_ID = 0;
+
+	private static final int VERIFY_PACKET_ID = 2;
+	private static final int GET_USER_DATA_PACKET_ID = 4;
 	private static final int ADD_SERVER_PACKET_ID = 688;
 	private static final int UPDATE_SERVER_PACKET_ID = 773;
 	private static final int REMOVE_SERVER_PACKET_ID = 420;
+	private static final int GET_USER_POINTS_PACKET_ID = 532;
+	private static final int ADD_USER_POINTS_PACKET_ID = 839;
+
+	public static final int CORRECT_LOGIN_RESPONSE_PACKET_ID = 0;
+	public static final int USER_DATA_RESPONSE_PACKET_ID = 3;
+	public static final int INVALID_PACKET_REPONSE_PACKET_ID = 6;
+	public static final int USER_DOESNT_EXIST_ERROR_RESPONSE_PACKET_ID = 8;
+	public static final int WRONG_PASSWORD_RESPONSE_PACKET_ID = 9;
+	public static final int INVALID_EMAIL_RESPONSE_PACKET_ID = 11;
+	public static final int INVALID_PASSWORD_RESPONSE_PACKET_ID = 12;
+	public static final int GET_USER_POINTS_RESPONSE_PACKET = 14;
 	
 	private boolean connected = false;
 	private HashMap<String, HollowBitServerQueryResponseHandler> handlerMap;
@@ -98,24 +112,44 @@ public class HollowBitServerConnectivity extends WebSocketClient {
 	
 	/**
 	 * Send query to HollowBit server to see if login credentials are correct.
-	 * @param name Name of HollowBit user
+	 * @param email Email of user
 	 * @param password Password for user used to authenticate
 	 * @param handler Handles response to queries
 	 */
-	public void sendVerifyQuery (String name, String password, HollowBitServerQueryResponseHandler handler) {
-		String query = "2;" + name + ";" + password;
+	public void sendVerifyQuery (String email, String password, HollowBitServerQueryResponseHandler handler) {
+		String query = VERIFY_PACKET_ID + ";" + email + ";" + password;
 		sendQuery(query, handler);
 	}
 	
 	/**
 	 * Send query to HollowBit server to get data about a user.
-	 * @param name Name of HollowBit user
+	 * @param email Email of user
 	 * @param password Password for user used to authenticate
 	 * @param handler Handles response to queries
 	 */
-	public void sendGetUserDataQuery (String name, String password, HollowBitServerQueryResponseHandler handler) {
-		String query = "5;" + name + ";" + password;
+	public void sendGetUserDataQuery (String email, String password, HollowBitServerQueryResponseHandler handler) {
+		String query = GET_USER_DATA_PACKET_ID + ";" + email + ";" + password;
 		sendQuery(query, handler);
+	}
+	
+	/**
+	 * Gets points of HollowBitUser
+	 * @param email
+	 * @param handler
+	 */
+	public void sendGetUserPointsQuery (String email, HollowBitServerQueryResponseHandler handler) {
+		String query = GET_USER_POINTS_PACKET_ID + ";" + ArchipeloServer.getServer().getConfig().hbServerPassword + ";" + email;
+		sendQuery(query, handler);
+	}
+	
+	/**
+	 * Adds points to a HollowBitUser
+	 * @param email
+	 * @param pointsToAdd
+	 */
+	public void sendAddUserPoints (String email, int pointsToAdd) {
+		String query = ADD_USER_POINTS_PACKET_ID + ";" + ArchipeloServer.getServer().getConfig().hbServerPassword + ";" + email + ";" + pointsToAdd;
+		sendQuery(query, null);
 	}
 
 	@Override

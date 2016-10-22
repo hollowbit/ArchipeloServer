@@ -10,7 +10,7 @@ public class PlayerDeletePacket extends Packet {
 	public static final int RESULT_NOT_PLAYER_OWNER = 2;
 	public static final int RESULT_INVALID_NAME = 3;
 	
-	public String name;
+	public String email;
 	public int result = 0;
 	
 	public PlayerDeletePacket () {

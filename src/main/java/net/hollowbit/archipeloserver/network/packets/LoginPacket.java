@@ -9,7 +9,7 @@ public class LoginPacket extends Packet {
 	public static final int RESULT_LOGIN_ERROR = 1;
 	public static final int RESULT_BAD_VERSION = 2;
 	
-	public String username;
+	public String email;
 	public String password;
 	public int result;
 	public String version;
