@@ -185,7 +185,7 @@ public class NetworkManager extends WebSocketServer {
 	
 	@Override
 	public void onOpen (WebSocket conn, ClientHandshake handshake) {
-		ArchipeloServer.getServer().getLogger().info("Connection received!");
+		//ArchipeloServer.getServer().getLogger().info("Connection received!");
 		addUser(conn);
 	}
 	

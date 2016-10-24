@@ -319,6 +319,7 @@ public class World implements PacketHandler {
 					
 					//Make sure user is only getting player data from players that belong to them
 					if (!playerListPacket.email.equals(hbu.getEmailAddress())) {
+						System.out.println("World.java  " + playerListPacket.email + "   " + hbu.getEmailAddress());
 						playerListPacket.result = PlayerListPacket.RESULT_INVALID_LOGIN;
 						playerListPacket.send(ArchipeloServer.getServer().getNetworkManager().getConnectionByAddress(address));
 						return;

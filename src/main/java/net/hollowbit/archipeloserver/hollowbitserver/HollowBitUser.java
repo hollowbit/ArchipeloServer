@@ -36,9 +36,8 @@ public class HollowBitUser {
 					public void responseReceived (int id, String[] data) {
 						if (id == HollowBitServerConnectivity.USER_DATA_RESPONSE_PACKET_ID) {//Login was successful
 							user.email = email;
-							user.email = data[0];
-							user.uuid = data[1];
-							user.points = Integer.parseInt(data[2]);
+							user.uuid = data[0];
+							user.points = Integer.parseInt(data[1]);
 							loggedIn = true;
 						}
 						
