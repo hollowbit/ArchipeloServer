@@ -198,7 +198,7 @@ public class World implements PacketHandler {
 						}
 						
 						//Check if user name is valid
-						if (!StringValidator.isStringValid(playerPickPacket.name, StringValidator.USERNAME)) {
+						if (!StringValidator.isStringValid(playerPickPacket.name, StringValidator.USERNAME, StringValidator.MAX_USERNAME_LENGTH)) {
 							playerPickPacket.result = PlayerPickPacket.RESULT_INVALID_USERNAME;
 							playerPickPacket.send(ArchipeloServer.getServer().getNetworkManager().getConnectionByAddress(address));
 							return;

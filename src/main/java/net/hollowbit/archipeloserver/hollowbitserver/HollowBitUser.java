@@ -61,6 +61,7 @@ public class HollowBitUser {
 	public void logout () {
 		if (this.getPlayer() != null)//Remove the player if there is one.
 			this.getPlayer().remove();
+		this.loggedIn = false;
 	}
 	
 	public String getUUID () {
