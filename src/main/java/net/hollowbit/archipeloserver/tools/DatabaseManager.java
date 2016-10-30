@@ -194,6 +194,31 @@ public class DatabaseManager {
 	}
 	
 	/**
+	 * Deletes player belonging to HBU. If this HBU doesn't own this player, it won't be deleted
+	 * @param name
+	 * @param hbUuid
+	 */
+	public void deletePlayer (String name, String hbUuid) {
+		Thread thread = new Thread(new Runnable(){//Use a thread so that this task is done asynchronously
+			@Override
+			public void run() {
+				//Update player row in database
+				try {
+					PreparedStatement statement = connection.prepareStatement("delete from players where name = ? and hbUuid = ?");
+					statement.setString(1, name);
+					statement.setString(2, hbUuid);
+					
+					statement.executeUpdate();
+					System.out.println("DatabaseManager.java Player deleted: " + name);
+				} catch (SQLException e) {
+					ArchipeloServer.getServer().getLogger().caution("Was unable to delete player: " + name + "   Error: " + e.getMessage());
+				}
+			}
+		});
+		thread.start();
+	}
+	
+	/**
 	 * Gets player count for this user
 	 * @param hbUuid UUID of user to test for
 	 * @return

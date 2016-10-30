@@ -308,7 +308,9 @@ public class World implements PacketHandler {
 			return true;
 		case PacketType.PLAYER_DELETE:
 			PlayerDeletePacket playerDeletePacket = (PlayerDeletePacket) packet;
-			break;
+			HollowBitUser hbu = ArchipeloServer.getServer().getNetworkManager().getUser(address);
+			ArchipeloServer.getServer().getDatabaseManager().deletePlayer(playerDeletePacket.name, hbu.getUUID());
+			return true;
 		case PacketType.PLAYER_LIST:
 			Thread thread2 = new Thread (new Runnable() {
 				@Override
