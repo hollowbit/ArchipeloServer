@@ -34,13 +34,15 @@ public class DatabaseManager {
 	/**
 	 * Get player data of a specified player.
 	 * @param name
+	 * @param hbUuid
 	 * @return
 	 */
-	public PlayerData getPlayerData (String name) {
+	public PlayerData getPlayerData (String name, String hbUuid) {
 		//Query database to get info on a player
 		try {
-			PreparedStatement statement = connection.prepareStatement("select * from players where name = ?");
+			PreparedStatement statement = connection.prepareStatement("select * from players where name = ? and hbUuid = ?");
 			statement.setString(1, name);
+			statement.setString(2, hbUuid);
 			ResultSet rs = statement.executeQuery();
 			if (!rs.next())
 				return null;

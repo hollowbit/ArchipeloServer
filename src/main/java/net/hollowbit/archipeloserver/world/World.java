@@ -220,18 +220,11 @@ public class World implements PacketHandler {
 						pd = Player.getNewPlayerData(playerPickPacket.name, hbu.getUUID(), hair, face, body);
 						firstTimeLogin = true;
 					} else {
-						pd = ArchipeloServer.getServer().getDatabaseManager().getPlayerData(playerPickPacket.name);
+						pd = ArchipeloServer.getServer().getDatabaseManager().getPlayerData(playerPickPacket.name, hbu.getUUID());
 						
 						//If pd is null, then the player doesn't exist
 						if (pd == null) {
 							playerPickPacket.result = PlayerPickPacket.RESULT_NO_PLAYER_WITH_NAME;
-							playerPickPacket.send(ArchipeloServer.getServer().getNetworkManager().getConnectionByAddress(address));
-							return;
-						}
-						
-						//If the selected player does not belong to this user, don't allow the user to use it.
-						if (!pd.bhUuid.equals(hbu.getUUID())) {
-							playerPickPacket.result = PlayerPickPacket.RESULT_PLAYER_BELONGS_TO_ANOTHER_HBU;
 							playerPickPacket.send(ArchipeloServer.getServer().getNetworkManager().getConnectionByAddress(address));
 							return;
 						}
