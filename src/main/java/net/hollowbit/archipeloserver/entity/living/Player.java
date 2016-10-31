@@ -16,6 +16,7 @@ import net.hollowbit.archipeloserver.entity.EntityInteraction;
 import net.hollowbit.archipeloserver.entity.EntitySnapshot;
 import net.hollowbit.archipeloserver.entity.EntityType;
 import net.hollowbit.archipeloserver.entity.LivingEntity;
+import net.hollowbit.archipeloserver.entity.living.player.NpcDialogManager;
 import net.hollowbit.archipeloserver.hollowbitserver.HollowBitUser;
 import net.hollowbit.archipeloserver.items.Item;
 import net.hollowbit.archipeloserver.items.ItemType;
@@ -76,13 +77,15 @@ public class Player extends LivingEntity implements PacketHandler {
 	Item[] inventory;
 	Date lastPlayed, creationDate;
 	HollowBitUser hbUser;
+	NpcDialogManager npcDialogManager;
 	
 	public Player (String name, String address, boolean firstTimeLogin) {
-		create(name, 0, location, address, firstTimeLogin);
+		this.create(name, 0, location, address, firstTimeLogin);
 	}
 	
 	public void create (String name, int style, Location location, String address, boolean firstTimeLogin) {
 		super.create(name, style, location, EntityType.PLAYER);
+		this.npcDialogManager = new NpcDialogManager(this);
 		this.address = address;
 		this.firstTimeLogin = firstTimeLogin;
 		controls = new boolean[Controls.TOTAL];

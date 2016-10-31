@@ -104,7 +104,7 @@ public class NetworkManager extends WebSocketServer {
 	}
 	
 	public String getAddress (WebSocket conn) {
-		return conn.getRemoteSocketAddress().toString();
+		return conn.getRemoteSocketAddress().getAddress().toString() + ";" + conn.getLocalSocketAddress().getAddress().toString() + ";" + conn.getRemoteSocketAddress().getPort();
 	}
 	
 	public synchronized String addUser (WebSocket conn) {

@@ -298,6 +298,8 @@ public class World implements PacketHandler {
 					playerPickPacket.result = PlayerPickPacket.RESULT_SUCCESSFUL;
 					player.sendPacket(playerPickPacket);
 					
+					
+					
 					//Send messages for login
 					ArchipeloServer.getServer().getLogger().info("<Join> " + player.getName());
 					player.sendPacket(new ChatMessagePacket(ArchipeloServer.getServer().getConfig().motd, "server"));
@@ -308,6 +310,12 @@ public class World implements PacketHandler {
 			return true;
 		case PacketType.PLAYER_DELETE:
 			PlayerDeletePacket playerDeletePacket = (PlayerDeletePacket) packet;
+			
+			//Check if user name is valid
+			if (!StringValidator.isStringValid(playerDeletePacket.name, StringValidator.USERNAME, StringValidator.MAX_USERNAME_LENGTH)) {
+				return true;//Don't bother trying to delete if name is invalid
+			}
+			
 			HollowBitUser hbu = ArchipeloServer.getServer().getNetworkManager().getUser(address);
 			ArchipeloServer.getServer().getDatabaseManager().deletePlayer(playerDeletePacket.name, hbu.getUUID());
 			return true;
