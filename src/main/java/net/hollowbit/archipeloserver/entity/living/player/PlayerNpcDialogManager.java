@@ -10,11 +10,11 @@ import net.hollowbit.archipeloserver.network.PacketType;
 import net.hollowbit.archipeloserver.network.packets.NpcDialogPacket;
 import net.hollowbit.archipeloserver.network.packets.NpcDialogRequestPacket;
 
-public class NpcDialogManager implements PacketHandler {
+public class PlayerNpcDialogManager implements PacketHandler {
 	
 	private Player player;
 	
-	public NpcDialogManager (Player player) {
+	public PlayerNpcDialogManager (Player player) {
 		this.player = player;
 		ArchipeloServer.getServer().getNetworkManager().addPacketHandler(this);
 	}

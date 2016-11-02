@@ -17,7 +17,7 @@ import net.hollowbit.archipeloserver.entity.EntitySnapshot;
 import net.hollowbit.archipeloserver.entity.EntityType;
 import net.hollowbit.archipeloserver.entity.LivingEntity;
 import net.hollowbit.archipeloserver.entity.living.player.ConditionsManager;
-import net.hollowbit.archipeloserver.entity.living.player.NpcDialogManager;
+import net.hollowbit.archipeloserver.entity.living.player.PlayerNpcDialogManager;
 import net.hollowbit.archipeloserver.entity.living.player.PlayerData;
 import net.hollowbit.archipeloserver.hollowbitserver.HollowBitUser;
 import net.hollowbit.archipeloserver.items.Item;
@@ -78,7 +78,7 @@ public class Player extends LivingEntity implements PacketHandler {
 	Item[] inventory;
 	Date lastPlayed, creationDate;
 	HollowBitUser hbUser;
-	NpcDialogManager npcDialogManager;
+	PlayerNpcDialogManager npcDialogManager;
 	ConditionsManager conditionsManager;
 	
 	public Player (String name, String address, boolean firstTimeLogin) {
@@ -87,7 +87,7 @@ public class Player extends LivingEntity implements PacketHandler {
 	
 	public void create (String name, int style, Location location, String address, boolean firstTimeLogin) {
 		super.create(name, style, location, EntityType.PLAYER);
-		this.npcDialogManager = new NpcDialogManager(this);
+		this.npcDialogManager = new PlayerNpcDialogManager(this);
 		this.address = address;
 		this.firstTimeLogin = firstTimeLogin;
 		controls = new boolean[Controls.TOTAL];
@@ -480,7 +480,7 @@ public class Player extends LivingEntity implements PacketHandler {
 		return hbUser;
 	}
 	
-	public NpcDialogManager getNpcDialogManager () {
+	public PlayerNpcDialogManager getNpcDialogManager () {
 		return npcDialogManager;
 	}
 	
