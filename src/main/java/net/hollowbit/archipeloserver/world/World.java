@@ -9,6 +9,7 @@ import com.badlogic.gdx.graphics.Color;
 
 import net.hollowbit.archipeloserver.ArchipeloServer;
 import net.hollowbit.archipeloserver.entity.living.Player;
+import net.hollowbit.archipeloserver.entity.living.player.PlayerData;
 import net.hollowbit.archipeloserver.hollowbitserver.HollowBitUser;
 import net.hollowbit.archipeloserver.items.Item;
 import net.hollowbit.archipeloserver.items.ItemType;
@@ -22,7 +23,6 @@ import net.hollowbit.archipeloserver.network.packets.PlayerDeletePacket;
 import net.hollowbit.archipeloserver.network.packets.PlayerListPacket;
 import net.hollowbit.archipeloserver.network.packets.PlayerPickPacket;
 import net.hollowbit.archipeloserver.tools.Configuration;
-import net.hollowbit.archipeloserver.tools.PlayerData;
 import net.hollowbit.archipeloshared.StringValidator;
 
 public class World implements PacketHandler {

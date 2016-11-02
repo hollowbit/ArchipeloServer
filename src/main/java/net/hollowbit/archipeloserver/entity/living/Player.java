@@ -16,7 +16,9 @@ import net.hollowbit.archipeloserver.entity.EntityInteraction;
 import net.hollowbit.archipeloserver.entity.EntitySnapshot;
 import net.hollowbit.archipeloserver.entity.EntityType;
 import net.hollowbit.archipeloserver.entity.LivingEntity;
+import net.hollowbit.archipeloserver.entity.living.player.ConditionsManager;
 import net.hollowbit.archipeloserver.entity.living.player.NpcDialogManager;
+import net.hollowbit.archipeloserver.entity.living.player.PlayerData;
 import net.hollowbit.archipeloserver.hollowbitserver.HollowBitUser;
 import net.hollowbit.archipeloserver.items.Item;
 import net.hollowbit.archipeloserver.items.ItemType;
@@ -31,7 +33,6 @@ import net.hollowbit.archipeloserver.tools.Configuration;
 import net.hollowbit.archipeloserver.tools.DatabaseManager;
 import net.hollowbit.archipeloserver.tools.HitCalculator;
 import net.hollowbit.archipeloserver.tools.Location;
-import net.hollowbit.archipeloserver.tools.PlayerData;
 import net.hollowbit.archipeloserver.world.Map;
 import net.hollowbit.archipeloshared.CollisionRect;
 import net.hollowbit.archipeloshared.Controls;
@@ -78,6 +79,7 @@ public class Player extends LivingEntity implements PacketHandler {
 	Date lastPlayed, creationDate;
 	HollowBitUser hbUser;
 	NpcDialogManager npcDialogManager;
+	ConditionsManager conditionsManager;
 	
 	public Player (String name, String address, boolean firstTimeLogin) {
 		this.create(name, 0, location, address, firstTimeLogin);
@@ -100,6 +102,7 @@ public class Player extends LivingEntity implements PacketHandler {
 		this.lastPlayed = playerData.lastPlayed;
 		this.creationDate = playerData.creationDate;
 		this.hbUser = hbUser;
+		this.conditionsManager = new ConditionsManager(playerData.conditions);
 	}
 	
 	@Override
@@ -477,6 +480,14 @@ public class Player extends LivingEntity implements PacketHandler {
 		return hbUser;
 	}
 	
+	public NpcDialogManager getNpcDialogManager () {
+		return npcDialogManager;
+	}
+	
+	public ConditionsManager getConditionsManager () {
+		return conditionsManager;
+	}
+	
 	private boolean doesCurrentPositionCollideWithMap () {
 		for (CollisionRect rect : getCollisionRects(location.pos)) {//Checks to make sure no collision rect is intersecting with map
 			if (location.getMap().collidesWithMap(rect)) {
@@ -498,6 +509,7 @@ public class Player extends LivingEntity implements PacketHandler {
 		playerData.map = config.spawnMap;
 		playerData.lastPlayed = DatabaseManager.getCurrentDate();
 		playerData.creationDate = DatabaseManager.getCurrentDate();
+		playerData.conditions = "{conditions:[]}";
 		
 		//Default inventory
 		playerData.inventory = new Item[INVENTORY_SIZE];

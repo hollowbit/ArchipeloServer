@@ -1,4 +1,4 @@
-package net.hollowbit.archipeloserver.tools;
+package net.hollowbit.archipeloserver.entity.living.player;
 
 import java.sql.Date;
 
@@ -14,5 +14,6 @@ public class PlayerData {
 	public Item[] equippedInventory;
 	public Item[] inventory;
 	public Date lastPlayed, creationDate;
+	public String conditions;
 	
 }

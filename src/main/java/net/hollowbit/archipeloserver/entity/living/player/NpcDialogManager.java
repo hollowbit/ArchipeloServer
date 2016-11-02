@@ -25,7 +25,7 @@ public class NpcDialogManager implements PacketHandler {
 			if (packet.packetType == PacketType.NPC_DIALOG_REQUEST) {
 				NpcDialogRequestPacket npcDialogRequestPacket = (NpcDialogRequestPacket) packet;
 				handleMessage(npcDialogRequestPacket.messageId);
-				player.sendPacket(new NpcDialogPacket(npcDialogRequestPacket.messageId));
+				//player.sendPacket(new NpcDialogPacket(npcDialogRequestPacket.messageId));
 				return true;
 			}
 		}

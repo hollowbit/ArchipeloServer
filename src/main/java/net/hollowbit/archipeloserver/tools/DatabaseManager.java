@@ -13,6 +13,7 @@ import com.badlogic.gdx.utils.Json;
 
 import net.hollowbit.archipeloserver.ArchipeloServer;
 import net.hollowbit.archipeloserver.entity.living.Player;
+import net.hollowbit.archipeloserver.entity.living.player.PlayerData;
 import net.hollowbit.archipeloserver.items.Item;
 
 public class DatabaseManager {
@@ -118,7 +119,7 @@ public class DatabaseManager {
 			public void run() {
 				//Insert row to database for player
 				try {
-					PreparedStatement statement = connection.prepareStatement("insert into players (`uuid`, `hbUuid`, `name`, `x`, `y`, `island`, `map`, `equippedInventory`, `inventory`, `lastPlayed`, `creationDate`) values (?,?,?,?,?,?,?,?,?,?,?)");
+					PreparedStatement statement = connection.prepareStatement("insert into players (`uuid`, `hbUuid`, `name`, `x`, `y`, `island`, `map`, `equippedInventory`, `inventory`, `lastPlayed`, `creationDate`, `conditions`) values (?,?,?,?,?,?,?,?,?,?,?,?)");
 					statement.setString(1, player.getUUID());
 					statement.setString(2, player.getHollowBitUser().getUUID());
 					statement.setString(3, player.getName());
@@ -134,6 +135,7 @@ public class DatabaseManager {
 
 					statement.setDate(10, player.getLastPlayedDate());
 					statement.setDate(11, player.getCreationDate());
+					statement.setString(12, player.getConditionsManager().getConditionsJson());
 					
 					statement.executeUpdate();
 				} catch (SQLException e) {
@@ -170,7 +172,7 @@ public class DatabaseManager {
 			public void run() {
 				//Update player row in database
 				try {
-					PreparedStatement statement = connection.prepareStatement("update players set `name`=?, `x`=?, `y`=?, `island`=?, `map`=?, `equippedInventory`=?, `inventory`=?, `lastPlayed`=? where uuid = ?");
+					PreparedStatement statement = connection.prepareStatement("update players set `name`=?, `x`=?, `y`=?, `island`=?, `map`=?, `equippedInventory`=?, `inventory`=?, `lastPlayed`=?, `conditions`=? where uuid = ?");
 					statement.setString(1, player.getName());
 					statement.setFloat(2, player.getLocation().getX());
 					statement.setFloat(3, player.getLocation().getY());
@@ -183,8 +185,9 @@ public class DatabaseManager {
 					statement.setString(7, json.toJson(player.getInventory()));
 					
 					statement.setDate(8, getCurrentDate());
+					statement.setString(9, player.getConditionsManager().getConditionsJson());
 					
-					statement.setString(9, player.getUUID());//Update where uuid is the same
+					statement.setString(10, player.getUUID());//Update where uuid is the same
 					
 					statement.executeUpdate();
 				} catch (SQLException e) {
