@@ -4,6 +4,7 @@ import java.util.HashMap;
 
 import com.badlogic.gdx.utils.Json;
 
+import net.hollowbit.archipeloserver.ArchipeloServer;
 import net.hollowbit.archipeloserver.entity.Entity;
 import net.hollowbit.archipeloserver.entity.living.Player;
 
@@ -43,7 +44,21 @@ public class Executor {
 	public boolean execute (String executionCommandJson, Entity sender, Entity target) {
 		ExecutionCommand command = parseCommandString(executionCommandJson);
 		if (executables.containsKey(command.id))
-			return executables.get(command.id).execute(sender, target, command.arguments);
+			return executables.get(command.id).execute(sender, target, command.args);
+		else
+			return false;
+	}
+	
+	/**
+	 * Execute a command with an already parse execution command
+	 * @param executionCommand
+	 * @param sender
+	 * @param target
+	 * @return
+	 */
+	public boolean execute (ExecutionCommand executionCommand, Entity sender, Entity target) {
+		if (executables.containsKey(executionCommand.id))
+			return executables.get(executionCommand.id).execute(sender, target, executionCommand.args);
 		else
 			return false;
 	}
@@ -66,8 +81,12 @@ public class Executor {
 	public class ExecutionCommand  {
 		
 		public String id;
-		public HashMap<String, String> arguments;
+		public HashMap<String, String> args;
 		
+		
+		public void execute (Entity sender, Entity target) {
+			ArchipeloServer.getServer().getExecutor().execute(this, sender, target);
+		}
 	}
 	
 	/**
@@ -81,8 +100,8 @@ public class Executor {
 				if (target != null && target instanceof Player) {
 					Player player = (Player) target;
 					
-					if (arguments.containsKey("condition")) {
-						player.getConditionsManager().setCondition(arguments.get("condition"));//Set condition to player if available
+					if (arguments.containsKey("cond")) {
+						player.getConditionsManager().setCondition(arguments.get("cond"));//Set condition to player if available
 						return true;
 					}else
 						return false;

@@ -8,6 +8,7 @@ import java.util.Scanner;
 import com.badlogic.gdx.utils.Json;
 
 import net.hollowbit.archipeloserver.ArchipeloServer;
+import net.hollowbit.archipeloserver.tools.Executor.ExecutionCommand;
 
 public class NpcDialogManager {
 	
@@ -106,9 +107,9 @@ public class NpcDialogManager {
 	
 	public class NpcDialog {
 		public String id;
-		public String condition = "";
-		public String changeId = "";
-		public ArrayList<String> executionCommands = new ArrayList<String>();
+		public String cond = "";
+		public String change = "";
+		public ArrayList<ExecutionCommand> execCommands = new ArrayList<ExecutionCommand>();
 		public ArrayList<String> choices = new ArrayList<String>();
 	}
 	

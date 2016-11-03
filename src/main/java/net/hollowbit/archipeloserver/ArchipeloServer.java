@@ -8,6 +8,7 @@ import net.hollowbit.archipeloserver.tools.Configuration;
 import net.hollowbit.archipeloserver.tools.DatabaseManager;
 import net.hollowbit.archipeloserver.tools.Executor;
 import net.hollowbit.archipeloserver.tools.Logger;
+import net.hollowbit.archipeloserver.tools.NpcDialogManager;
 import net.hollowbit.archipeloserver.tools.PasswordHasher;
 import net.hollowbit.archipeloserver.world.MapElementManager;
 import net.hollowbit.archipeloserver.world.World;
@@ -35,6 +36,7 @@ public class ArchipeloServer {
 	private PasswordHasher passwordHasher;
 	private HollowBitServerConnectivity hollowBitServerConnectivity;
 	private Executor executor;
+	private NpcDialogManager npcDialogManager;
 	private Logger logger;
 	private World world;
 	private Thread tick30;
@@ -55,6 +57,7 @@ public class ArchipeloServer {
 		} catch (URISyntaxException e1) {}
 		
 		executor = new Executor();
+		npcDialogManager = new NpcDialogManager();
 		
 		world = new World();
 		mapElementManager = new MapElementManager();
@@ -140,6 +143,10 @@ public class ArchipeloServer {
 	
 	public Executor getExecutor () {
 		return executor;
+	}
+	
+	public NpcDialogManager getNpcDialogManager () {
+		return npcDialogManager;
 	}
 	
 	public void stop () {

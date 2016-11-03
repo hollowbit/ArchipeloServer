@@ -2,13 +2,13 @@ package net.hollowbit.archipeloserver.network.packets;
 
 import java.util.ArrayList;
 
+import net.hollowbit.archipeloserver.ArchipeloServer;
 import net.hollowbit.archipeloserver.network.Packet;
 import net.hollowbit.archipeloserver.network.PacketType;
 
 public class NpcDialogPacket extends Packet {
 
 	public String messageId;
-	public ArrayList<String> choices;
 	public ArrayList<String> links;
 	
 	public String name;
@@ -20,11 +20,10 @@ public class NpcDialogPacket extends Packet {
 		super(PacketType.NPC_DIALOG);
 	}
 	
-	public NpcDialogPacket (String messageId, ArrayList<String> choices, ArrayList<String> links) {
+	public NpcDialogPacket (String messageId) {
 		this();
 		this.messageId = messageId;
-		this.choices = choices;
-		this.links = links;
+		this.links = ArchipeloServer.getServer().getNpcDialogManager().getNpcDialogById(messageId).choices;
 		this.usesId = true;
 	}
 	
