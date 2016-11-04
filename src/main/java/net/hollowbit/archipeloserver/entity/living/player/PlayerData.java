@@ -14,6 +14,6 @@ public class PlayerData {
 	public Item[] equippedInventory;
 	public Item[] inventory;
 	public Date lastPlayed, creationDate;
-	public String conditions;
+	public String flags;
 	
 }

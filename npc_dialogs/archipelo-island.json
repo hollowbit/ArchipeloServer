@@ -1,7 +1,7 @@
 {dialogs:[
 
 {id:"sign1Start", condition:"archipelo-island-sign1Talked", changeId:"sign1StopIt", choices:["sign1End"]},
-{id:"sign1End", exec:[{id:addCondition, args:{cond:"archipelo-island-sign1Talked"}}]},
+{id:"sign1End", exec:[{id:"addFlag", args:{flag:"archipelo-island-sign1Talked"}}]},
 {id:"sign1StopIt"},
 
 ]}

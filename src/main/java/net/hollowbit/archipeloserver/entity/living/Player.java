@@ -16,7 +16,7 @@ import net.hollowbit.archipeloserver.entity.EntityInteraction;
 import net.hollowbit.archipeloserver.entity.EntitySnapshot;
 import net.hollowbit.archipeloserver.entity.EntityType;
 import net.hollowbit.archipeloserver.entity.LivingEntity;
-import net.hollowbit.archipeloserver.entity.living.player.ConditionsManager;
+import net.hollowbit.archipeloserver.entity.living.player.PlayerFlagsManager;
 import net.hollowbit.archipeloserver.entity.living.player.PlayerNpcDialogManager;
 import net.hollowbit.archipeloserver.entity.living.player.PlayerData;
 import net.hollowbit.archipeloserver.hollowbitserver.HollowBitUser;
@@ -79,7 +79,7 @@ public class Player extends LivingEntity implements PacketHandler {
 	Date lastPlayed, creationDate;
 	HollowBitUser hbUser;
 	PlayerNpcDialogManager npcDialogManager;
-	ConditionsManager conditionsManager;
+	PlayerFlagsManager flagsManager;
 	
 	public Player (String name, String address, boolean firstTimeLogin) {
 		this.create(name, 0, location, address, firstTimeLogin);
@@ -102,7 +102,7 @@ public class Player extends LivingEntity implements PacketHandler {
 		this.lastPlayed = playerData.lastPlayed;
 		this.creationDate = playerData.creationDate;
 		this.hbUser = hbUser;
-		this.conditionsManager = new ConditionsManager(playerData.conditions);
+		this.flagsManager = new PlayerFlagsManager(playerData.flags);
 	}
 	
 	@Override
@@ -484,8 +484,8 @@ public class Player extends LivingEntity implements PacketHandler {
 		return npcDialogManager;
 	}
 	
-	public ConditionsManager getConditionsManager () {
-		return conditionsManager;
+	public PlayerFlagsManager getFlagsManager () {
+		return flagsManager;
 	}
 	
 	private boolean doesCurrentPositionCollideWithMap () {
@@ -509,7 +509,7 @@ public class Player extends LivingEntity implements PacketHandler {
 		playerData.map = config.spawnMap;
 		playerData.lastPlayed = DatabaseManager.getCurrentDate();
 		playerData.creationDate = DatabaseManager.getCurrentDate();
-		playerData.conditions = "{conditions:[]}";
+		playerData.flags = "{flags:[]}";
 		
 		//Default inventory
 		playerData.inventory = new Item[INVENTORY_SIZE];

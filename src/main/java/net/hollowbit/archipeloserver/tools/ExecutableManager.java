@@ -8,12 +8,12 @@ import net.hollowbit.archipeloserver.ArchipeloServer;
 import net.hollowbit.archipeloserver.entity.Entity;
 import net.hollowbit.archipeloserver.entity.living.Player;
 
-public class Executor {
+public class ExecutableManager {
 	
 	private HashMap<String, Executable> executables;
 	private Json json;
 	
-	public Executor () {
+	public ExecutableManager () {
 		executables = new HashMap<String, Executable>();
 		json = new Json();
 		load();
@@ -21,15 +21,15 @@ public class Executor {
 	
 	/**
 	 * Execute a command with a specified id. Returns whether successful or not.
-	 * @param id
+	 * @param id Case insensitive
 	 * @param sender
 	 * @param target
 	 * @param arguments
 	 * @return
 	 */
 	public boolean execute (String id, Entity sender, Entity target, HashMap<String, String> arguments) {
-		if (executables.containsKey(id))
-			return executables.get(id).execute(sender, target, arguments);
+		if (executables.containsKey(id.toUpperCase()))
+			return executables.get(id.toUpperCase()).execute(sender, target, arguments);
 		else
 			return false;
 	}
@@ -43,10 +43,7 @@ public class Executor {
 	 */
 	public boolean execute (String executionCommandJson, Entity sender, Entity target) {
 		ExecutionCommand command = parseCommandString(executionCommandJson);
-		if (executables.containsKey(command.id))
-			return executables.get(command.id).execute(sender, target, command.args);
-		else
-			return false;
+		return this.execute(command, sender, target);
 	}
 	
 	/**
@@ -57,8 +54,8 @@ public class Executor {
 	 * @return
 	 */
 	public boolean execute (ExecutionCommand executionCommand, Entity sender, Entity target) {
-		if (executables.containsKey(executionCommand.id))
-			return executables.get(executionCommand.id).execute(sender, target, executionCommand.args);
+		if (executables.containsKey(executionCommand.id.toUpperCase()))
+			return executables.get(executionCommand.id.toUpperCase()).execute(sender, target, executionCommand.args);
 		else
 			return false;
 	}
@@ -93,15 +90,15 @@ public class Executor {
 	 * Loads all executables
 	 */
 	private void load() {
-		executables.put("addCondition", new Executable() {
+		executables.put("ADDFLAG", new Executable() {
 			
 			@Override
 			public boolean execute(Entity sender, Entity target, HashMap<String, String> arguments) {
 				if (target != null && target instanceof Player) {
 					Player player = (Player) target;
 					
-					if (arguments.containsKey("cond")) {
-						player.getConditionsManager().setCondition(arguments.get("cond"));//Set condition to player if available
+					if (arguments.containsKey("flag")) {
+						player.getFlagsManager().addFlag(arguments.get("flag"));//Set condition to player if available
 						return true;
 					}else
 						return false;

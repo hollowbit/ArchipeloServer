@@ -8,7 +8,7 @@ import java.util.Scanner;
 import com.badlogic.gdx.utils.Json;
 
 import net.hollowbit.archipeloserver.ArchipeloServer;
-import net.hollowbit.archipeloserver.tools.Executor.ExecutionCommand;
+import net.hollowbit.archipeloserver.tools.ExecutableManager.ExecutionCommand;
 
 public class NpcDialogManager {
 	

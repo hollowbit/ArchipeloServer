@@ -10,7 +10,7 @@ import net.hollowbit.archipeloserver.network.PacketHandler;
 import net.hollowbit.archipeloserver.network.PacketType;
 import net.hollowbit.archipeloserver.network.packets.NpcDialogPacket;
 import net.hollowbit.archipeloserver.network.packets.NpcDialogRequestPacket;
-import net.hollowbit.archipeloserver.tools.Executor.ExecutionCommand;
+import net.hollowbit.archipeloserver.tools.ExecutableManager.ExecutionCommand;
 import net.hollowbit.archipeloserver.tools.NpcDialogManager.NpcDialog;
 
 public class PlayerNpcDialogManager implements PacketHandler {
@@ -36,7 +36,7 @@ public class PlayerNpcDialogManager implements PacketHandler {
 				NpcDialog dialog = ArchipeloServer.getServer().getNpcDialogManager().getNpcDialogById(npcDialogRequestPacket.messageId);
 				
 				//While conditions are met on all dialogs, get the next one and test
-				while (player.getConditionsManager().isConditionMet(dialog.cond))
+				while (player.getFlagsManager().hasFlag(dialog.cond))
 					dialog = ArchipeloServer.getServer().getNpcDialogManager().getNpcDialogById(dialog.change);
 				
 				handleMessage(lastSender, dialog);
