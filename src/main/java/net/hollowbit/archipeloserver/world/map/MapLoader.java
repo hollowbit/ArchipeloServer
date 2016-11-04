@@ -65,7 +65,7 @@ public class MapLoader {
 			return;
 		}
 		Json json = new Json();
-		formatter.format("%s", json.toJson(new MapData(map)).replaceAll("],", "],\n"));
+		formatter.format("%s", json.toJson(new MapData(map)).replaceAll("],", "],\n").replaceAll("},",  "},\n"));
 		formatter.flush();
 		formatter.close();
 	}

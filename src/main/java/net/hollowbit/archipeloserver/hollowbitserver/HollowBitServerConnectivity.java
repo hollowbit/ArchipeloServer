@@ -22,6 +22,8 @@ import net.hollowbit.archipeloserver.tools.Configuration;
 public class HollowBitServerConnectivity extends WebSocketClient {
 	
 	public static final int GAME_ID = 0;
+	
+	private static final int TIMEOUT_LENGTH = 2000;//Time in milliseconds to wait to connect to HollowBitServer
 
 	private static final int VERIFY_PACKET_ID = 2;
 	private static final int GET_USER_DATA_PACKET_ID = 4;
@@ -40,8 +42,10 @@ public class HollowBitServerConnectivity extends WebSocketClient {
 	public static final int INVALID_PASSWORD_RESPONSE_PACKET_ID = 12;
 	public static final int GET_USER_POINTS_RESPONSE_PACKET = 14;
 	
-	private boolean connected = false;
+	private volatile boolean connected = false;
 	private HashMap<String, HollowBitServerQueryResponseHandler> handlerMap;
+	
+	private long startTime = 0;
 	
 	public HollowBitServerConnectivity () throws URISyntaxException {
 		super(new URI("wss://" + ArchipeloServer.getServer().getConfig().hbServerAddress));
@@ -70,6 +74,19 @@ public class HollowBitServerConnectivity extends WebSocketClient {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+	}
+	
+	/**
+	 * Method that tried to connect to hollowbit server and waits until it does or gets timed out
+	 */
+	public boolean connectToServer () {
+		super.connect();
+		startTime = System.currentTimeMillis();
+		while (!connected) {
+			if (System.currentTimeMillis() - startTime > TIMEOUT_LENGTH)
+				return false;
+		}
+		return true;
 	}
 	
 	/**

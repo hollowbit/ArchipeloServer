@@ -17,6 +17,8 @@ public class PlayerFlagsManager {
 	public PlayerFlagsManager (String flagsJson) {
 		json = new Json();
 		
+		flags = new HashSet<String>();
+		
 		ArrayList<String> flagsArray = json.fromJson(FlagsData.class, flagsJson).flags;
 		
 		for (String flag : flagsArray)
@@ -52,12 +54,6 @@ public class PlayerFlagsManager {
 	 */
 	public void addFlag (String flag) {
 		this.flags.add(flag);
-	}
-
-	public class FlagsData {
-		
-		public ArrayList<String> flags;
-		
 	}
 	
 }

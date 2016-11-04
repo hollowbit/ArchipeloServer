@@ -13,12 +13,10 @@ import net.hollowbit.archipeloserver.entity.living.player.PlayerData;
 import net.hollowbit.archipeloserver.hollowbitserver.HollowBitUser;
 import net.hollowbit.archipeloserver.items.Item;
 import net.hollowbit.archipeloserver.items.ItemType;
-import net.hollowbit.archipeloserver.network.LogoutReason;
 import net.hollowbit.archipeloserver.network.Packet;
 import net.hollowbit.archipeloserver.network.PacketHandler;
 import net.hollowbit.archipeloserver.network.PacketType;
 import net.hollowbit.archipeloserver.network.packets.ChatMessagePacket;
-import net.hollowbit.archipeloserver.network.packets.LogoutPacket;
 import net.hollowbit.archipeloserver.network.packets.PlayerDeletePacket;
 import net.hollowbit.archipeloserver.network.packets.PlayerListPacket;
 import net.hollowbit.archipeloserver.network.packets.PlayerPickPacket;
@@ -151,9 +149,12 @@ public class World implements PacketHandler {
 	}
 	
 	public Player getPlayer (String name) {
-		for (Player player : getOnlinePlayers()) {
-			if (player.getName().equalsIgnoreCase(name))
-				return player;
+		for (Island island : loadedIslands) {
+			for (Map map : island.getMaps()) {
+				Player player = map.getEntityManager().getPlayer(name);
+				if (player != null)
+					return player;
+			}
 		}
 		return null;
 	}
@@ -355,22 +356,6 @@ public class World implements PacketHandler {
 			return true;
 		}
 		return false;
-	}
-	
-	public void logoutPlayer (Player player, LogoutReason reason, String alt) {
-		player.getLocation().getMap().removeEntity(player);
-		player.sendPacket(new LogoutPacket(reason.reason, alt));
-		
-		//Don't remove connection on logoff, since player may join back
-		//ArchipeloServer.getServer().getNetworkManager().removeConnection(player.getAddress());
-		
-		//Build leave message
-		StringBuilder leaveMessage = new StringBuilder();
-		leaveMessage.append("<Leave> " + player.getName());
-		leaveMessage.append(" " + reason.message);
-		leaveMessage.append(" " + alt);
-		
-		ArchipeloServer.getServer().getLogger().info(leaveMessage.toString());
 	}
 	
 }

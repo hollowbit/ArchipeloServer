@@ -6,6 +6,7 @@ import com.badlogic.gdx.utils.Json;
 
 import net.hollowbit.archipeloserver.ArchipeloServer;
 import net.hollowbit.archipeloserver.entity.living.Player;
+import net.hollowbit.archipeloserver.tools.conditions.ConditionCommand;
 
 public class ConditionManager {
 	
@@ -54,13 +55,6 @@ public class ConditionManager {
 		 * @return
 		 */
 		public boolean isMet (Player player, HashMap<String, String> args);
-		
-	}
-	
-	public class ConditionCommand {
-		
-		public String id;
-		public HashMap<String, String> args;
 		
 	}
 	

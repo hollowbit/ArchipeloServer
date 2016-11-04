@@ -28,6 +28,7 @@ import net.hollowbit.archipeloserver.network.PacketHandler;
 import net.hollowbit.archipeloserver.network.PacketType;
 import net.hollowbit.archipeloserver.network.packets.ChatMessagePacket;
 import net.hollowbit.archipeloserver.network.packets.ControlsPacket;
+import net.hollowbit.archipeloserver.network.packets.LogoutPacket;
 import net.hollowbit.archipeloserver.network.packets.PopupTextPacket;
 import net.hollowbit.archipeloserver.tools.Configuration;
 import net.hollowbit.archipeloserver.tools.DatabaseManager;
@@ -300,24 +301,43 @@ public class Player extends LivingEntity implements PacketHandler {
 		return address;
 	}
 	
-	@Override
-	public void unload() {
+	/**
+	 * Updates player to database to be ready to be removed
+	 */
+	private void unload() {
 		ArchipeloServer.getServer().getNetworkManager().removePacketHandler(this);
 		ArchipeloServer.getServer().getDatabaseManager().updatePlayer(this);
-		super.unload();
 	}
 	
+	/**
+	 * Proper way to simply remove a player from the game
+	 */
 	@Override
 	public void remove () {
 		remove(LogoutReason.NONE, "");
 	}
 	
+	/**
+	 * Proper way to remove a player from the game with a reason
+	 * @param reason
+	 * @param alt
+	 */
 	public void remove (LogoutReason reason, String alt) {
+		super.remove();
 		unload();
-		getLocation().getWorld().logoutPlayer(this, reason, alt);
+		sendPacket(new LogoutPacket(reason.reason, alt));
+		
+		//Build leave message
+		StringBuilder leaveMessage = new StringBuilder();
+		leaveMessage.append("<Leave> " + name);
+		leaveMessage.append(" " + reason.message);
+		leaveMessage.append(" " + alt);
+		
+		ArchipeloServer.getServer().getLogger().info(leaveMessage.toString());
 	}
 	
-	public void controlUp (int control) {
+	
+	private void controlUp (int control) {
 		switch (control) {
 		case Controls.ROLL:
 			changes.putBoolean("is-sprinting", false);
@@ -325,7 +345,7 @@ public class Player extends LivingEntity implements PacketHandler {
 		}
 	}
 	
-	public void controlDown (int control) {
+	private void controlDown (int control) {
 		switch (control) {
 		case Controls.ROLL:
 			if (rollDoubleClickTimer <= 0) {
@@ -444,7 +464,7 @@ public class Player extends LivingEntity implements PacketHandler {
 		} else if (label.equalsIgnoreCase("ping")) {
 			this.sendPacket(new ChatMessagePacket("Pong!", "server"));
 		} else if (label.equalsIgnoreCase("logoff") || label.equalsIgnoreCase("exit") || label.equalsIgnoreCase("logout")) {
-			location.getWorld().logoutPlayer(this, LogoutReason.NONE, "");
+			this.remove(LogoutReason.LEAVE, "");
 		}
 	}
 	

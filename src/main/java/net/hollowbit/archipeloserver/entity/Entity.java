@@ -68,10 +68,6 @@ public abstract class Entity {
 		location.getMap().removeEntity(this);
 	}
 	
-	public void unload () {
-		
-	}
-	
 	//InterpSnapshots are for thing like position that can be interpolated between and can be skipped.
 	public EntitySnapshot getInterpSnapshot () {
 		EntitySnapshot snapshot = new EntitySnapshot(this);
@@ -93,10 +89,7 @@ public abstract class Entity {
 	
 	//Get a snapshot of an entity to save them when map unloads
 	public EntitySnapshot getSaveSnapshot () {
-		EntitySnapshot snapshot = new EntitySnapshot(this);
-		snapshot.putFloat("x", this.getX());
-		snapshot.putFloat("y", this.getY());
-		return snapshot;
+		return getFullSnapshot();
 	}
 	
 	public Location getLocation () {

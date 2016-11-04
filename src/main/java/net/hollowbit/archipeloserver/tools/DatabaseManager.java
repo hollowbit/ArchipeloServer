@@ -7,7 +7,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Calendar;
 
 import com.badlogic.gdx.utils.Json;
 
@@ -246,7 +245,7 @@ public class DatabaseManager {
 	}
 	
 	public static final Date getCurrentDate () {
-		return new Date(Calendar.getInstance().getTime().getTime());
+		return new Date(System.currentTimeMillis());
 	}
 	
 }

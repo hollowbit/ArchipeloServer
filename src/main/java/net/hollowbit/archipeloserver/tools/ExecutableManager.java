@@ -4,9 +4,9 @@ import java.util.HashMap;
 
 import com.badlogic.gdx.utils.Json;
 
-import net.hollowbit.archipeloserver.ArchipeloServer;
 import net.hollowbit.archipeloserver.entity.Entity;
 import net.hollowbit.archipeloserver.entity.living.Player;
+import net.hollowbit.archipeloserver.tools.executables.ExecutionCommand;
 
 public class ExecutableManager {
 	
@@ -73,17 +73,6 @@ public class ExecutableManager {
 		
 		public abstract boolean execute (Entity sender, Entity target, HashMap<String, String> arguments);
 		
-	}
-	
-	public class ExecutionCommand  {
-		
-		public String id;
-		public HashMap<String, String> args;
-		
-		
-		public void execute (Entity sender, Entity target) {
-			ArchipeloServer.getServer().getExecutor().execute(this, sender, target);
-		}
 	}
 	
 	/**

@@ -8,7 +8,9 @@ import java.util.Scanner;
 import com.badlogic.gdx.utils.Json;
 
 import net.hollowbit.archipeloserver.ArchipeloServer;
-import net.hollowbit.archipeloserver.tools.ExecutableManager.ExecutionCommand;
+import net.hollowbit.archipeloserver.tools.npcdialogs.NpcDialog;
+import net.hollowbit.archipeloserver.tools.npcdialogs.NpcDialogs;
+import net.hollowbit.archipeloserver.tools.npcdialogs.NpcDialogsList;
 
 public class NpcDialogManager {
 	
@@ -46,6 +48,7 @@ public class NpcDialogManager {
 				scanner.close();
 				return npcDialogs;
 			} catch (Exception e) {
+				System.out.println("NpcDialogManager.java   test " + e.getMessage());
 				unableToLoad = true;
 			}
 			
@@ -103,22 +106,6 @@ public class NpcDialogManager {
 			return npcDialogs.get(id);
 		else
 			return new NpcDialog();
-	}
-	
-	public class NpcDialog {
-		public String id;
-		public String cond = "";
-		public String change = "";
-		public ArrayList<ExecutionCommand> execCommands = new ArrayList<ExecutionCommand>();
-		public ArrayList<String> choices = new ArrayList<String>();
-	}
-	
-	public class NpcDialogs {
-		public ArrayList<NpcDialog> dialogs;
-	}
-	
-	public class NpcDialogsList {
-		public ArrayList<String> npcDialogs;
 	}
 	
 }

@@ -74,7 +74,7 @@ public class Door extends LifelessEntity {
 	
 	@Override
 	public EntitySnapshot getSaveSnapshot() {
-		EntitySnapshot snapshot = super.getFullSnapshot();
+		EntitySnapshot snapshot = super.getSaveSnapshot();
 		snapshot.putBoolean("teleports", teleports);
 		snapshot.putFloat("teleportX", teleportX);
 		snapshot.putFloat("teleportY", teleportY);

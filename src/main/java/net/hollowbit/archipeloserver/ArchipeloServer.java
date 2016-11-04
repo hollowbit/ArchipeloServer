@@ -4,6 +4,7 @@ import java.net.URISyntaxException;
 
 import net.hollowbit.archipeloserver.hollowbitserver.HollowBitServerConnectivity;
 import net.hollowbit.archipeloserver.network.NetworkManager;
+import net.hollowbit.archipeloserver.tools.ConditionManager;
 import net.hollowbit.archipeloserver.tools.Configuration;
 import net.hollowbit.archipeloserver.tools.DatabaseManager;
 import net.hollowbit.archipeloserver.tools.ExecutableManager;
@@ -35,7 +36,8 @@ public class ArchipeloServer {
 	private Configuration config;
 	private PasswordHasher passwordHasher;
 	private HollowBitServerConnectivity hollowBitServerConnectivity;
-	private ExecutableManager executor;
+	private ConditionManager conditionManager;
+	private ExecutableManager executableManager;
 	private NpcDialogManager npcDialogManager;
 	private Logger logger;
 	private World world;
@@ -53,10 +55,14 @@ public class ArchipeloServer {
 		databaseManager = new DatabaseManager();
 		try {
 			hollowBitServerConnectivity = new HollowBitServerConnectivity();
-			hollowBitServerConnectivity.connect();
+			if (!hollowBitServerConnectivity.connectToServer()) {
+				logger.error("Could not connect to HollowBit server at the specified address at this time.");
+				this.stop();
+			}
 		} catch (URISyntaxException e1) {}
 		
-		executor = new ExecutableManager();
+		conditionManager = new ConditionManager();
+		executableManager = new ExecutableManager();
 		npcDialogManager = new NpcDialogManager();
 		
 		world = new World();
@@ -141,8 +147,12 @@ public class ArchipeloServer {
 		return hollowBitServerConnectivity;
 	}
 	
-	public ExecutableManager getExecutor () {
-		return executor;
+	public ConditionManager getConditionManager () {
+		return conditionManager;
+	}
+	
+	public ExecutableManager getExecutableManager () {
+		return executableManager;
 	}
 	
 	public NpcDialogManager getNpcDialogManager () {

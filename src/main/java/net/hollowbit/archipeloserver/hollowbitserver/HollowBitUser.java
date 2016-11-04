@@ -4,6 +4,7 @@ import org.java_websocket.WebSocket;
 
 import net.hollowbit.archipeloserver.ArchipeloServer;
 import net.hollowbit.archipeloserver.entity.living.Player;
+import net.hollowbit.archipeloserver.network.LogoutReason;
 import net.hollowbit.archipeloserver.network.packets.LoginPacket;
 
 public class HollowBitUser {
@@ -60,7 +61,7 @@ public class HollowBitUser {
 	
 	public void logout () {
 		if (this.getPlayer() != null)//Remove the player if there is one.
-			this.getPlayer().remove();
+			this.getPlayer().remove(LogoutReason.LEAVE, "");
 		this.loggedIn = false;
 	}
 	

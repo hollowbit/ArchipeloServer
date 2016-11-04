@@ -10,8 +10,8 @@ import net.hollowbit.archipeloserver.network.PacketHandler;
 import net.hollowbit.archipeloserver.network.PacketType;
 import net.hollowbit.archipeloserver.network.packets.NpcDialogPacket;
 import net.hollowbit.archipeloserver.network.packets.NpcDialogRequestPacket;
-import net.hollowbit.archipeloserver.tools.ExecutableManager.ExecutionCommand;
-import net.hollowbit.archipeloserver.tools.NpcDialogManager.NpcDialog;
+import net.hollowbit.archipeloserver.tools.executables.ExecutionCommand;
+import net.hollowbit.archipeloserver.tools.npcdialogs.NpcDialog;
 
 public class PlayerNpcDialogManager implements PacketHandler {
 	
@@ -21,6 +21,7 @@ public class PlayerNpcDialogManager implements PacketHandler {
 	
 	public PlayerNpcDialogManager (Player player) {
 		this.player = player;
+		allowedLinks = new ArrayList<String>();
 		ArchipeloServer.getServer().getNetworkManager().addPacketHandler(this);
 	}
 
@@ -32,19 +33,16 @@ public class PlayerNpcDialogManager implements PacketHandler {
 				
 				if (!allowedLinks.contains(npcDialogRequestPacket.messageId))//If link requested by player is not allowed, don't send response
 					return true;
-
-				NpcDialog dialog = ArchipeloServer.getServer().getNpcDialogManager().getNpcDialogById(npcDialogRequestPacket.messageId);
 				
-				//While conditions are met on all dialogs, get the next one and test
-				while (player.getFlagsManager().hasFlag(dialog.cond))
-					dialog = ArchipeloServer.getServer().getNpcDialogManager().getNpcDialogById(dialog.change);
-				
-				handleMessage(lastSender, dialog);
-				player.sendPacket(new NpcDialogPacket());
+				sendNpcDialog(lastSender, npcDialogRequestPacket.messageId);
 				return true;
 			}
 		}
 		return false;
+	}
+	
+	public void dispose () {
+		ArchipeloServer.getServer().getNetworkManager().removePacketHandler(this);
 	}
 	
 	/**
@@ -52,17 +50,27 @@ public class PlayerNpcDialogManager implements PacketHandler {
 	 * @param messageId
 	 */
 	public void sendNpcDialog (Entity sender, String messageId) {
-		handleMessage(sender, ArchipeloServer.getServer().getNpcDialogManager().getNpcDialogById(messageId));
-		player.sendPacket(new NpcDialogPacket(messageId));
+		NpcDialog dialog = ArchipeloServer.getServer().getNpcDialogManager().getNpcDialogById(messageId);
+		
+		//While conditions are met on all dialogs, get the next one and test
+		while (dialog != null && dialog.cond != null && dialog.cond.isConditionMet(player))
+			dialog = ArchipeloServer.getServer().getNpcDialogManager().getNpcDialogById(dialog.change);
+		
+		if (dialog == null)//Don't send if somehow we reached a null dialog
+			return;
+		System.out.println("PlayerNpcDialogManager.java   " + dialog.id + "  " + messageId);
+		handleMessage(sender, dialog);
+		player.sendPacket(new NpcDialogPacket(dialog));
 	}
 	
 	/**
 	 * Send plain message
 	 * @param name
 	 * @param messages
+	 * @param interruptable Can player move to exit dialog?
 	 */
-	public void sendNpcDialog (String name, ArrayList<String> messages) {
-		player.sendPacket(new NpcDialogPacket(name, messages));
+	public void sendNpcDialog (String name, ArrayList<String> messages, boolean interruptable) {
+		player.sendPacket(new NpcDialogPacket(name, messages, interruptable));
 	}
 	
 	/**
@@ -72,8 +80,12 @@ public class PlayerNpcDialogManager implements PacketHandler {
 	private void handleMessage (Entity sender, NpcDialog npcDialog) {
 		this.lastSender = sender;
 		
+		allowedLinks.clear();
+		if (npcDialog.choices != null)
+			allowedLinks.addAll(npcDialog.choices);//Add choices for current npc dialog to allowed choices by player
+		
 		//Execute commands from packet
-		for (ExecutionCommand command : npcDialog.execCommands)
+		for (ExecutionCommand command : npcDialog.exec)
 			command.execute(sender, player);
 	}
 	
