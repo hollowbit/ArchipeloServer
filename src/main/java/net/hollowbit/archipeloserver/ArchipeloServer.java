@@ -9,7 +9,6 @@ import net.hollowbit.archipeloserver.tools.Configuration;
 import net.hollowbit.archipeloserver.tools.DatabaseManager;
 import net.hollowbit.archipeloserver.tools.ExecutableManager;
 import net.hollowbit.archipeloserver.tools.Logger;
-import net.hollowbit.archipeloserver.tools.NpcDialogManager;
 import net.hollowbit.archipeloserver.tools.PasswordHasher;
 import net.hollowbit.archipeloserver.world.MapElementManager;
 import net.hollowbit.archipeloserver.world.World;
@@ -18,7 +17,7 @@ public class ArchipeloServer {
 
 	public static final float TICK30 = 1 / 30f;
 	public static final float TICK60 = 1 / 60f;
-	public static final float TILE_SIZE = 16;
+	public static final int TILE_SIZE = 16;
 	public static final String VERSION = "0.1a";
 	public static final int MAX_CHARACTERS_PER_PLAYER = 4;
 	
@@ -38,7 +37,6 @@ public class ArchipeloServer {
 	private HollowBitServerConnectivity hollowBitServerConnectivity;
 	private ConditionManager conditionManager;
 	private ExecutableManager executableManager;
-	private NpcDialogManager npcDialogManager;
 	private Logger logger;
 	private World world;
 	private Thread tick30;
@@ -63,7 +61,6 @@ public class ArchipeloServer {
 		
 		conditionManager = new ConditionManager();
 		executableManager = new ExecutableManager();
-		npcDialogManager = new NpcDialogManager();
 		
 		world = new World();
 		mapElementManager = new MapElementManager();
@@ -153,10 +150,6 @@ public class ArchipeloServer {
 	
 	public ExecutableManager getExecutableManager () {
 		return executableManager;
-	}
-	
-	public NpcDialogManager getNpcDialogManager () {
-		return npcDialogManager;
 	}
 	
 	public void stop () {

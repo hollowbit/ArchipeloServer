@@ -7,28 +7,44 @@ import java.util.Scanner;
 
 import com.badlogic.gdx.utils.Json;
 
-import net.hollowbit.archipeloserver.ArchipeloServer;
 import net.hollowbit.archipeloserver.tools.npcdialogs.NpcDialog;
 import net.hollowbit.archipeloserver.tools.npcdialogs.NpcDialogs;
-import net.hollowbit.archipeloserver.tools.npcdialogs.NpcDialogsList;
+import net.hollowbit.archipeloserver.world.Map;
 
 public class NpcDialogManager {
-	
 
 	private HashMap<String, NpcDialog> npcDialogs;
 	
-	public NpcDialogManager () {
+	public NpcDialogManager (Map map) {
 		npcDialogs = new HashMap<String, NpcDialog>();
 		
-		for (String dialogFileName : getNpcDialogsListFromFile().npcDialogs) {
-			ArrayList<NpcDialog> dialogs = getNpcDialogsFileByName(dialogFileName).dialogs;
+		NpcDialogs npcDialogsFile = getNpcDialogsFileByMap(map);
+		
+		if (npcDialogsFile == null)
+			return;
+		
+		ArrayList<NpcDialog> dialogs = npcDialogsFile.dialogs;
+		
+		if (dialogs != null) {
 			for (NpcDialog dialog : dialogs)
 				npcDialogs.put(dialog.id, dialog);
 		}
 	}
 	
-	private NpcDialogs getNpcDialogsFileByName (String name) {
-		File dialogFile = new File("npc_dialogs/" + name + ".json");
+	/**
+	 * Gets an NPC dialog by id
+	 * @param id
+	 * @return
+	 */
+	public NpcDialog getNpcDialogById (String id) {
+		if (npcDialogs.containsKey(id))
+			return npcDialogs.get(id);
+		else
+			return new NpcDialog();
+	}
+	
+	private static NpcDialogs getNpcDialogsFileByMap (Map map) {
+		File dialogFile = new File("islands/" + map.getIsland().getName() + "/" + map.getName() + "/npc_dialogs.json");
 		if (dialogFile.exists()) {
 			boolean unableToLoad = false;
 			try {
@@ -44,68 +60,19 @@ public class NpcDialogManager {
 					file += scanner.next();
 				}
 				npcDialogs = (NpcDialogs) json.fromJson(NpcDialogs.class, file.trim());
-					
+				
 				scanner.close();
 				return npcDialogs;
 			} catch (Exception e) {
-				System.out.println("NpcDialogManager.java   test " + e.getMessage());
 				unableToLoad = true;
 			}
 			
-			if (unableToLoad) {
-				System.out.println("Could not load NPC dialogs");
-				ArchipeloServer.getServer().stop();
-			}
+			if (unableToLoad)
+				System.out.println("Could not load NPC dialogs for " + map.getIsland().getName() + "-" + map.getName());
 			return null;
 		} else {
 			return null;
 		}
-	}
-	
-	private NpcDialogsList getNpcDialogsListFromFile () {
-		File dialogListFile = new File("npc_dialogs.json");
-		if (dialogListFile.exists()) {
-			boolean unableToLoad = false;
-			try {
-				Scanner scanner = new Scanner(dialogListFile);
-				NpcDialogsList npcDialogsList = null;
-				Json json = new Json();
-				String file = "";
-				
-				if (!scanner.hasNext())
-					unableToLoad = true;
-				
-				while (scanner.hasNext()) {
-					file += scanner.next();
-				}
-				npcDialogsList = (NpcDialogsList) json.fromJson(NpcDialogsList.class, file.trim());
-					
-				scanner.close();
-				return npcDialogsList;
-			} catch (Exception e) {
-				unableToLoad = true;
-			}
-			
-			if (unableToLoad) {
-				System.out.println("Could not load NPC dialogs");
-				ArchipeloServer.getServer().stop();
-			}
-			return null;
-		} else {
-			return null;
-		}
-	}
-	
-	/**
-	 * Gets an NPC dialog by id
-	 * @param id
-	 * @return
-	 */
-	public NpcDialog getNpcDialogById (String id) {
-		if (npcDialogs.containsKey(id))
-			return npcDialogs.get(id);
-		else
-			return new NpcDialog();
 	}
 	
 }

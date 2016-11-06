@@ -13,7 +13,7 @@ import net.hollowbit.archipeloserver.world.Map;
 public class MapLoader {
 	
 	public static MapData loadMap (Map map) {
-		File mapFile = new File("islands/" + map.getIsland().getName() + "/" + map.getName() + ".json");
+		File mapFile = new File("islands/" + map.getIsland().getName() + "/" + map.getName() + "/data.json");
 		if (mapFile.exists()) {
 			boolean unableToLoad = false;
 			try {
@@ -45,7 +45,7 @@ public class MapLoader {
 	}
 	
 	public static void saveMap (Map map) {
-		File mapFile = new File("islands/" + map.getIsland().getName() + "/" + map.getName() + ".json");
+		File mapFile = new File("islands/" + map.getIsland().getName() + "/" + map.getName() + "/data.json");
 		
 		if(!mapFile.exists()) {
 			mapFile.getParentFile().mkdirs();

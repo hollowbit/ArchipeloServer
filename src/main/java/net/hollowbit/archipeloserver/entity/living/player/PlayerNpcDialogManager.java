@@ -41,6 +41,13 @@ public class PlayerNpcDialogManager implements PacketHandler {
 		return false;
 	}
 	
+	/**
+	 * Call when player moves
+	 */
+	public void playerMoved () {
+		allowedLinks.clear();
+	}
+	
 	public void dispose () {
 		ArchipeloServer.getServer().getNetworkManager().removePacketHandler(this);
 	}
@@ -50,17 +57,18 @@ public class PlayerNpcDialogManager implements PacketHandler {
 	 * @param messageId
 	 */
 	public void sendNpcDialog (Entity sender, String messageId) {
-		NpcDialog dialog = ArchipeloServer.getServer().getNpcDialogManager().getNpcDialogById(messageId);
+		NpcDialog dialog = player.getMap().getNpcDialogManager().getNpcDialogById(messageId);
 		
 		//While conditions are met on all dialogs, get the next one and test
 		while (dialog != null && dialog.cond != null && dialog.cond.isConditionMet(player))
-			dialog = ArchipeloServer.getServer().getNpcDialogManager().getNpcDialogById(dialog.change);
+			dialog = player.getMap().getNpcDialogManager().getNpcDialogById(dialog.change);
 		
 		if (dialog == null)//Don't send if somehow we reached a null dialog
 			return;
-		System.out.println("PlayerNpcDialogManager.java   " + dialog.id + "  " + messageId);
+
+		player.stopMovement();
 		handleMessage(sender, dialog);
-		player.sendPacket(new NpcDialogPacket(dialog));
+		player.sendPacket(new NpcDialogPacket(dialog, player.getMap()));
 	}
 	
 	/**

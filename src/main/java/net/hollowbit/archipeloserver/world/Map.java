@@ -11,6 +11,7 @@ import net.hollowbit.archipeloserver.entity.EntityType;
 import net.hollowbit.archipeloserver.entity.living.Player;
 import net.hollowbit.archipeloserver.network.packets.EntityAddPacket;
 import net.hollowbit.archipeloserver.network.packets.EntityRemovePacket;
+import net.hollowbit.archipeloserver.tools.NpcDialogManager;
 import net.hollowbit.archipeloserver.world.map.MapData;
 import net.hollowbit.archipeloserver.world.map.MapLoader;
 import net.hollowbit.archipeloshared.CollisionRect;
@@ -37,6 +38,7 @@ public class Map {
 	private String[][] elementData;
 	private boolean[][] collisionMap;
 	private EntityManager entityManager;
+	private NpcDialogManager npcDialogManager;
 	private Island island;
 	private String displayName;
 	private int climat;
@@ -62,6 +64,7 @@ public class Map {
 
 	//If you wish to add this map, load it from its island, not here.
 	public boolean load () {
+		npcDialogManager = new NpcDialogManager(this);
 		ArchipeloServer.getServer().getLogger().info("Loading map " + getIsland().getName() + ":" + getName() + ".");
 		displayName = makeDisplayName();
 		MapData mapData = MapLoader.loadMap(this);
@@ -121,8 +124,12 @@ public class Map {
 		}
 	}
 	
-	public boolean collidesWithMap (CollisionRect rect) {
-		//See if collisionrect collides with map
+	public boolean collidesWithMap (CollisionRect rect, Entity testEntity) {
+		//See if rect collides with map
+		if (rect.x < - ArchipeloServer.TILE_SIZE || rect.y < + ArchipeloServer.TILE_SIZE || rect.x + rect.width > getPixelWidth() - ArchipeloServer.TILE_SIZE || rect.y + rect.height > getPixelHeight() + ArchipeloServer.TILE_SIZE - rect.height)
+			return true;
+		
+		//See if it collides with tiles and elements
 		int collisionBoxSize = (int) ArchipeloServer.TILE_SIZE / TileData.COLLISION_MAP_SCALE;
 		CollisionRect tileRect = new CollisionRect(0, 0, 0, 0, collisionBoxSize, collisionBoxSize);
 		for (int row = (int) (rect.y / collisionBoxSize) - 1; row < (int) (rect.height / collisionBoxSize) + (rect.y / collisionBoxSize) + 2; row++) {
@@ -135,6 +142,20 @@ public class Map {
 					if (tileRect.collidesWith(rect))
 						return true;
 				}
+			}
+		}
+		
+		//Check for collisions with entities
+		for (Entity entity : getEntities()) {
+			if (entity == testEntity)
+				continue;
+			
+			for (CollisionRect entityRect : entity.getCollisionRects()) {
+				if (!entityRect.hard)
+					continue;
+				
+				if (entityRect.collidesWith(rect))
+					return true;
 			}
 		}
 		return false;
@@ -250,6 +271,10 @@ public class Map {
 		return elementData;
 	}
 	
+	public NpcDialogManager getNpcDialogManager () {
+		return npcDialogManager;
+	}
+	
 	public void applyMapData (MapData mapData) {
 		displayName = mapData.displayName;
 		tileData = mapData.tileData;
@@ -299,6 +324,22 @@ public class Map {
 
 	public void setMusic(String music) {
 		this.music = music;
+	}
+	
+	public int getWidth () {
+		return tileData[0].length;
+	}
+	
+	public int getHeight () {
+		return tileData.length;
+	}
+	
+	public int getPixelWidth () {
+		return getWidth() * ArchipeloServer.TILE_SIZE;
+	}
+	
+	public int getPixelHeight () {
+		return getHeight() * ArchipeloServer.TILE_SIZE;
 	}
 	
 	@Override

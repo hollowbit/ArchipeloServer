@@ -16,9 +16,9 @@ import net.hollowbit.archipeloserver.entity.EntityInteraction;
 import net.hollowbit.archipeloserver.entity.EntitySnapshot;
 import net.hollowbit.archipeloserver.entity.EntityType;
 import net.hollowbit.archipeloserver.entity.LivingEntity;
+import net.hollowbit.archipeloserver.entity.living.player.PlayerData;
 import net.hollowbit.archipeloserver.entity.living.player.PlayerFlagsManager;
 import net.hollowbit.archipeloserver.entity.living.player.PlayerNpcDialogManager;
-import net.hollowbit.archipeloserver.entity.living.player.PlayerData;
 import net.hollowbit.archipeloserver.hollowbitserver.HollowBitUser;
 import net.hollowbit.archipeloserver.items.Item;
 import net.hollowbit.archipeloserver.items.ItemType;
@@ -235,7 +235,7 @@ public class Player extends LivingEntity implements PacketHandler {
 		
 		boolean collidesWithMap = false;
 		for (CollisionRect rect : getCollisionRects(newPos)) {//Checks to make sure no collision rect is intersecting with map
-			if (location.getMap().collidesWithMap(rect)) {
+			if (location.getMap().collidesWithMap(rect, this)) {
 				collidesWithMap = true;
 				break;
 			}
@@ -243,7 +243,9 @@ public class Player extends LivingEntity implements PacketHandler {
 		
 		if (!collidesWithMap || doesCurrentPositionCollideWithMap()) {
 			location.set(newPos);
-			moved();
+			
+			if (isMoving())
+				moved();
 		}
 		
 		//Rolling
@@ -255,6 +257,15 @@ public class Player extends LivingEntity implements PacketHandler {
 		}
 		
 		super.tick60();
+	}
+	
+	public void stopMovement () {
+		rollTimer = 0;
+		rollDoubleClickTimer = 0;
+		controls[Controls.UP] = false;
+		controls[Controls.LEFT] = false;
+		controls[Controls.DOWN] = false;
+		controls[Controls.RIGHT] = false;
 	}
 	
 	public boolean isMoving () {
@@ -393,6 +404,11 @@ public class Player extends LivingEntity implements PacketHandler {
 		return ArchipeloServer.getServer().getNetworkManager().getConnectionByAddress(address);
 	}
 	
+	public void moved() {
+		super.moved();
+		npcDialogManager.playerMoved();
+	}
+	
 	@Override
 	public EntitySnapshot getFullSnapshot() {
 		EntitySnapshot snapshot = super.getFullSnapshot();
@@ -510,7 +526,7 @@ public class Player extends LivingEntity implements PacketHandler {
 	
 	private boolean doesCurrentPositionCollideWithMap () {
 		for (CollisionRect rect : getCollisionRects(location.pos)) {//Checks to make sure no collision rect is intersecting with map
-			if (location.getMap().collidesWithMap(rect)) {
+			if (location.getMap().collidesWithMap(rect, this)) {
 				return true;
 			}
 		}
