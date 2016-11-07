@@ -462,7 +462,7 @@ public class Player extends LivingEntity implements PacketHandler {
 						}
 					}
 				} else {
-					ArchipeloServer.getServer().getLogger().broadcast("<" + this.getName() + "> " + messagePacket.message, this.getName());
+					ArchipeloServer.getServer().getLogger().broadcast("&d<" + this.getName() + ">&1 " + messagePacket.message, this.getName());
 				}
 				return true;
 			}
