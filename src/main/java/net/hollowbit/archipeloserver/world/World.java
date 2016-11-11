@@ -17,6 +17,7 @@ import net.hollowbit.archipeloserver.network.Packet;
 import net.hollowbit.archipeloserver.network.PacketHandler;
 import net.hollowbit.archipeloserver.network.PacketType;
 import net.hollowbit.archipeloserver.network.packets.ChatMessagePacket;
+import net.hollowbit.archipeloserver.network.packets.FlagsAddPacket;
 import net.hollowbit.archipeloserver.network.packets.PlayerDeletePacket;
 import net.hollowbit.archipeloserver.network.packets.PlayerListPacket;
 import net.hollowbit.archipeloserver.network.packets.PlayerPickPacket;
@@ -292,7 +293,7 @@ public class World implements PacketHandler {
 					playerPickPacket.result = PlayerPickPacket.RESULT_SUCCESSFUL;
 					player.sendPacket(playerPickPacket);
 					
-					
+					player.sendPacket(new FlagsAddPacket(player.getFlagsManager().getFlagsList()));
 					
 					//Send messages for login
 					ArchipeloServer.getServer().getLogger().info("<Join> " + player.getName());

@@ -103,7 +103,7 @@ public class Player extends LivingEntity implements PacketHandler {
 		this.lastPlayed = playerData.lastPlayed;
 		this.creationDate = playerData.creationDate;
 		this.hbUser = hbUser;
-		this.flagsManager = new PlayerFlagsManager(playerData.flags);
+		this.flagsManager = new PlayerFlagsManager(playerData.flags, this);
 	}
 	
 	@Override

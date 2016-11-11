@@ -57,6 +57,10 @@ public class PlayerNpcDialogManager implements PacketHandler {
 	 * @param messageId
 	 */
 	public void sendNpcDialog (Entity sender, String messageId) {
+		this.sendNpcDialog(sender, messageId, NpcDialog.getPrefix(player.getMap()));
+	}
+	
+	public void sendNpcDialog (Entity sender, String messageId, String prefix) {
 		NpcDialog dialog = player.getMap().getNpcDialogManager().getNpcDialogById(messageId);
 		
 		//While conditions are met on all dialogs, get the next one and test
@@ -68,7 +72,7 @@ public class PlayerNpcDialogManager implements PacketHandler {
 
 		player.stopMovement();
 		handleMessage(sender, dialog);
-		player.sendPacket(new NpcDialogPacket(dialog, player.getMap()));
+		player.sendPacket(new NpcDialogPacket(dialog, player.getMap(), prefix));
 	}
 	
 	/**

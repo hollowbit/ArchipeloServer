@@ -20,11 +20,11 @@ public class NpcDialogPacket extends Packet {
 		super(PacketType.NPC_DIALOG);
 	}
 	
-	public NpcDialogPacket (NpcDialog dialog, Map map) {
+	public NpcDialogPacket (NpcDialog dialog, Map map, String prefix) {
 		this();
 		this.name = dialog.id;
 		this.messages = dialog.choices;
-		this.prefix = NpcDialog.getPrefix(map);
+		this.prefix = prefix;
 		this.interruptable = dialog.interruptable;
 		this.usesId = true;
 	}
