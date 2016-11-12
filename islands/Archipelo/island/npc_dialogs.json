@@ -2,7 +2,7 @@
 
 {id:"sign1Start", interruptable: true, cond:{id:"hasFlag", args:{flag:"archipelo-island-sign1Talked"}}, change:"sign1StopIt", choices:["sign1End"]},
 {id:"sign1End", interruptable: true, exec:[{id:"addFlag", args:{flag:"archipelo-island-sign1Talked"}}]},
-{id:"sign1StopIt", interruptable: true},
+{id:"sign1StopIt", interruptable: true, exec:[{id:"addFlag", args:{flag:"Archipelo-island-smithyDoorunlock"}}]},
 
 {id:"sign2Start", choices:["sign2Hollowbit", "sign2Npc"]},
 {id:"sign2Hollowbit", choices:["sign2End"]},

@@ -144,6 +144,8 @@ public class Map {
 				}
 			}
 		}
+
+		boolean isPlayer = testEntity instanceof Player;
 		
 		//Check for collisions with entities
 		for (Entity entity : getEntities()) {
@@ -152,6 +154,9 @@ public class Map {
 			
 			for (CollisionRect entityRect : entity.getCollisionRects()) {
 				if (!entityRect.hard)
+					continue;
+				
+				if (isPlayer && entity.ignoreHardnessOfCollisionRects((Player) testEntity, entityRect.name))
 					continue;
 				
 				if (entityRect.collidesWith(rect))
@@ -200,6 +205,7 @@ public class Map {
 		snapshot.setTileData(tileData.clone());
 		snapshot.setElementData(elementData.clone());
 		snapshot.putString("display-name", displayName);
+		snapshot.putString("island-name", island.getName());
 		snapshot.putInt("fade-color", naturalLighting ? FADE_COLOR_WHITE : FADE_COLOR_BLACK);
 		snapshot.putString("music", music);
 		return snapshot;

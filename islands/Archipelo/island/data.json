@@ -99,7 +99,7 @@ elementData:[["null","null","null","null","null","null","null","null","null","nu
 ["null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null"],
 ["null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null"]],
 entitySnapshots:[{name:teleporter1,entityType:teleporter,properties:{teleportMap:"",teleportDirection:-1,x:300.0,y:430.0,teleportX:360.0,teleportIsland:"",teleportY:400.0}},
-{name:smithyDoor,entityType:door,properties:{teleportMap:smithy,teleportDirection:-1,x:418.0,y:576.0,teleports:"true",teleportX:64.0,teleportIsland:"",open:"false",teleportY:0.0}},
+{name:smithyDoor,entityType:door-locked,properties:{unlockFlag:Archipelo-island-smithyDoorunlock,teleportMap:smithy,teleportDirection:-1,x:418.0,y:576.0,teleports:"true",teleportX:64.0,teleportIsland:"",open:"false",teleportY:0.0}},
 {name:hospitalDoor,entityType:door,properties:{teleportMap:"",teleportDirection:-1,x:290.0,y:608.0,teleports:"false",teleportX:0.0,teleportIsland:"",open:"false",teleportY:0.0}},
 {name:sign1,entityType:sign,properties:{x:330.0,y:400.0,startMessageId:sign1Start}},
 {name:sign2,entityType:sign,properties:{x:380.0,y:420.0,startMessageId:sign2Start}}]}

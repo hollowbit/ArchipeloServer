@@ -68,6 +68,17 @@ public abstract class Entity {
 		location.getMap().removeEntity(this);
 	}
 	
+	/**
+	 * This is used by certain entities which don't always want a collision rect to be hard.
+	 * Ex: Like a locked door that becomes unlocked for some players.
+	 * @param player
+	 * @param rectName
+	 * @return
+	 */
+	public boolean ignoreHardnessOfCollisionRects (Player player, String rectName) {
+		return false;
+	}
+	
 	//InterpSnapshots are for thing like position that can be interpolated between and can be skipped.
 	public EntitySnapshot getInterpSnapshot () {
 		EntitySnapshot snapshot = new EntitySnapshot(this);
