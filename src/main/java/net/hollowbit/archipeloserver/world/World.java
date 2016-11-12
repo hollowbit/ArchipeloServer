@@ -95,7 +95,7 @@ public class World implements PacketHandler {
 				WorldSnapshot fullSnapshot = null;
 				String fullSnapshotPacketString = null;
 				
-				//Check if there are any new players on map, if so; create a full snapshot for them, otherwise don't even bother making it.
+				//Check if there are any new players on map, if so, create a full snapshot for them, otherwise don't even bother making it.
 				if (map.isThereNewPlayerOnMap()) {
 					fullSnapshot = new WorldSnapshot(this, map, WorldSnapshot.TYPE_FULL);
 					fullSnapshotPacketString = ArchipeloServer.getServer().getNetworkManager().getPacketString(fullSnapshot.getPacket());
@@ -185,6 +185,10 @@ public class World implements PacketHandler {
 				@Override
 				public void run() {
 					PlayerPickPacket playerPickPacket = (PlayerPickPacket) packet;
+					
+					if (playerPickPacket.name == null || playerPickPacket.name.equals(""))
+						return;
+					
 					Configuration config = ArchipeloServer.getServer().getConfig();
 					
 					HollowBitUser hbu = ArchipeloServer.getServer().getNetworkManager().getUser(address);
@@ -296,8 +300,8 @@ public class World implements PacketHandler {
 					player.sendPacket(new FlagsAddPacket(player.getFlagsManager().getFlagsList()));
 					
 					//Send messages for login
-					ArchipeloServer.getServer().getLogger().info("<Join> " + player.getName());
-					player.sendPacket(new ChatMessagePacket(ArchipeloServer.getServer().getConfig().motd, "server"));
+					ArchipeloServer.getServer().getLogger().broadcastAsServer("<{join}>", player.getName());
+					player.sendPacket(new ChatMessagePacket("{serverTag}", ArchipeloServer.getServer().getConfig().motd, "server"));
 				}
 				
 			});
@@ -305,6 +309,9 @@ public class World implements PacketHandler {
 			return true;
 		case PacketType.PLAYER_DELETE:
 			PlayerDeletePacket playerDeletePacket = (PlayerDeletePacket) packet;
+			
+			if (playerDeletePacket.name == null || playerDeletePacket.name.equals(""))
+				return true;
 			
 			//Check if user name is valid
 			if (!StringValidator.isStringValid(playerDeletePacket.name, StringValidator.USERNAME, StringValidator.MAX_USERNAME_LENGTH)) {
@@ -320,11 +327,13 @@ public class World implements PacketHandler {
 				public void run() {
 					PlayerListPacket playerListPacket = (PlayerListPacket) packet;
 					
+					if (playerListPacket.email == null || playerListPacket.email.equals(""))
+						return;
+					
 					HollowBitUser hbu = ArchipeloServer.getServer().getNetworkManager().getUser(address);
 					
 					//Make sure user is only getting player data from players that belong to them
 					if (!playerListPacket.email.equals(hbu.getEmailAddress())) {
-						System.out.println("World.java  " + playerListPacket.email + "   " + hbu.getEmailAddress());
 						playerListPacket.result = PlayerListPacket.RESULT_INVALID_LOGIN;
 						playerListPacket.send(ArchipeloServer.getServer().getNetworkManager().getConnectionByAddress(address));
 						return;

@@ -13,6 +13,7 @@ public class NpcDialog {
 	public ArrayList<ExecutionCommand> exec = new ArrayList<ExecutionCommand>();
 	public ArrayList<String> choices = new ArrayList<String>();
 	public boolean interruptable = false;
+	public boolean endConversation = false;
 	
 	public static String getPrefix (Map map) {
 		return map.getIsland().getName() + "-" + map.getName() + "-";

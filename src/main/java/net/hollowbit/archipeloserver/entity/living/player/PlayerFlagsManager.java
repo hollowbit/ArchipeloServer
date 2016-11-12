@@ -51,7 +51,7 @@ public class PlayerFlagsManager {
 	public ArrayList<String> getFlagsList() {
 		ArrayList<String> flags = new ArrayList<String>();
 		
-		for (String flag : flags)
+		for (String flag : this.flags)
 			flags.add(flag);
 		return flags;
 	}

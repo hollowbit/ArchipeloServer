@@ -286,16 +286,16 @@ public class Player extends LivingEntity implements PacketHandler {
 			Player player = (Player) entity;
 			switch (interactionType) {
 			case STEP_ON:
-				player.sendPacket(new PopupTextPacket("You stepped on " + this.getName(), PopupTextPacket.Type.NORMAL));
-				player.sendPacket(new ChatMessagePacket("<Server> You have just stepped on " + this.getName(), "server"));
+				player.sendPacket(new PopupTextPacket("{youSteppedOn} " + this.getName(), PopupTextPacket.Type.NORMAL));
+				player.sendPacket(new ChatMessagePacket("{serverTag}", "{youSteppedOn} " + this.getName(), "server"));
 				break;
 			case STEP_OFF:
-				player.sendPacket(new PopupTextPacket("You stepped off of " + this.getName(), PopupTextPacket.Type.NORMAL));
-				player.sendPacket(new ChatMessagePacket("<Server> You have just stepped off of " + this.getName(), "server"));
+				player.sendPacket(new PopupTextPacket("{youSteppedOff} " + this.getName(), PopupTextPacket.Type.NORMAL));
+				player.sendPacket(new ChatMessagePacket("{serverTag}", "{youSteppedOff} " + this.getName(), "server"));
 				break;
 			case HIT:
-				player.sendPacket(new PopupTextPacket("You hit " + this.getName(), PopupTextPacket.Type.NORMAL));
-				player.sendPacket(new ChatMessagePacket("<Server> You hit " + this.getName(), "server"));
+				player.sendPacket(new PopupTextPacket("{youHit} " + this.getName(), PopupTextPacket.Type.NORMAL));
+				player.sendPacket(new ChatMessagePacket("{serverTag}", "{youHit} " + this.getName(), "server"));
 				break;
 			default:
 				break;
@@ -340,7 +340,7 @@ public class Player extends LivingEntity implements PacketHandler {
 		
 		//Build leave message
 		StringBuilder leaveMessage = new StringBuilder();
-		leaveMessage.append("<Leave> " + name);
+		leaveMessage.append("<{leave}> " + name);
 		leaveMessage.append(" " + reason.message);
 		leaveMessage.append(" " + alt);
 		
@@ -366,8 +366,8 @@ public class Player extends LivingEntity implements PacketHandler {
 				if (!isRolling()) {
 					rollTimer = ROLLING_DURATION;
 					changes.putBoolean("is-rolling", true);
-					sendPacket(new PopupTextPacket("You have just rolled.", PopupTextPacket.Type.NORMAL));
-					sendPacket(new ChatMessagePacket("<Server> You have just rolled.", "server"));
+					sendPacket(new PopupTextPacket("{youJustRolled}", PopupTextPacket.Type.NORMAL));
+					sendPacket(new ChatMessagePacket("{serverTag}", "{youJustRolled}", "server"));
 				}
 			}
 			
@@ -424,6 +424,9 @@ public class Player extends LivingEntity implements PacketHandler {
 			case PacketType.CONTROLS:
 				boolean[] newControls = ((ControlsPacket) packet).controls;
 				
+				if (newControls == null || newControls.length != Controls.TOTAL)
+					return true;
+				
 				//Loops through all controls to handle them one by one.
 				for (int i = 0; i < Controls.TOTAL; i++) {
 					//Checks for control change and executes controlUp/Down if there is a one.
@@ -442,7 +445,7 @@ public class Player extends LivingEntity implements PacketHandler {
 				return true;
 			case PacketType.CHAT_MESSAGE:
 				ChatMessagePacket messagePacket = (ChatMessagePacket) packet;
-				if (messagePacket.message.equals(""))
+				if (messagePacket.message == null || messagePacket.message.equals(""))
 					return true;
 				
 				if (messagePacket.message.startsWith("/") || messagePacket.message.startsWith(".") || messagePacket.message.startsWith("!")) {//Is a command
@@ -462,7 +465,7 @@ public class Player extends LivingEntity implements PacketHandler {
 						}
 					}
 				} else {
-					ArchipeloServer.getServer().getLogger().broadcast("&d<" + this.getName() + ">&1 " + messagePacket.message, this.getName());
+					ArchipeloServer.getServer().getLogger().broadcast("&d<" + this.getName() + ">&1 ", messagePacket.message, "@" + this.getName());//@ symbol added to differentiate from server, tells client a user sent this message
 				}
 				return true;
 			}
@@ -476,9 +479,9 @@ public class Player extends LivingEntity implements PacketHandler {
 			for (String arg : args) {
 				text += " " + arg;
 			}
-			ArchipeloServer.getServer().getLogger().broadcast(this.getName() + text, "server");
+			ArchipeloServer.getServer().getLogger().broadcastAsServer("", this.getName() + text);
 		} else if (label.equalsIgnoreCase("ping")) {
-			this.sendPacket(new ChatMessagePacket("Pong!", "server"));
+			this.sendPacket(new ChatMessagePacket("", "{pong}", "server"));
 		} else if (label.equalsIgnoreCase("logoff") || label.equalsIgnoreCase("exit") || label.equalsIgnoreCase("logout")) {
 			this.remove(LogoutReason.LEAVE, "");
 		}

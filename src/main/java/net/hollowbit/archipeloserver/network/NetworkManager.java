@@ -24,6 +24,8 @@ import net.hollowbit.archipeloserver.network.packets.LoginPacket;
 
 public class NetworkManager extends WebSocketServer {
 	
+	private static final int PACKET_LIFESPAN = 5000;//ms
+	
 	@SuppressWarnings("rawtypes")
 	private HashMap<Integer, Class> packetMap;
 	private ArrayList<PacketHandler> packetHandlers;
@@ -85,7 +87,7 @@ public class NetworkManager extends WebSocketServer {
 				}
 			}
 			
-			if (packetHandled) 
+			if (packetHandled || System.currentTimeMillis() - packetWrapper.time >= PACKET_LIFESPAN) 
 				packetsToRemove.add(packetWrapper);
 		}
 		
@@ -152,6 +154,16 @@ public class NetworkManager extends WebSocketServer {
 		//Handle login/logoff packets
 		if (packet.packetType == PacketType.LOGIN) {
 			LoginPacket loginPacket = (LoginPacket) packet;
+			
+			if (loginPacket.email == null || loginPacket.email.equals(""))
+				return;
+			
+			if (loginPacket.password == null || loginPacket.password.equals(""))
+				return;
+			
+			if (loginPacket.version == null || loginPacket.version.equals(""))
+				return;
+			
 			//Check if version is valid
 			if (!loginPacket.version.equals(ArchipeloServer.VERSION)) {
 				loginPacket.version = ArchipeloServer.VERSION;

@@ -1,5 +1,7 @@
 package net.hollowbit.archipeloserver.entity.lifeless;
 
+import net.hollowbit.archipeloserver.entity.Entity;
+import net.hollowbit.archipeloserver.entity.EntityInteraction;
 import net.hollowbit.archipeloserver.entity.EntitySnapshot;
 import net.hollowbit.archipeloserver.entity.EntityType;
 import net.hollowbit.archipeloserver.entity.living.Player;
@@ -12,7 +14,26 @@ public class DoorLocked extends Door {
 	@Override
 	public void create(EntitySnapshot fullSnapshot, Map map, EntityType entityType) {
 		super.create(fullSnapshot, map, entityType);
-		this.unlockFlag = fullSnapshot.getString("unlockFlag", map.getIsland().getName() + "-" + map.getName() + "-" + this.name + "unlock");//Default flag is perfectly valid to use
+		this.unlockFlag = fullSnapshot.getString("unlockFlag", getDefaultUnlockFlag());//Default flag is perfectly valid to use
+	}
+	
+	@Override
+	public void interactFrom(Entity entity, String collisionRectName, EntityInteraction interactionType) {
+		super.interactFrom(entity, collisionRectName, interactionType);
+		
+		switch(collisionRectName) {
+		case "bottom":
+			if (interactionType == EntityInteraction.HIT && entity instanceof Player) {
+				Player player = (Player) entity;
+				if (!player.getFlagsManager().hasFlag(unlockFlag))//If the player hasnt unlocked this door, open the dialog for the player
+					player.getNpcDialogManager().sendNpcDialog(this, this.name + "Locked");
+			}
+			break;
+		}
+	}
+	
+	private String getDefaultUnlockFlag () {
+		return this.location.map.getIsland().getName() + "-" + this.location.map.getName() + "-" + this.name + "Unlock";
 	}
 	
 	@Override

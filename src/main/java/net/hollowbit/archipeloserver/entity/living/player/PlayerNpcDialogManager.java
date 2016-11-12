@@ -31,6 +31,9 @@ public class PlayerNpcDialogManager implements PacketHandler {
 			if (packet.packetType == PacketType.NPC_DIALOG_REQUEST) {
 				NpcDialogRequestPacket npcDialogRequestPacket = (NpcDialogRequestPacket) packet;
 				
+				if (npcDialogRequestPacket.messageId == null || npcDialogRequestPacket.messageId.equals(""))
+					return true;
+				
 				if (!allowedLinks.contains(npcDialogRequestPacket.messageId))//If link requested by player is not allowed, don't send response
 					return true;
 				

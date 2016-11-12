@@ -20,14 +20,22 @@ public class Logger {
 		logs = new ArrayList<String>();
 	}
 	
-	public void broadcast (String message, String sender) {
+	public void broadcastAsServer (String prefix, String message) {
+		this.broadcast(prefix, message, "server");
+	}
+	
+	public void broadcastAsServerUrgent (String message) {
+		this.broadcast("&R<SERVER>&1", message, "server");
+	}
+	
+	public void broadcast (String prefix, String message, String sender) {
 		DateFormat dateFormat = new SimpleDateFormat("yyyy.MM.dd/HH:mm:ss");
 		Date date = new Date();
 		String log = "[CHAT " + dateFormat.format(date) + " by " + sender + "]" + message;
 		logs.add(log);
 		System.out.println(log);
 		
-		ChatMessagePacket packet = new ChatMessagePacket(message, sender);
+		ChatMessagePacket packet = new ChatMessagePacket(prefix, message, sender);
 		for (Player player : ArchipeloServer.getServer().getWorld().getOnlinePlayers()) {
 			player.sendPacket(packet);
 		}

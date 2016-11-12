@@ -30,8 +30,8 @@ public class PlayerPickPacket extends Packet {
 	public int result = 0;
 	
 	//If character is new
-	public int selectedHair, selectedFace;
-	public int hairColor, eyeColor, bodyColor;
+	public int selectedHair = 0, selectedFace = 0;
+	public int hairColor = 0, eyeColor = 0, bodyColor = 0;
 	
 	public PlayerPickPacket () {
 		super(PacketType.PLAYER_PICK);
