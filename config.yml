@@ -2,7 +2,7 @@ dbAddress: localhost:3306
 dbUsername: root
 dbPassword: password
 name: Emerald
-hbServerAddress: localhost:22123
+hbServerAddress: hollowbit.net:22123
 hbServerPassword: astrongpassword
 motd: Welcome to Archipelo!
 region: 0
