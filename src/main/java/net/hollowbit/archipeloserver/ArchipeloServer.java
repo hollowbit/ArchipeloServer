@@ -56,6 +56,7 @@ public class ArchipeloServer {
 			if (!hollowBitServerConnectivity.connectToServer()) {
 				logger.error("Could not connect to HollowBit server at the specified address at this time.");
 				this.stop();
+				return;
 			}
 		} catch (URISyntaxException e1) {}
 		
