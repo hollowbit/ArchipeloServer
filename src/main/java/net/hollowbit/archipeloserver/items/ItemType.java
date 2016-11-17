@@ -34,6 +34,7 @@ public enum ItemType {
 	public int iconX, iconY;
 	public int minDamage;
 	public int maxDamage;
+	public int maxStackSize;
 	public float critMultiplier;
 	public float critChance;
 	public int durability;
@@ -75,6 +76,8 @@ public enum ItemType {
 		this.iconX = data.iconX;
 		this.iconY = data.iconY;
 		this.minDamage = data.minDamage;
+		this.maxDamage = data.maxDamage;
+		this.maxStackSize = data.maxStackSize;
 		this.critMultiplier = data.critMultiplier;
 		this.critChance = data.critChance;
 		this.durability = data.durability;

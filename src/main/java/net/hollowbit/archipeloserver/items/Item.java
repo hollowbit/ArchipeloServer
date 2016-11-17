@@ -12,11 +12,23 @@ public class Item {
 	public int color = DEFAULT_COLOR;
 	public int durability = 1;
 	public int style = 0;
+	public int quantity = 1;
 	
 	public Item () {}
 	
 	public Item (ItemType type) {
 		this.id = type.id;
+	}
+	
+	public Item (ItemType type, int style) {
+		this.id = type.id;
+		this.style = style;
+	}
+	
+	public Item (ItemType type, int style, int quantity) {
+		this.id = type.id;
+		this.style = style;
+		this.quantity = quantity;
 	}
 	
 	public ItemType getType () {
@@ -25,6 +37,24 @@ public class Item {
 	
 	public boolean use (Player user) {
 		return ItemType.getItemTypeByItem(this).getUseType().useItem(this, user);
+	}
+	
+	/**
+	 * Returns if item is same type
+	 * @param item
+	 * @return
+	 */
+	public boolean isSameType (Item item) {
+		return this.id.equals(item.id);
+	}
+	
+	/**
+	 * Returns if item is same type and style
+	 * @param item
+	 * @return
+	 */
+	public boolean isSameTypeAndStyle (Item item) {
+		return isSameType(item) && this.style == item.style;
 	}
 	
 }
