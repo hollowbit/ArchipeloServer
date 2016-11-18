@@ -23,7 +23,7 @@ public class DatabaseManager {
 		//Connect to database
 		try {
 			Configuration config = ArchipeloServer.getServer().getConfig();
-			connection = DriverManager.getConnection("jdbc:mysql://" + config.dbAddress + "/archipelo_server", config.dbUsername, config.dbPassword);
+			connection = DriverManager.getConnection("jdbc:mysql://" + config.dbAddress + "/archipelo_server?autoReconnect=true", config.dbUsername, config.dbPassword);
 			ArchipeloServer.getServer().getLogger().info("Connected to database!");
 		} catch (Exception e) {
 			System.out.println(e.getMessage());

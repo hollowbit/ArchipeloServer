@@ -32,9 +32,14 @@ public class Inventory {
 		for (int slot : slotsWithSameItem) {
 			Item storageItem = storage[slot];
 			
-			while (storageItem.quantity < storageItem.getType().maxStackSize && item.quantity > 0) {
-				storageItem.quantity++;
-				item.quantity--;
+			int spaceLeftInSlot = storageItem.getType().maxStackSize - storageItem.quantity;
+			
+			if (item.quantity > spaceLeftInSlot) {
+				storageItem.quantity += spaceLeftInSlot;
+				item.quantity -= spaceLeftInSlot;
+			} else {
+				storageItem.quantity += item.quantity;
+				item.quantity = 0;
 			}
 			
 			if (item.quantity <= 0)//Item done adding, return null
@@ -46,9 +51,14 @@ public class Inventory {
 			storage[nextSlot] = new Item(item.getType(), item.style, 0);
 			Item storageItem = storage[nextSlot];
 			
-			while (storageItem.quantity < storageItem.getType().maxStackSize && item.quantity > 0) {
-				storageItem.quantity++;
-				item.quantity--;
+			int spaceInSlot = storageItem.getType().maxStackSize;
+			
+			if (item.quantity > spaceInSlot) {
+				storageItem.quantity += spaceInSlot;
+				item.quantity -= spaceInSlot;
+			} else {
+				storageItem.quantity += item.quantity;
+				item.quantity = 0;
 			}
 			
 			if (item.quantity <= 0)//Item done adding, return null
@@ -87,14 +97,13 @@ public class Inventory {
 				same = storageItem.isSameTypeAndStyle(item);
 			
 			if (same) {
-				int numToRemove = 0;
-				while (storageItem.quantity > 0 && item.quantity > 0) {//Keep removing items from slot until it is empty or remove item is empty
-					numToRemove++;
-					storageItem.quantity--;
-					item.quantity--;
+				if (storageItem.quantity < item.quantity) {
+					item.quantity -= storageItem.quantity;
+					storageItem.quantity = 0;
+				} else {
+					storageItem.quantity -= item.quantity;
+					item.quantity = 0;
 				}
-				
-				System.out.println("Removed " + numToRemove + "  from  " + i + "  Left: " + item.quantity);
 			}
 		}
 		
@@ -135,20 +144,22 @@ public class Inventory {
 		} else {
 			Item toItem = storage[toSlot];
 			if (fromItem.isSameTypeAndStyle(fromItem)) {
-				while (toItem.quantity <= toItem.getType().maxStackSize && fromItem.quantity >= 0) {
-					toItem.quantity++;
-					fromItem.quantity--;
-				}
-				
-				storage[fromSlot] = null;
-				
-				if (fromItem.quantity >= 0)
+				int spaceLeftInSlot = toItem.getType().maxStackSize - toItem.quantity;
+				if (fromItem.quantity > spaceLeftInSlot) {
+					toItem.quantity += spaceLeftInSlot;
+					fromItem.quantity -= spaceLeftInSlot;
+					storage[fromSlot] = null;
 					add(fromItem);
+				} else {
+					toItem.quantity += fromItem.quantity;
+					fromItem.quantity = 0;
+				}
 			} else {
 				storage[toSlot] = fromItem;
 				storage[fromSlot] = toItem;
 			}
 		}
+		clean();
 		return true;
 	}
 	
@@ -237,6 +248,16 @@ public class Inventory {
 	/**
 	 * Returns if the inventory has this item
 	 * @param item
+	 * @return
+	 */
+	public boolean hasItem (Item item) {
+		return this.hasItem(item, true);
+	}
+	
+	/**
+	 * Returns if the inventory has this item
+	 * @param item
+	 * @param ignoreStyle
 	 * @return
 	 */
 	public boolean hasItem (Item item, boolean ignoreStyle) {
