@@ -136,7 +136,7 @@ public class Player extends LivingEntity implements PacketHandler {
 				}
 				
 				if (isMoving())
-					newPos.add((float) (-Tick.T_60 * getSpeed() / LivingEntity.DIAGONAL_FACTOR), (float) (Tick.T_60 * getSpeed() / Math.sqrt(2)));
+					newPos.add((float) (-Tick.T_60 * getSpeed() / LivingEntity.DIAGONAL_FACTOR), (float) (Tick.T_60 * getSpeed() / LivingEntity.DIAGONAL_FACTOR));
 			} else if (controls[Controls.RIGHT]) {//Up right
 				if (location.direction != Direction.UP_RIGHT && !controls[Controls.LOCK]) {
 					location.direction = Direction.UP_RIGHT;
@@ -149,7 +149,7 @@ public class Player extends LivingEntity implements PacketHandler {
 				}
 				
 				if (isMoving()) 
-					newPos.add((float) (Tick.T_60 * getSpeed() / LivingEntity.DIAGONAL_FACTOR), (float) (Tick.T_60 * getSpeed() / Math.sqrt(2)));
+					newPos.add((float) (Tick.T_60 * getSpeed() / LivingEntity.DIAGONAL_FACTOR), (float) (Tick.T_60 * getSpeed() / LivingEntity.DIAGONAL_FACTOR));
 			} else {//Up
 				if (location.direction != Direction.UP && !controls[Controls.LOCK]) {
 					location.direction = Direction.UP;
@@ -177,7 +177,7 @@ public class Player extends LivingEntity implements PacketHandler {
 				}
 				
 				if (isMoving()) 
-					newPos.add((float) (-Tick.T_60 * getSpeed() / LivingEntity.DIAGONAL_FACTOR), (float) (-Tick.T_60 * getSpeed() / Math.sqrt(2)));
+					newPos.add((float) (-Tick.T_60 * getSpeed() / LivingEntity.DIAGONAL_FACTOR), (float) (-Tick.T_60 * getSpeed() / LivingEntity.DIAGONAL_FACTOR));
 			} else if (controls[Controls.RIGHT]) {//Down right
 				if (location.direction != Direction.DOWN_RIGHT && !controls[Controls.LOCK]) {
 					location.direction = Direction.DOWN_RIGHT;
@@ -190,7 +190,7 @@ public class Player extends LivingEntity implements PacketHandler {
 				}
 				
 				if (isMoving())
-					newPos.add((float) (Tick.T_60 * getSpeed() / LivingEntity.DIAGONAL_FACTOR), (float) (-Tick.T_60 * getSpeed() / Math.sqrt(2)));
+					newPos.add((float) (Tick.T_60 * getSpeed() / LivingEntity.DIAGONAL_FACTOR), (float) (-Tick.T_60 * getSpeed() / LivingEntity.DIAGONAL_FACTOR));
 			} else {//Down
 				if (location.direction != Direction.DOWN && !controls[Controls.LOCK]) {
 					location.direction = Direction.DOWN;

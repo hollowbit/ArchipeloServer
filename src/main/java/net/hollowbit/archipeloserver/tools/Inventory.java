@@ -83,7 +83,7 @@ public class Inventory {
 	public boolean remove (Item item, boolean ignoreStyle) {
 		if (!hasItem(item, ignoreStyle))
 			return false;
-		
+
 		for (int i = storage.length - 1; i >= 0 && item.quantity > 0; i--) {//Remove item starting from end
 			Item storageItem = storage[i];
 			
@@ -114,7 +114,7 @@ public class Inventory {
 	/**
 	 * Removes all slots with items of quantities of 0 or less
 	 */
-	public void clean () {
+	private void clean () {
 		for (int i = 0; i < storage.length; i++) {
 			Item item = storage[i];
 			if (item == null)
@@ -126,13 +126,24 @@ public class Inventory {
 	}
 	
 	/**
-	 * Moves items from on slot to another. Will stack them if they are the same type and style
+	 * Moves items from one slot to another. Will stack them if they are the same type and style
 	 * Returns if successful
 	 * @param fromSlot
 	 * @param toSlot
 	 * @return
 	 */
 	public boolean move (int fromSlot, int toSlot) {
+		return move(fromSlot, toSlot, false);
+	}
+	
+	/**
+	 * Moves items from on slot to another. Will stack them.
+	 * Returns if successful
+	 * @param fromSlot
+	 * @param toSlot
+	 * @return
+	 */
+	public boolean move (int fromSlot, int toSlot, boolean ignoreStyle) {
 		if (!slotExists(toSlot) || isSlotEmpty(fromSlot))
 			return false;
 		
@@ -143,7 +154,14 @@ public class Inventory {
 			storage[fromSlot] = null;
 		} else {
 			Item toItem = storage[toSlot];
-			if (fromItem.isSameTypeAndStyle(fromItem)) {
+			
+			boolean same = false;
+			if (ignoreStyle)
+				same = fromItem.isSameType(toItem);
+			else
+				same = fromItem.isSameTypeAndStyle(toItem);
+			
+			if (same) {
 				int spaceLeftInSlot = toItem.getType().maxStackSize - toItem.quantity;
 				if (fromItem.quantity > spaceLeftInSlot) {
 					toItem.quantity += spaceLeftInSlot;
@@ -177,8 +195,12 @@ public class Inventory {
 	}
 	
 	public boolean isSlotEmpty (int slot) {
-		if (slotExists(slot))
-			return storage[slot] == null;
+		return isSlotEmpty(slot, storage);
+	}
+	
+	private boolean isSlotEmpty (int slot, Item[] inventory) {
+		if (slotExists(slot, inventory))
+			return inventory[slot] == null;
 		else
 			return true;
 	}
@@ -194,7 +216,7 @@ public class Inventory {
 	}
 	
 	private boolean slotHasItem (int slot, Item item, Item[] inventory) {
-		if (!slotExists(slot, inventory))
+		if (!slotExists(slot, inventory) || isSlotEmpty(slot, inventory))
 			return false;
 		
 		Item itemInSlot = inventory[slot];
@@ -239,9 +261,9 @@ public class Inventory {
 			}
 			
 			if (!itemFound)
-				items.add(new Item(item.getType(), item.style, item.quantity));
+				items.add(new Item(item.getType(), item.quantity, item.style));
 		}
-		Item[] itemsArray = new Item[storage.length];
+		Item[] itemsArray = new Item[items.size()];
 		return items.toArray(itemsArray);
 	}
 	
