@@ -1,4 +1,4 @@
-package net.hollowbit.archipeloserver.tools;
+package net.hollowbit.archipeloserver.tools.npcdialogs;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -7,8 +7,6 @@ import java.util.Scanner;
 
 import com.badlogic.gdx.utils.Json;
 
-import net.hollowbit.archipeloserver.tools.npcdialogs.NpcDialog;
-import net.hollowbit.archipeloserver.tools.npcdialogs.NpcDialogs;
 import net.hollowbit.archipeloserver.world.Map;
 
 public class NpcDialogManager {

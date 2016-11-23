@@ -1,4 +1,4 @@
-package net.hollowbit.archipeloserver.tools;
+package net.hollowbit.archipeloserver.tools.log;
 
 import java.io.File;
 import java.io.FileNotFoundException;

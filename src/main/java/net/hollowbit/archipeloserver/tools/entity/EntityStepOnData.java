@@ -1,4 +1,4 @@
-package net.hollowbit.archipeloserver.tools;
+package net.hollowbit.archipeloserver.tools.entity;
 
 import net.hollowbit.archipeloserver.entity.Entity;
 

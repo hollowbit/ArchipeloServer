@@ -2,8 +2,8 @@ package net.hollowbit.archipeloserver.entity;
 
 import java.util.ArrayList;
 
-import net.hollowbit.archipeloserver.tools.EntityStepOnData;
-import net.hollowbit.archipeloserver.tools.Location;
+import net.hollowbit.archipeloserver.tools.entity.EntityStepOnData;
+import net.hollowbit.archipeloserver.tools.entity.Location;
 import net.hollowbit.archipeloserver.world.Map;
 import net.hollowbit.archipeloshared.CollisionRect;
 

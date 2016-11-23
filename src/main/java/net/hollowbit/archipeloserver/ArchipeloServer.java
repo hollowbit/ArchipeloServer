@@ -4,12 +4,11 @@ import java.net.URISyntaxException;
 
 import net.hollowbit.archipeloserver.hollowbitserver.HollowBitServerConnectivity;
 import net.hollowbit.archipeloserver.network.NetworkManager;
-import net.hollowbit.archipeloserver.tools.ConditionManager;
 import net.hollowbit.archipeloserver.tools.Configuration;
 import net.hollowbit.archipeloserver.tools.DatabaseManager;
-import net.hollowbit.archipeloserver.tools.ExecutableManager;
-import net.hollowbit.archipeloserver.tools.Logger;
-import net.hollowbit.archipeloserver.tools.PasswordHasher;
+import net.hollowbit.archipeloserver.tools.conditions.ConditionManager;
+import net.hollowbit.archipeloserver.tools.executables.ExecutableManager;
+import net.hollowbit.archipeloserver.tools.log.Logger;
 import net.hollowbit.archipeloserver.world.MapElementManager;
 import net.hollowbit.archipeloserver.world.World;
 
@@ -33,7 +32,6 @@ public class ArchipeloServer {
 	private MapElementManager mapElementManager;
 	private DatabaseManager databaseManager;
 	private Configuration config;
-	private PasswordHasher passwordHasher;
 	private HollowBitServerConnectivity hollowBitServerConnectivity;
 	private ConditionManager conditionManager;
 	private ExecutableManager executableManager;
@@ -47,7 +45,6 @@ public class ArchipeloServer {
 		server = this;
 		logger = new Logger();
 		config = new Configuration();
-		passwordHasher = new PasswordHasher();
 		networkManager = new NetworkManager(22122);
 		networkManager.start();
 		databaseManager = new DatabaseManager();
@@ -123,10 +120,6 @@ public class ArchipeloServer {
 	
 	public DatabaseManager getDatabaseManager () {
 		return databaseManager;
-	}
-	
-	public PasswordHasher getPasswordHasher () {
-		return passwordHasher;
 	}
 	
 	public Configuration getConfig () {

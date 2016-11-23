@@ -16,6 +16,18 @@ public class Item {
 	
 	public Item () {}
 	
+	/**
+	 * Duplicates an item
+	 * @param item
+	 */
+	public Item (Item item) {
+		this.id = item.id;
+		this.color = item.color;
+		this.durability = item.durability;
+		this.style = item.style;
+		this.quantity = item.quantity;
+	}
+	
 	public Item (ItemType type) {
 		this.id = type.id;
 	}
@@ -55,6 +67,19 @@ public class Item {
 	 */
 	public boolean isSameTypeAndStyle (Item item) {
 		return isSameType(item) && this.style == item.style;
+	}
+	
+	/**
+	 * Returns if item is same type
+	 * @param item
+	 * @param ignoreStyle
+	 * @return
+	 */
+	public boolean isSame (Item item, boolean ignoreStyle) {
+		if (ignoreStyle)
+			return isSameType(item);
+		else
+			return isSameTypeAndStyle(item);
 	}
 	
 }

@@ -1,4 +1,4 @@
-package net.hollowbit.archipeloserver.tools;
+package net.hollowbit.archipeloserver.tools.executables;
 
 import java.util.HashMap;
 
@@ -6,7 +6,6 @@ import com.badlogic.gdx.utils.Json;
 
 import net.hollowbit.archipeloserver.entity.Entity;
 import net.hollowbit.archipeloserver.entity.living.Player;
-import net.hollowbit.archipeloserver.tools.executables.ExecutionCommand;
 
 public class ExecutableManager {
 	

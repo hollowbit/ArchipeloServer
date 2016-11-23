@@ -6,7 +6,7 @@ import net.hollowbit.archipeloserver.ArchipeloServer;
 import net.hollowbit.archipeloserver.entity.living.Player;
 import net.hollowbit.archipeloserver.network.packets.PopupTextPacket;
 import net.hollowbit.archipeloserver.network.packets.TeleportPacket;
-import net.hollowbit.archipeloserver.tools.Location;
+import net.hollowbit.archipeloserver.tools.entity.Location;
 import net.hollowbit.archipeloserver.world.Island;
 import net.hollowbit.archipeloserver.world.Map;
 import net.hollowbit.archipeloserver.world.World;

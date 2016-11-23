@@ -11,7 +11,7 @@ import net.hollowbit.archipeloserver.entity.EntityType;
 import net.hollowbit.archipeloserver.entity.living.Player;
 import net.hollowbit.archipeloserver.network.packets.EntityAddPacket;
 import net.hollowbit.archipeloserver.network.packets.EntityRemovePacket;
-import net.hollowbit.archipeloserver.tools.NpcDialogManager;
+import net.hollowbit.archipeloserver.tools.npcdialogs.NpcDialogManager;
 import net.hollowbit.archipeloserver.world.map.MapData;
 import net.hollowbit.archipeloserver.world.map.MapLoader;
 import net.hollowbit.archipeloshared.CollisionRect;
