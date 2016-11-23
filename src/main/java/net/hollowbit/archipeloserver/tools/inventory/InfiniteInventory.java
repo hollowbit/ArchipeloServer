@@ -1,5 +1,6 @@
 package net.hollowbit.archipeloserver.tools.inventory;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 
 import net.hollowbit.archipeloserver.items.Item;
@@ -11,10 +12,10 @@ import net.hollowbit.archipeloserver.items.Item;
  */
 public class InfiniteInventory extends Inventory {
 	
-	private LinkedList<Item> storage;
+	private ArrayList<Item> storage;
 	
 	public InfiniteInventory () {
-		storage = new LinkedList<Item>();
+		storage = new ArrayList<Item>();
 	}
 	
 	@Override
@@ -31,8 +32,9 @@ public class InfiniteInventory extends Inventory {
 					item.quantity = 0;
 				}
 				
-				if (item.quantity <= 0)
+				if (item.quantity <= 0) {
 					return null;
+				}
 			}
 		}
 		
@@ -53,12 +55,17 @@ public class InfiniteInventory extends Inventory {
 	}
 
 	@Override
+	public boolean remove (Item item) {
+		return this.remove(item, true);
+	}
+
+	@Override
 	public boolean remove (Item item, boolean ignoreStyle) {
 		if (!hasItem(item, ignoreStyle))
 			return false;
 		
 		for (Item storageItem : storage) {
-			if (storageItem.isSame(storageItem, ignoreStyle)) {
+			if (storageItem.isSame(item, ignoreStyle)) {
 				if (storageItem.quantity < item.quantity) {
 					item.quantity -= storageItem.quantity;
 					storageItem.quantity = 0;
@@ -77,6 +84,11 @@ public class InfiniteInventory extends Inventory {
 	}
 
 	@Override
+	public boolean move(int fromSlot, int toSlot) {
+		return this.move(fromSlot, toSlot, true);
+	}
+
+	@Override
 	public boolean move(int fromSlot, int toSlot, boolean ignoreStyle) {
 		if (!doesSlotExists(toSlot) || isSlotEmpty(fromSlot))
 			return false;
@@ -88,8 +100,9 @@ public class InfiniteInventory extends Inventory {
 			int spaceLeftInSlot = toItem.getType().maxStackSize - toItem.quantity;
 			if (fromItem.quantity > spaceLeftInSlot) {
 				toItem.quantity += spaceLeftInSlot;
-				fromItem.quantity -= spaceLeftInSlot;
-				storage.remove(fromSlot);
+				
+				fromItem = new Item(fromItem);
+				storage.get(fromSlot).quantity = 0;
 				add(fromItem);
 			} else {
 				toItem.quantity += fromItem.quantity;
@@ -110,8 +123,8 @@ public class InfiniteInventory extends Inventory {
 			if (storageItem.isSame(item, ignoreStyle)) {
 				quantityFound += storageItem.quantity;
 				
-				if (quantityFound >= storageItem.quantity)
-					break;
+				if (quantityFound >= item.quantity)
+					return true;
 			}
 		}
 		
