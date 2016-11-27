@@ -18,6 +18,10 @@ public class InfiniteInventory extends Inventory {
 		storage = new ArrayList<Item>();
 	}
 	
+	public InfiniteInventory (ArrayList<Item> startItems) {
+		storage = startItems;
+	}
+	
 	@Override
 	public Item add (Item item) {
 		for (Item storageItem : storage) {
@@ -156,8 +160,40 @@ public class InfiniteInventory extends Inventory {
 	}
 
 	@Override
-	protected boolean doesSlotExists (int slot) {
+	public boolean doesSlotExists (int slot) {
 		return slot < storage.size() && slot >= 0;
+	}
+	
+	@Override
+	public String getJson() {
+		return json.toJson(storage);
+	}
+
+	@Override
+	public Item setSlot (int slot, Item item) {
+		if (!doesSlotExists(slot))
+			return null;
+		
+		Item replacedItem = removeFromSlot(slot);
+		storage.set(slot, item);
+		return replacedItem;
+	}
+
+	@Override
+	public Item removeFromSlot (int slot) {
+		if (!doesSlotExists(slot))
+			return null;
+		
+		Item item = storage.get(slot);
+		storage.set(slot, null);
+		return item;
+	}
+
+	@Override
+	public Item[] getRawStorage() {
+		Item[] storageArray = new Item[storage.size()];
+		storageArray = storage.toArray(storageArray);
+		return storageArray;
 	}
 	
 }

@@ -1,10 +1,14 @@
 package net.hollowbit.archipeloserver.tools.inventory;
 
+import com.badlogic.gdx.utils.Json;
+
 import net.hollowbit.archipeloserver.items.Item;
 
 public abstract class Inventory {
 	
 	public static int ROW_LENGTH = 9;
+
+	protected Json json = new Json();
 	
 	/**
 	 * Add an item to this inventory.
@@ -12,6 +16,14 @@ public abstract class Inventory {
 	 * @return Returns the left overs that could not be added.
 	 */
 	public abstract Item add(Item item);
+	
+	/**
+	 * Set the item at the specific slot. Returns the item that was in the
+	 * slot before if there was one.
+	 * @param slot
+	 * @return
+	 */
+	public abstract Item setSlot(int slot, Item item);
 	
 	/**
 	 * Remove an item from this inventory ignoring style.
@@ -29,6 +41,13 @@ public abstract class Inventory {
 	 * @return False if item not found and not removed.
 	 */
 	public abstract boolean remove(Item item, boolean ignoreStyle);
+	
+	/**
+	 * Remove an item from a specific slot
+	 * @param slot
+	 * @return
+	 */
+	public abstract Item removeFromSlot (int slot);
 	
 	/**
 	 * Move an item from one slot to another and handles overflow. Ignores item style.
@@ -85,11 +104,23 @@ public abstract class Inventory {
 	 * @param slot
 	 * @return
 	 */
-	protected abstract boolean doesSlotExists (int slot);
+	public abstract boolean doesSlotExists (int slot);
 	
 	/**
 	 * Removes all items with a quantity of 0.
 	 */
 	protected abstract void clean();
+	
+	/**
+	 * Returns a json string representing this inventory ready to be saved.
+	 * @return
+	 */
+	public abstract String getJson();
+	
+	/**
+	 * Returns the raw inventory array
+	 * @return
+	 */
+	public abstract Item[] getRawStorage();
 	
 }

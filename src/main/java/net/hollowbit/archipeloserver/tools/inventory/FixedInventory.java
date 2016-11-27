@@ -14,6 +14,10 @@ public class FixedInventory extends Inventory {
 	public FixedInventory (int size) {
 		this.storage = new Item[size];
 	}
+	
+	public FixedInventory (Item[] startItems) {
+		this.storage = startItems;
+	}
 
 	@Override
 	public Item add (Item item) {
@@ -164,7 +168,7 @@ public class FixedInventory extends Inventory {
 	}
 	
 	@Override
-	protected boolean doesSlotExists (int slot) {
+	public boolean doesSlotExists (int slot) {
 		return slot < storage.length && slot >= 0;
 	}
 	
@@ -178,6 +182,36 @@ public class FixedInventory extends Inventory {
 				return i;
 		}
 		return -1;
+	}
+
+	@Override
+	public String getJson () {
+		return json.toJson(storage);
+	}
+
+	@Override
+	public Item setSlot (int slot, Item item) {
+		if (!doesSlotExists(slot))
+			return null;
+		
+		Item replacedItem = removeFromSlot(slot);
+		storage[slot] = item;
+		return replacedItem;
+	}
+
+	@Override
+	public Item removeFromSlot (int slot) {
+		if (!doesSlotExists(slot))
+			return null;
+		
+		Item item = storage[slot];
+		storage[slot] = null;
+		return item;
+	}
+
+	@Override
+	public Item[] getRawStorage() {
+		return storage;
 	}
 	
 }

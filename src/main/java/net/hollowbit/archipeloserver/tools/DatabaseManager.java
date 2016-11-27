@@ -80,7 +80,7 @@ public class DatabaseManager {
 	public ArrayList<PlayerData> getPlayerDataFromUser (String hbUuid) {
 		//Query database to get info on a player
 		try {
-			PreparedStatement statement = connection.prepareStatement("select name, island, lastPlayed, creationDate, equippedInventory from players where hbUuid = ?");
+			PreparedStatement statement = connection.prepareStatement("select name, island, lastPlayed, creationDate, equippedInventory from players where hbUuid = ? and active = 1");
 			statement.setString(1, hbUuid);
 			ResultSet rs = statement.executeQuery();
 			
@@ -209,7 +209,7 @@ public class DatabaseManager {
 			public void run() {
 				//Update player row in database
 				try {
-					PreparedStatement statement = connection.prepareStatement("delete from players where name = ? and hbUuid = ?");
+					PreparedStatement statement = connection.prepareStatement("update players set `active`=0 where name = ? and hbUuid = ?");
 					statement.setString(1, name);
 					statement.setString(2, hbUuid);
 					

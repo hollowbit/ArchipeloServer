@@ -7,7 +7,6 @@ import java.util.UUID;
 import org.java_websocket.WebSocket;
 
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.utils.Json;
 
 import net.hollowbit.archipeloserver.ArchipeloServer;
 import net.hollowbit.archipeloserver.Tick;
@@ -18,6 +17,7 @@ import net.hollowbit.archipeloserver.entity.EntityType;
 import net.hollowbit.archipeloserver.entity.LivingEntity;
 import net.hollowbit.archipeloserver.entity.living.player.PlayerData;
 import net.hollowbit.archipeloserver.entity.living.player.PlayerFlagsManager;
+import net.hollowbit.archipeloserver.entity.living.player.PlayerInventory;
 import net.hollowbit.archipeloserver.entity.living.player.PlayerNpcDialogManager;
 import net.hollowbit.archipeloserver.hollowbitserver.HollowBitUser;
 import net.hollowbit.archipeloserver.items.Item;
@@ -61,8 +61,6 @@ public class Player extends LivingEntity implements PacketHandler {
 	public static final int EQUIP_INDEX_HAT = 8;
 	public static final int EQUIP_INDEX_USABLE = 9;
 	
-	public static final int INVENTORY_SIZE = 16;
-	
 	public static final float PERMITTED_ERROR_MULTIPLIER = 20;
 	
 	String uuid;
@@ -75,12 +73,11 @@ public class Player extends LivingEntity implements PacketHandler {
 	float rollDoubleClickTimer = 0;
 	boolean wasMoving;
 	boolean isSprinting;
-	Item[] equippedInventory;
-	Item[] inventory;
 	Date lastPlayed, creationDate;
 	HollowBitUser hbUser;
 	PlayerNpcDialogManager npcDialogManager;
 	PlayerFlagsManager flagsManager;
+	PlayerInventory inventory;
 	
 	public Player (String name, String address, boolean firstTimeLogin) {
 		this.create(name, 0, location, address, firstTimeLogin);
@@ -98,8 +95,7 @@ public class Player extends LivingEntity implements PacketHandler {
 	public void load (Map map, PlayerData playerData, HollowBitUser hbUser) {
 		this.uuid = playerData.uuid;
 		this.location = new Location(map, new Vector2(playerData.x, playerData.y));
-		this.equippedInventory = playerData.equippedInventory;
-		this.inventory = playerData.inventory;
+		this.inventory = new PlayerInventory(this, playerData.inventory, playerData.equippedInventory, null, null);
 		this.lastPlayed = playerData.lastPlayed;
 		this.creationDate = playerData.creationDate;
 		this.hbUser = hbUser;
@@ -412,8 +408,7 @@ public class Player extends LivingEntity implements PacketHandler {
 	@Override
 	public EntitySnapshot getFullSnapshot() {
 		EntitySnapshot snapshot = super.getFullSnapshot();
-		Json json = new Json();
-		snapshot.putString("equipped-inventory", json.toJson(equippedInventory));
+		snapshot.putString("equipped-inventory", inventory.getEquippedInventory().getJson());
 		return snapshot;
 	}
 	
@@ -496,11 +491,11 @@ public class Player extends LivingEntity implements PacketHandler {
 	}
 	
 	public Item[] getEquippedInventory () {
-		return equippedInventory;
+		return inventory.getEquippedInventory().getRawStorage();
 	}
 	
 	public Item[] getInventory () {
-		return inventory;
+		return inventory.getMainInventory().getRawStorage();
 	}
 	
 	public boolean isFirstTimeLogin () {
@@ -551,7 +546,7 @@ public class Player extends LivingEntity implements PacketHandler {
 		playerData.flags = "{flags:[]}";
 		
 		//Default inventory
-		playerData.inventory = new Item[INVENTORY_SIZE];
+		playerData.inventory = new Item[PlayerInventory.INVENTORY_SIZE];
 		playerData.equippedInventory = new Item[EQUIP_SIZE];
 		playerData.equippedInventory[EQUIP_INDEX_BODY] = body;
 		playerData.equippedInventory[EQUIP_INDEX_BOOTS] = new Item(ItemType.BOOTS_BASIC);
