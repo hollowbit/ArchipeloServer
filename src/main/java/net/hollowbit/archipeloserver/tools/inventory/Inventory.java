@@ -5,10 +5,9 @@ import com.badlogic.gdx.utils.Json;
 import net.hollowbit.archipeloserver.items.Item;
 
 public abstract class Inventory {
-	
-	public static int ROW_LENGTH = 9;
 
-	protected Json json = new Json();
+	protected static Json json = new Json();
+	public static final int ROW_LENGTH = 9;
 	
 	/**
 	 * Add an item to this inventory.

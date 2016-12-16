@@ -9,6 +9,7 @@ import net.hollowbit.archipeloserver.entity.EntityManager;
 import net.hollowbit.archipeloserver.entity.EntitySnapshot;
 import net.hollowbit.archipeloserver.entity.EntityType;
 import net.hollowbit.archipeloserver.entity.living.Player;
+import net.hollowbit.archipeloserver.form.FormManager;
 import net.hollowbit.archipeloserver.network.packets.EntityAddPacket;
 import net.hollowbit.archipeloserver.network.packets.EntityRemovePacket;
 import net.hollowbit.archipeloserver.tools.npcdialogs.NpcDialogManager;
@@ -39,6 +40,7 @@ public class Map {
 	private boolean[][] collisionMap;
 	private EntityManager entityManager;
 	private NpcDialogManager npcDialogManager;
+	private FormManager formManager;
 	private Island island;
 	private String displayName;
 	private int climat;
@@ -51,6 +53,8 @@ public class Map {
 		this.name = name;
 		this.island = island;
 		entityManager = new EntityManager();
+		npcDialogManager = new NpcDialogManager(this);
+		formManager = new FormManager(this);
 		changes = new MapSnapshot(name, displayName);
 	}
 	
@@ -64,7 +68,6 @@ public class Map {
 
 	//If you wish to add this map, load it from its island, not here.
 	public boolean load () {
-		npcDialogManager = new NpcDialogManager(this);
 		ArchipeloServer.getServer().getLogger().info("Loading map " + getIsland().getName() + ":" + getName() + ".");
 		displayName = makeDisplayName();
 		MapData mapData = MapLoader.loadMap(this);
@@ -82,6 +85,7 @@ public class Map {
 	public void unload () {
 		ArchipeloServer.getServer().getLogger().info("Unloading map " + getIsland().getName() + ":" + getName() + ".");
 		MapLoader.saveMap(this);
+		formManager.dispose();
 		loaded = false;
 	}
 	

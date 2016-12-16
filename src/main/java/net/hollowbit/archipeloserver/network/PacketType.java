@@ -26,6 +26,9 @@ public class PacketType {
 	public static final int NPC_DIALOG = 14;
 	public static final int NPC_DIALOG_REQUEST = 15;
 	public static final int FLAGS_ADD = 16;
+	public static final int FORM_INTERACT = 17;
+	public static final int FORM_REQUEST = 18;
+	public static final int FORM_DATA = 19;
 
 	private static HashMap<Integer, Class> registeredPackets;
 	
@@ -48,6 +51,9 @@ public class PacketType {
 			registeredPackets.put(NPC_DIALOG, ClassReflection.forName("net.hollowbit.archipeloserver.network.packets.NpcDialogPacket"));
 			registeredPackets.put(NPC_DIALOG_REQUEST, ClassReflection.forName("net.hollowbit.archipeloserver.network.packets.NpcDialogRequestPacket"));
 			registeredPackets.put(FLAGS_ADD, ClassReflection.forName("net.hollowbit.archipeloserver.network.packets.FlagsAddPacket"));
+			registeredPackets.put(FORM_INTERACT, ClassReflection.forName("net.hollowbit.archipeloserver.network.packets.FormInteractPacket"));
+			registeredPackets.put(FORM_REQUEST, ClassReflection.forName("net.hollowbit.archipeloserver.network.packets.FormRequestPacket"));
+			registeredPackets.put(FORM_DATA, ClassReflection.forName("net.hollowbit.archipeloserver.network.packets.FormDataPacket"));
 		} catch (Exception e) {
 			ArchipeloServer.getServer().getLogger().error("Was unable to register all packet.");
 			ArchipeloServer.getServer().stop();

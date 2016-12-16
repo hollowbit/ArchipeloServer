@@ -11,8 +11,11 @@ import com.badlogic.gdx.utils.reflect.ClassReflection;
 import com.badlogic.gdx.utils.reflect.ReflectionException;
 
 import net.hollowbit.archipeloserver.ArchipeloServer;
-import net.hollowbit.archipeloserver.entity.lifeless.*;
-import net.hollowbit.archipeloserver.entity.living.*;
+import net.hollowbit.archipeloserver.entity.lifeless.Door;
+import net.hollowbit.archipeloserver.entity.lifeless.DoorLocked;
+import net.hollowbit.archipeloserver.entity.lifeless.Sign;
+import net.hollowbit.archipeloserver.entity.lifeless.Teleporter;
+import net.hollowbit.archipeloserver.entity.living.Player;
 import net.hollowbit.archipeloserver.world.Map;
 import net.hollowbit.archipeloshared.CollisionRect;
 import net.hollowbit.archipeloshared.EntityTypeData;

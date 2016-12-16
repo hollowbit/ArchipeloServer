@@ -95,7 +95,7 @@ public class Player extends LivingEntity implements PacketHandler {
 	public void load (Map map, PlayerData playerData, HollowBitUser hbUser) {
 		this.uuid = playerData.uuid;
 		this.location = new Location(map, new Vector2(playerData.x, playerData.y));
-		this.inventory = new PlayerInventory(this, playerData.inventory, playerData.equippedInventory, null, null);
+		this.inventory = new PlayerInventory(this, playerData.inventory, playerData.equippedInventory, new Item[playerData.equippedInventory.length], new ArrayList<Item>());
 		this.lastPlayed = playerData.lastPlayed;
 		this.creationDate = playerData.creationDate;
 		this.hbUser = hbUser;
@@ -408,7 +408,7 @@ public class Player extends LivingEntity implements PacketHandler {
 	@Override
 	public EntitySnapshot getFullSnapshot() {
 		EntitySnapshot snapshot = super.getFullSnapshot();
-		snapshot.putString("equipped-inventory", inventory.getEquippedInventory().getJson());
+		snapshot.putString("displayInventory", inventory.getDisplayInventoryJson());
 		return snapshot;
 	}
 	
