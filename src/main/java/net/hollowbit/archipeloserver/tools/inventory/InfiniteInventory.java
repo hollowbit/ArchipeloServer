@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 
 import net.hollowbit.archipeloserver.items.Item;
+import net.hollowbit.archipeloserver.tools.StaticTools;
 
 /**
  * Inventory with an infinite amount of space. Can never run out.
@@ -166,7 +167,7 @@ public class InfiniteInventory extends Inventory {
 	
 	@Override
 	public String getJson() {
-		return json.toJson(storage);
+		return StaticTools.getJson().toJson(storage);
 	}
 
 	@Override

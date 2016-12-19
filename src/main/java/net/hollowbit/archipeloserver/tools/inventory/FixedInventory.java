@@ -1,6 +1,7 @@
 package net.hollowbit.archipeloserver.tools.inventory;
 
 import net.hollowbit.archipeloserver.items.Item;
+import net.hollowbit.archipeloserver.tools.StaticTools;
 
 /**
  * Inventory with a fixed size that cannot be changed
@@ -186,7 +187,7 @@ public class FixedInventory extends Inventory {
 
 	@Override
 	public String getJson () {
-		return json.toJson(storage);
+		return StaticTools.getJson().toJson(storage);
 	}
 
 	@Override

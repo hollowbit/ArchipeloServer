@@ -8,6 +8,7 @@ import net.hollowbit.archipeloserver.network.PacketType;
 public class FormInteractPacket extends Packet {
 	
 	public String id;
+	public String command;
 	public HashMap<String, String> data;
 	public boolean close = false;
 	

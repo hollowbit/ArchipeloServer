@@ -10,6 +10,7 @@ import com.badlogic.gdx.graphics.Color;
 import net.hollowbit.archipeloserver.ArchipeloServer;
 import net.hollowbit.archipeloserver.entity.living.Player;
 import net.hollowbit.archipeloserver.entity.living.player.PlayerData;
+import net.hollowbit.archipeloserver.entity.living.player.PlayerInventory;
 import net.hollowbit.archipeloserver.hollowbitserver.HollowBitUser;
 import net.hollowbit.archipeloserver.items.Item;
 import net.hollowbit.archipeloserver.items.ItemType;
@@ -341,7 +342,7 @@ public class World implements PacketHandler {
 					
 					//Get player datas from database and parse them into the packet
 					ArrayList<PlayerData> playerDatas = ArchipeloServer.getServer().getDatabaseManager().getPlayerDataFromUser(hbu.getUUID());
-					playerListPacket.playerEquippedInventories = new Item[playerDatas.size()][Player.EQUIP_SIZE];
+					playerListPacket.playerEquippedInventories = new Item[playerDatas.size()][PlayerInventory.DISPLAY_EQUIP_SIZE];
 					playerListPacket.names = new String[playerDatas.size()];
 					playerListPacket.islands = new String[playerDatas.size()];
 					playerListPacket.lastPlayedDateTimes = new String[playerDatas.size()];
@@ -351,7 +352,7 @@ public class World implements PacketHandler {
 					DateFormat createdFormat = new SimpleDateFormat("MMM d, yyyy");
 					
 					for (int i = 0; i < playerDatas.size(); i++) {
-						playerListPacket.playerEquippedInventories[i] = playerDatas.get(i).equippedInventory;
+						playerListPacket.playerEquippedInventories[i] = PlayerInventory.getDisplayInventory(playerDatas.get(i).uneditableEquippedInventory, playerDatas.get(i).equippedInventory, playerDatas.get(i).cosmeticInventory);;
 						playerListPacket.names[i] = playerDatas.get(i).name;
 						playerListPacket.islands[i] = playerDatas.get(i).island;
 						playerListPacket.lastPlayedDateTimes[i] = lastPlayedFormat.format(playerDatas.get(i).lastPlayed);

@@ -47,10 +47,10 @@ public enum FormType {
 		return formTypes.get(id);
 	}
 	
-	public static Form createFormByFormData (FormData formData) {
+	public static Form createFormByFormData (FormData formData, FormManager formManager) {
 		FormType formType = formTypes.get(formData.type);
 		Form form = formType.createFormOfType();
-		form.create(formData, formType);
+		form.create(formData, formType, formManager);
 		return form;
 	}
 	

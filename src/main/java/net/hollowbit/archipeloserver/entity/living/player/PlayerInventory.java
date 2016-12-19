@@ -2,15 +2,16 @@ package net.hollowbit.archipeloserver.entity.living.player;
 
 import java.util.ArrayList;
 
-import com.badlogic.gdx.utils.Json;
-
 import net.hollowbit.archipeloserver.entity.living.Player;
 import net.hollowbit.archipeloserver.items.Item;
+import net.hollowbit.archipeloserver.tools.StaticTools;
 import net.hollowbit.archipeloserver.tools.inventory.FixedInventory;
 import net.hollowbit.archipeloserver.tools.inventory.InfiniteInventory;
 import net.hollowbit.archipeloserver.tools.inventory.Inventory;
 
 public class PlayerInventory {
+
+	public static final int DISPLAY_EQUIP_SIZE = 10;
 	
 	public static final int INVENTORY_SIZE = 20;
 	public static final int INVENTORY_ROW_LENGTH = 5;
@@ -19,28 +20,30 @@ public class PlayerInventory {
 	public static final int BANK_INVENTORY = 1;
 	public static final int EQUIPPED_INVENTORY = 2;
 	public static final int COSMETIC_INVENTORY = 3;
-	
-	private static Json json = new Json();
+	public static final int UNEDITABLE_EQUIP_INVENTORY = 4;
 	
 	Player player;
 	FixedInventory main;
+	FixedInventory uneditableEquipped;
 	FixedInventory equipped;
 	FixedInventory cosmetic;
 	InfiniteInventory bank;
 	Inventory[] inventoriesInArray;
 	
-	public PlayerInventory (Player player, Item[] mainInventory, Item[] equippedInventory, Item[] cosmeticInventory, ArrayList<Item> bankInventory) {
+	public PlayerInventory (Player player, Item[] mainInventory, Item[] uneditableEquippedInventory, Item[] equippedInventory, Item[] cosmeticInventory, ArrayList<Item> bankInventory) {
 		this.player = player;
 		this.main = new FixedInventory(mainInventory);
+		this.uneditableEquipped = new FixedInventory(uneditableEquippedInventory);
 		this.equipped = new FixedInventory(equippedInventory);
 		this.cosmetic = new FixedInventory(cosmeticInventory);
 		this.bank = new InfiniteInventory(bankInventory);
 		
-		inventoriesInArray = new Inventory[4];
+		inventoriesInArray = new Inventory[5];
 		inventoriesInArray[0] = main;
 		inventoriesInArray[1] = bank;
 		inventoriesInArray[2] = equipped;
 		inventoriesInArray[3] = cosmetic;
+		inventoriesInArray[4] = uneditableEquipped;
 	}
 	
 	/**
@@ -127,6 +130,9 @@ public class PlayerInventory {
 		if (fromInventory >= inventoriesInArray.length || toInventory >= inventoriesInArray.length)
 			return false;
 		
+		if (fromInventory == UNEDITABLE_EQUIP_INVENTORY || toInventory == UNEDITABLE_EQUIP_INVENTORY)
+			return false;
+		
 		if (!inventoriesInArray[fromInventory].doesSlotExists(fromSlot) || !inventoriesInArray[toInventory].doesSlotExists(toSlot))
 			return false;
 		
@@ -156,6 +162,10 @@ public class PlayerInventory {
 			inventoryUpdated(fromInventory);
 			inventoryUpdated(toInventory);
 		}
+		
+		if (fromInventory == EQUIPPED_INVENTORY || fromInventory == COSMETIC_INVENTORY || toInventory == EQUIPPED_INVENTORY || toInventory == COSMETIC_INVENTORY)
+			player.updateDisplayInventory();
+		
 		return true;
 	}
 	
@@ -166,32 +176,10 @@ public class PlayerInventory {
 	private void inventoryUpdated (int inventoryId) {
 		if (inventoryId == EQUIPPED_INVENTORY || inventoryId == COSMETIC_INVENTORY)
 			player.getChangesSnapshot().putString("displayInventory", getDisplayInventoryJson());
-		
-		/*switch (inventoryId) {
-		case MAIN_INVENTORY:
-			player.getChangesSnapshot().putString("inventory", main.getJson());
-			break;
-		case EQUIPPED_INVENTORY:
-			player.getChangesSnapshot().putString("equippedInventory", main.getJson());
-			break;
-		case COSMETIC_INVENTORY:
-			player.getChangesSnapshot().putString("cosmeticInventory", main.getJson());
-			break;
-		case BANK_INVENTORY:
-			player.getChangesSnapshot().putString("bankInventory", main.getJson());
-			break;
-		}*/
 	}
 	
 	public String getDisplayInventoryJson () {
-		Item[] displayInventory = new Item[cosmetic.getRawStorage().length];
-		for (int i = 0; i < displayInventory.length; i++) {
-			if (cosmetic.getRawStorage()[i] != null)
-				displayInventory[i] = cosmetic.getRawStorage()[i];
-			else
-				displayInventory[i] = equipped.getRawStorage()[i];
-		}
-		return json.toJson(displayInventory);
+		return StaticTools.getJson().toJson(getDisplayInventory(uneditableEquipped.getRawStorage(), equipped.getRawStorage(), cosmetic.getRawStorage()));
 	}
 	
 	public FixedInventory getMainInventory () {
@@ -208,6 +196,24 @@ public class PlayerInventory {
 	
 	public InfiniteInventory getBankInventory () {
 		return bank;
+	}
+	
+	public static Item[] getDisplayInventory (Item[] uneditableEquipped, Item[] equipped, Item[] cosmetic) {
+		Item[] displayInventory = new Item[DISPLAY_EQUIP_SIZE];
+		
+		int[] indexes = new int[]{0, 6, 7};
+		for (int i = 0; i < uneditableEquipped.length; i++) {
+			displayInventory[indexes[i]] = uneditableEquipped[i];
+		}
+
+		indexes = new int[]{1, 2, 3, 4, 5, 8, 9};
+		for (int i = 0; i < equipped.length; i++) {
+			if (cosmetic[i] != null)
+				displayInventory[indexes[i]] = cosmetic[i];
+			else
+				displayInventory[indexes[i]] = equipped[i];
+		}
+		return displayInventory;
 	}
 	
 }

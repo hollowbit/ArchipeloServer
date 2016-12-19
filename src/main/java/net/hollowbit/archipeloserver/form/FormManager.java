@@ -53,7 +53,7 @@ public class FormManager implements PacketHandler {
 						form.close();
 						this.removeForm(formInteractPacket.id);
 					} else {
-						form.interactWith(player, formInteractPacket.data);
+						form.interactWith(player, formInteractPacket.command, formInteractPacket.data);
 					}
 				}
 				return true;
@@ -67,7 +67,7 @@ public class FormManager implements PacketHandler {
 					
 					if (!forms.containsKey(id)) {//If the player doesn't have an inventory open
 						formRequestPacket.data.put("player", player.getName());
-						RequestableForm form = (RequestableForm) FormType.createFormByFormData(new FormData(formRequestPacket.type, id, formRequestPacket.data));
+						RequestableForm form = (RequestableForm) FormType.createFormByFormData(new FormData(formRequestPacket.type, id, formRequestPacket.data), this);
 						this.addForm(form);
 						player.sendPacket(new FormDataPacket(form.getFormDataForClient()));
 					}

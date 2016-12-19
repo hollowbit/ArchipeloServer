@@ -62,7 +62,10 @@ public class DatabaseManager {
 			
 			//Inventory
 			Json json = new Json();
+			pd.uneditableEquippedInventory = json.fromJson(Item[].class, rs.getString("uneditableEquippedInventory"));
 			pd.equippedInventory = json.fromJson(Item[].class, rs.getString("equippedInventory"));
+			pd.cosmeticInventory = json.fromJson(Item[].class, rs.getString("cosmeticInventory"));
+			pd.bankInventory = json.fromJson(Item[].class, rs.getString("bankInventory"));
 			pd.inventory = json.fromJson(Item[].class, rs.getString("inventory"));
 			return pd;
 		} catch (SQLException e) {
@@ -80,7 +83,7 @@ public class DatabaseManager {
 	public ArrayList<PlayerData> getPlayerDataFromUser (String hbUuid) {
 		//Query database to get info on a player
 		try {
-			PreparedStatement statement = connection.prepareStatement("select name, island, lastPlayed, creationDate, equippedInventory from players where hbUuid = ? and active = 1");
+			PreparedStatement statement = connection.prepareStatement("select name, island, lastPlayed, creationDate, uneditableEquippedInventory, equippedInventory, cosmeticInventory from players where hbUuid = ? and active = 1");
 			statement.setString(1, hbUuid);
 			ResultSet rs = statement.executeQuery();
 			
@@ -97,7 +100,9 @@ public class DatabaseManager {
 				
 				//Inventory
 				Json json = new Json();
+				pd.uneditableEquippedInventory = json.fromJson(Item[].class, rs.getString("uneditableEquippedInventory"));
 				pd.equippedInventory = json.fromJson(Item[].class, rs.getString("equippedInventory"));
+				pd.cosmeticInventory = json.fromJson(Item[].class, rs.getString("cosmeticInventory"));
 				
 				playerDatas.add(pd);
 			}
@@ -119,7 +124,7 @@ public class DatabaseManager {
 			public void run() {
 				//Insert row to database for player
 				try {
-					PreparedStatement statement = connection.prepareStatement("insert into players (`uuid`, `hbUuid`, `name`, `x`, `y`, `island`, `map`, `equippedInventory`, `inventory`, `lastPlayed`, `creationDate`, `flags`) values (?,?,?,?,?,?,?,?,?,?,?,?)");
+					PreparedStatement statement = connection.prepareStatement("insert into players (`uuid`, `hbUuid`, `name`, `x`, `y`, `island`, `map`, `equippedInventory`, `cosmeticInventory`, `bankInventory`, `inventory`, `lastPlayed`, `creationDate`, `flags`) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
 					statement.setString(1, player.getUUID());
 					statement.setString(2, player.getHollowBitUser().getUUID());
 					statement.setString(3, player.getName());
@@ -129,13 +134,14 @@ public class DatabaseManager {
 					statement.setString(7, player.getLocation().getMap().getName());
 					
 					//Inventory
-					Json json = new Json();
-					statement.setString(8, json.toJson(player.getEquippedInventory()));
-					statement.setString(9, json.toJson(player.getInventory()));
+					statement.setString(8, player.getInventory().getEquippedInventory().getJson());
+					statement.setString(9, player.getInventory().getCosmeticInventory().getJson());
+					statement.setString(10, player.getInventory().getBankInventory().getJson());
+					statement.setString(11, player.getInventory().getMainInventory().getJson());
 
-					statement.setDate(10, player.getLastPlayedDate());
-					statement.setDate(11, player.getCreationDate());
-					statement.setString(12, player.getFlagsManager().getFlagsJson());
+					statement.setDate(12, player.getLastPlayedDate());
+					statement.setDate(13, player.getCreationDate());
+					statement.setString(14, player.getFlagsManager().getFlagsJson());
 					
 					statement.executeUpdate();
 				} catch (SQLException e) {
@@ -172,7 +178,7 @@ public class DatabaseManager {
 			public void run() {
 				//Update player row in database
 				try {
-					PreparedStatement statement = connection.prepareStatement("update players set `name`=?, `x`=?, `y`=?, `island`=?, `map`=?, `equippedInventory`=?, `inventory`=?, `lastPlayed`=?, `flags`=? where uuid = ?");
+					PreparedStatement statement = connection.prepareStatement("update players set `name`=?, `x`=?, `y`=?, `island`=?, `map`=?, `equippedInventory`=?, `cosmeticInventory`=?, `bankInventory`=?, `inventory`=?, `lastPlayed`=?, `flags`=? where uuid = ?");
 					statement.setString(1, player.getName());
 					statement.setFloat(2, player.getLocation().getX());
 					statement.setFloat(3, player.getLocation().getY());
@@ -180,14 +186,15 @@ public class DatabaseManager {
 					statement.setString(5, player.getLocation().getMap().getName());
 					
 					//Inventory
-					Json json = new Json();
-					statement.setString(6, json.toJson(player.getEquippedInventory()));
-					statement.setString(7, json.toJson(player.getInventory()));
+					statement.setString(6, player.getInventory().getEquippedInventory().getJson());
+					statement.setString(7, player.getInventory().getCosmeticInventory().getJson());
+					statement.setString(8, player.getInventory().getBankInventory().getJson());
+					statement.setString(9, player.getInventory().getMainInventory().getJson());
 					
-					statement.setDate(8, getCurrentDate());
-					statement.setString(9, player.getFlagsManager().getFlagsJson());
+					statement.setDate(10, getCurrentDate());
+					statement.setString(11, player.getFlagsManager().getFlagsJson());
 					
-					statement.setString(10, player.getUUID());//Update where uuid is the same
+					statement.setString(12, player.getUUID());//Update where uuid is the same
 					
 					statement.executeUpdate();
 				} catch (SQLException e) {

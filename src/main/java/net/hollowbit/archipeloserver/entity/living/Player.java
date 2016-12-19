@@ -49,17 +49,19 @@ public class Player extends LivingEntity implements PacketHandler {
 	public static final float HIT_RANGE = 8;
 	
 	//Equipped Inventory Index
-	public static final int EQUIP_SIZE = 10;
-	public static final int EQUIP_INDEX_BODY = 0;
-	public static final int EQUIP_INDEX_BOOTS = 1;
-	public static final int EQUIP_INDEX_PANTS = 2;
-	public static final int EQUIP_INDEX_SHIRT = 3;
-	public static final int EQUIP_INDEX_GLOVES = 4;
-	public static final int EQUIP_INDEX_SHOULDERPADS = 5;
-	public static final int EQUIP_INDEX_FACE = 6;
-	public static final int EQUIP_INDEX_HAIR = 7;
-	public static final int EQUIP_INDEX_HAT = 8;
-	public static final int EQUIP_INDEX_USABLE = 9;
+	public static final int EQUIP_SIZE = 7;
+	public static final int EQUIP_INDEX_BOOTS = 0;
+	public static final int EQUIP_INDEX_PANTS = 1;
+	public static final int EQUIP_INDEX_SHIRT = 2;
+	public static final int EQUIP_INDEX_GLOVES = 3;
+	public static final int EQUIP_INDEX_SHOULDERPADS = 4;
+	public static final int EQUIP_INDEX_HAT = 5;
+	public static final int EQUIP_INDEX_USABLE = 6;
+	
+	public static final int UNEDITABLE_EQUIP_SIZE = 3;
+	public static final int UNEDITABLE_EQUIP_INDEX_BODY = 0;
+	public static final int UNEDITABLE_EQUIP_INDEX_FACE = 1;
+	public static final int UNEDITABLE_EQUIP_INDEX_HAIR = 2;
 	
 	public static final float PERMITTED_ERROR_MULTIPLIER = 20;
 	
@@ -95,7 +97,7 @@ public class Player extends LivingEntity implements PacketHandler {
 	public void load (Map map, PlayerData playerData, HollowBitUser hbUser) {
 		this.uuid = playerData.uuid;
 		this.location = new Location(map, new Vector2(playerData.x, playerData.y));
-		this.inventory = new PlayerInventory(this, playerData.inventory, playerData.equippedInventory, new Item[playerData.equippedInventory.length], new ArrayList<Item>());
+		this.inventory = new PlayerInventory(this, playerData.inventory, playerData.uneditableEquippedInventory, playerData.equippedInventory, new Item[playerData.equippedInventory.length], new ArrayList<Item>());
 		this.lastPlayed = playerData.lastPlayed;
 		this.creationDate = playerData.creationDate;
 		this.hbUser = hbUser;
@@ -412,6 +414,10 @@ public class Player extends LivingEntity implements PacketHandler {
 		return snapshot;
 	}
 	
+	public void updateDisplayInventory () {
+		changes.putString("displayInventory", inventory.getDisplayInventoryJson());
+	}
+	
 	@Override
 	public boolean handlePacket (Packet packet, String address) {
 		if (this.address.equals(address)) {
@@ -490,12 +496,8 @@ public class Player extends LivingEntity implements PacketHandler {
 		return uuid;
 	}
 	
-	public Item[] getEquippedInventory () {
-		return inventory.getEquippedInventory().getRawStorage();
-	}
-	
-	public Item[] getInventory () {
-		return inventory.getMainInventory().getRawStorage();
+	public PlayerInventory getInventory () {
+		return inventory;
 	}
 	
 	public boolean isFirstTimeLogin () {
@@ -547,15 +549,20 @@ public class Player extends LivingEntity implements PacketHandler {
 		
 		//Default inventory
 		playerData.inventory = new Item[PlayerInventory.INVENTORY_SIZE];
+		playerData.cosmeticInventory = new Item[EQUIP_SIZE];
+		playerData.bankInventory = new Item[1];
+		
+		playerData.uneditableEquippedInventory = new Item[UNEDITABLE_EQUIP_SIZE];
+		playerData.uneditableEquippedInventory[UNEDITABLE_EQUIP_INDEX_BODY] = body;
+		playerData.uneditableEquippedInventory[UNEDITABLE_EQUIP_INDEX_FACE] = face;
+		playerData.uneditableEquippedInventory[UNEDITABLE_EQUIP_INDEX_HAIR] = hair;
+		
 		playerData.equippedInventory = new Item[EQUIP_SIZE];
-		playerData.equippedInventory[EQUIP_INDEX_BODY] = body;
 		playerData.equippedInventory[EQUIP_INDEX_BOOTS] = new Item(ItemType.BOOTS_BASIC);
 		playerData.equippedInventory[EQUIP_INDEX_PANTS] = new Item(ItemType.PANTS_BASIC);
 		playerData.equippedInventory[EQUIP_INDEX_SHIRT] = new Item(ItemType.SHIRT_BASIC);
 		playerData.equippedInventory[EQUIP_INDEX_GLOVES] = null;
 		playerData.equippedInventory[EQUIP_INDEX_SHOULDERPADS] = null;
-		playerData.equippedInventory[EQUIP_INDEX_HAIR] = hair;
-		playerData.equippedInventory[EQUIP_INDEX_FACE] = face;
 		playerData.equippedInventory[EQUIP_INDEX_HAT] = null;
 		playerData.equippedInventory[EQUIP_INDEX_USABLE] = null;
 		return playerData;

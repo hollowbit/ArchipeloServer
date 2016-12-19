@@ -1,12 +1,9 @@
 package net.hollowbit.archipeloserver.tools.inventory;
 
-import com.badlogic.gdx.utils.Json;
-
 import net.hollowbit.archipeloserver.items.Item;
 
 public abstract class Inventory {
-
-	protected static Json json = new Json();
+	
 	public static final int ROW_LENGTH = 9;
 	
 	/**
