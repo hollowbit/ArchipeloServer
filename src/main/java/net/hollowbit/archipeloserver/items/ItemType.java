@@ -24,12 +24,12 @@ public enum ItemType {
 	POTION_SMALL("potion_small", new HealthPotionUseType())*/;
 	
 	public static final int NO_EQUIP_TYPE = -1;
-	public static final int EQUIP_INDEX_BODY = 0;
-	public static final int EQUIP_INDEX_BOOTS = 1;
-	public static final int EQUIP_INDEX_PANTS = 2;
-	public static final int EQUIP_INDEX_SHIRT = 3;
-	public static final int EQUIP_INDEX_GLOVES = 4;
-	public static final int EQUIP_INDEX_SHOULDERPADS = 5;
+	public static final int EQUIP_INDEX_BOOTS = 0;
+	public static final int EQUIP_INDEX_PANTS = 1;
+	public static final int EQUIP_INDEX_SHIRT = 2;
+	public static final int EQUIP_INDEX_GLOVES = 3;
+	public static final int EQUIP_INDEX_SHOULDERPADS = 4;
+	public static final int EQUIP_INDEX_BODY = 5;
 	public static final int EQUIP_INDEX_FACE = 6;
 	public static final int EQUIP_INDEX_HAIR = 7;
 	public static final int EQUIP_INDEX_HAT = 8;

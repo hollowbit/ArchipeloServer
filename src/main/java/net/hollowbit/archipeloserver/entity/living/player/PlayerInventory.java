@@ -160,6 +160,11 @@ public class PlayerInventory {
 		}*/
 			
 		if (fromInventory == toInventory) {
+			Item fromItem = inventoriesInArray[fromInventory].getRawStorage()[fromSlot];
+			if (toInventory == EQUIPPED_INVENTORY || toInventory == COSMETIC_INVENTORY) {
+				if (fromItem.getType().equipType != toSlot)
+					return false;
+			}
 			inventoriesInArray[fromInventory].move(fromSlot, toSlot);
 			inventoryUpdated(fromInventory);
 		} else {
