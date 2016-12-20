@@ -2,6 +2,7 @@ package net.hollowbit.archipeloserver.entity.living;
 
 import java.sql.Date;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.UUID;
 
 import org.java_websocket.WebSocket;
@@ -49,19 +50,23 @@ public class Player extends LivingEntity implements PacketHandler {
 	public static final float HIT_RANGE = 8;
 	
 	//Equipped Inventory Index
-	public static final int EQUIP_SIZE = 7;
+	public static final int EQUIP_SIZE = 6;
 	public static final int EQUIP_INDEX_BOOTS = 0;
 	public static final int EQUIP_INDEX_PANTS = 1;
 	public static final int EQUIP_INDEX_SHIRT = 2;
 	public static final int EQUIP_INDEX_GLOVES = 3;
 	public static final int EQUIP_INDEX_SHOULDERPADS = 4;
 	public static final int EQUIP_INDEX_HAT = 5;
-	public static final int EQUIP_INDEX_USABLE = 6;
 	
 	public static final int UNEDITABLE_EQUIP_SIZE = 3;
 	public static final int UNEDITABLE_EQUIP_INDEX_BODY = 0;
 	public static final int UNEDITABLE_EQUIP_INDEX_FACE = 1;
 	public static final int UNEDITABLE_EQUIP_INDEX_HAIR = 2;
+	
+	public static final int WEAPON_EQUIPPED_SIZE = 1;
+	public static final int CONSUMABLES_EQUIPPED_SIZE = 3;
+	public static final int BUFFS_EQUIPPED_SIZE = 3;
+	public static final int AMMO_EQUIPPED_SIZE = 2;
 	
 	public static final float PERMITTED_ERROR_MULTIPLIER = 20;
 	
@@ -97,7 +102,7 @@ public class Player extends LivingEntity implements PacketHandler {
 	public void load (Map map, PlayerData playerData, HollowBitUser hbUser) {
 		this.uuid = playerData.uuid;
 		this.location = new Location(map, new Vector2(playerData.x, playerData.y));
-		this.inventory = new PlayerInventory(this, playerData.inventory, playerData.uneditableEquippedInventory, playerData.equippedInventory, new Item[playerData.equippedInventory.length], new ArrayList<Item>());
+		this.inventory = new PlayerInventory(this, playerData.inventory, playerData.uneditableEquippedInventory, playerData.equippedInventory, playerData.cosmeticInventory, new ArrayList<Item>(Arrays.asList(playerData.bankInventory)), playerData.weaponInventory, playerData.consumablesInventory, playerData.buffsInventory, playerData.ammoInventory);
 		this.lastPlayed = playerData.lastPlayed;
 		this.creationDate = playerData.creationDate;
 		this.hbUser = hbUser;
@@ -534,6 +539,7 @@ public class Player extends LivingEntity implements PacketHandler {
 	}
 	
 	public static PlayerData getNewPlayerData (String name, String hbUuid, Item hair, Item face, Item body) {
+		System.out.println("Player.java getting default player data");
 		Configuration config = ArchipeloServer.getServer().getConfig();
 		PlayerData playerData = new PlayerData();
 		playerData.uuid = UUID.randomUUID().toString();
@@ -551,6 +557,10 @@ public class Player extends LivingEntity implements PacketHandler {
 		playerData.inventory = new Item[PlayerInventory.INVENTORY_SIZE];
 		playerData.cosmeticInventory = new Item[EQUIP_SIZE];
 		playerData.bankInventory = new Item[1];
+		playerData.weaponInventory = new Item[WEAPON_EQUIPPED_SIZE];
+		playerData.consumablesInventory = new Item[CONSUMABLES_EQUIPPED_SIZE];
+		playerData.buffsInventory = new Item[BUFFS_EQUIPPED_SIZE];
+		playerData.ammoInventory = new Item[AMMO_EQUIPPED_SIZE];
 		
 		playerData.uneditableEquippedInventory = new Item[UNEDITABLE_EQUIP_SIZE];
 		playerData.uneditableEquippedInventory[UNEDITABLE_EQUIP_INDEX_BODY] = body;
@@ -564,7 +574,6 @@ public class Player extends LivingEntity implements PacketHandler {
 		playerData.equippedInventory[EQUIP_INDEX_GLOVES] = null;
 		playerData.equippedInventory[EQUIP_INDEX_SHOULDERPADS] = null;
 		playerData.equippedInventory[EQUIP_INDEX_HAT] = null;
-		playerData.equippedInventory[EQUIP_INDEX_USABLE] = null;
 		return playerData;
 	}
 	

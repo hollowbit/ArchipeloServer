@@ -4,6 +4,7 @@ import java.util.ArrayList;
 
 import net.hollowbit.archipeloserver.entity.living.Player;
 import net.hollowbit.archipeloserver.items.Item;
+import net.hollowbit.archipeloserver.items.ItemType;
 import net.hollowbit.archipeloserver.tools.StaticTools;
 import net.hollowbit.archipeloserver.tools.inventory.FixedInventory;
 import net.hollowbit.archipeloserver.tools.inventory.InfiniteInventory;
@@ -16,11 +17,16 @@ public class PlayerInventory {
 	public static final int INVENTORY_SIZE = 20;
 	public static final int INVENTORY_ROW_LENGTH = 5;
 	
+	public static final int NUM_INVENTORIES = 9;
 	public static final int MAIN_INVENTORY = 0;
 	public static final int BANK_INVENTORY = 1;
 	public static final int EQUIPPED_INVENTORY = 2;
 	public static final int COSMETIC_INVENTORY = 3;
 	public static final int UNEDITABLE_EQUIP_INVENTORY = 4;
+	public static final int WEAPON_EQUIP_INVENTORY = 5;
+	public static final int CONSUMABLES_EQUIP_INVENTORY = 6;
+	public static final int BUFFS_EQUIP_INVENTORY = 7;
+	public static final int AMMO_EQUIP_INVENTORY = 8;
 	
 	Player player;
 	FixedInventory main;
@@ -28,22 +34,35 @@ public class PlayerInventory {
 	FixedInventory equipped;
 	FixedInventory cosmetic;
 	InfiniteInventory bank;
+	
+	FixedInventory weapon;
+	FixedInventory consumables;
+	FixedInventory buffs;
+	FixedInventory ammo;
 	Inventory[] inventoriesInArray;
 	
-	public PlayerInventory (Player player, Item[] mainInventory, Item[] uneditableEquippedInventory, Item[] equippedInventory, Item[] cosmeticInventory, ArrayList<Item> bankInventory) {
+	public PlayerInventory (Player player, Item[] mainInventory, Item[] uneditableEquippedInventory, Item[] equippedInventory, Item[] cosmeticInventory, ArrayList<Item> bankInventory, Item[] weaponInventory, Item[] consumablesInventory, Item[] buffsInventory, Item[] ammoInventory) {
 		this.player = player;
 		this.main = new FixedInventory(mainInventory);
 		this.uneditableEquipped = new FixedInventory(uneditableEquippedInventory);
 		this.equipped = new FixedInventory(equippedInventory);
 		this.cosmetic = new FixedInventory(cosmeticInventory);
 		this.bank = new InfiniteInventory(bankInventory);
+		this.weapon = new FixedInventory(weaponInventory);
+		this.consumables = new FixedInventory(consumablesInventory);
+		this.buffs = new FixedInventory(buffsInventory);
+		this.ammo = new FixedInventory(ammoInventory);
 		
-		inventoriesInArray = new Inventory[5];
+		inventoriesInArray = new Inventory[NUM_INVENTORIES];
 		inventoriesInArray[0] = main;
 		inventoriesInArray[1] = bank;
 		inventoriesInArray[2] = equipped;
 		inventoriesInArray[3] = cosmetic;
 		inventoriesInArray[4] = uneditableEquipped;
+		inventoriesInArray[5] = weapon;
+		inventoriesInArray[6] = consumables;
+		inventoriesInArray[7] = buffs;
+		inventoriesInArray[8] = ammo;
 	}
 	
 	/**
@@ -148,6 +167,34 @@ public class PlayerInventory {
 			if (fromItem == null)
 				return false;
 			
+			//Make sure items are only being put in correct slots
+			if (toInventory == WEAPON_EQUIP_INVENTORY) {
+				if (fromItem.getType().equipType != ItemType.EQUIP_INDEX_USABLE) {
+					inventoriesInArray[fromInventory].setSlot(fromSlot, fromItem);
+					return false;
+				}
+			} else if (toInventory == AMMO_EQUIP_INVENTORY) {
+				if (!fromItem.getType().ammo) {
+					inventoriesInArray[fromInventory].setSlot(fromSlot, fromItem);
+					return false;
+				}
+			} else if (toInventory == BUFFS_EQUIP_INVENTORY) {
+				if (!fromItem.getType().buff) {
+					inventoriesInArray[fromInventory].setSlot(fromSlot, fromItem);
+					return false;
+				}
+			} else if (toInventory == CONSUMABLES_EQUIP_INVENTORY) {
+				if (!fromItem.getType().consumable) {
+					inventoriesInArray[fromInventory].setSlot(fromSlot, fromItem);
+					return false;
+				}
+			} else if (toInventory == EQUIPPED_INVENTORY || toInventory == COSMETIC_INVENTORY) {
+				if (fromItem.getType().equipType != toSlot) {
+					inventoriesInArray[fromInventory].setSlot(fromSlot, fromItem);
+					return false;
+				}
+			}
+
 			//If it's the bank, just add the item
 			if (toInventory == BANK_INVENTORY) {
 				inventoriesInArray[toInventory].add(fromItem);
@@ -179,11 +226,15 @@ public class PlayerInventory {
 	}
 	
 	public String getDisplayInventoryJson () {
-		return StaticTools.getJson().toJson(getDisplayInventory(uneditableEquipped.getRawStorage(), equipped.getRawStorage(), cosmetic.getRawStorage()));
+		return StaticTools.getJson().toJson(getDisplayInventory(uneditableEquipped.getRawStorage(), equipped.getRawStorage(), cosmetic.getRawStorage(), weapon.getRawStorage()), Item[].class);
 	}
 	
 	public FixedInventory getMainInventory () {
 		return main;
+	}
+	
+	public FixedInventory getUneditableEquippedInventory () {
+		return uneditableEquipped;
 	}
 	
 	public FixedInventory getEquippedInventory () {
@@ -198,7 +249,23 @@ public class PlayerInventory {
 		return bank;
 	}
 	
-	public static Item[] getDisplayInventory (Item[] uneditableEquipped, Item[] equipped, Item[] cosmetic) {
+	public FixedInventory getWeaponInventory () {
+		return weapon;
+	}
+	
+	public FixedInventory getConsumablesInventory () {
+		return consumables;
+	}
+	
+	public FixedInventory getBuffsInventory () {
+		return buffs;
+	}
+	
+	public FixedInventory getAmmoInventory () {
+		return ammo;
+	}
+	
+	public static Item[] getDisplayInventory (Item[] uneditableEquipped, Item[] equipped, Item[] cosmetic, Item[] weapon) {
 		Item[] displayInventory = new Item[DISPLAY_EQUIP_SIZE];
 		
 		int[] indexes = new int[]{0, 6, 7};
@@ -206,13 +273,15 @@ public class PlayerInventory {
 			displayInventory[indexes[i]] = uneditableEquipped[i];
 		}
 
-		indexes = new int[]{1, 2, 3, 4, 5, 8, 9};
+		indexes = new int[]{1, 2, 3, 4, 5, 8};
 		for (int i = 0; i < equipped.length; i++) {
 			if (cosmetic[i] != null)
 				displayInventory[indexes[i]] = cosmetic[i];
 			else
 				displayInventory[indexes[i]] = equipped[i];
 		}
+		
+		displayInventory[9] = weapon[0];
 		return displayInventory;
 	}
 	

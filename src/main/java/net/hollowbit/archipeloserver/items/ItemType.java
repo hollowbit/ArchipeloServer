@@ -23,6 +23,18 @@ public enum ItemType {
 	SWORD("sword"),
 	POTION_SMALL("potion_small", new HealthPotionUseType())*/;
 	
+	public static final int NO_EQUIP_TYPE = -1;
+	public static final int EQUIP_INDEX_BODY = 0;
+	public static final int EQUIP_INDEX_BOOTS = 1;
+	public static final int EQUIP_INDEX_PANTS = 2;
+	public static final int EQUIP_INDEX_SHIRT = 3;
+	public static final int EQUIP_INDEX_GLOVES = 4;
+	public static final int EQUIP_INDEX_SHOULDERPADS = 5;
+	public static final int EQUIP_INDEX_FACE = 6;
+	public static final int EQUIP_INDEX_HAIR = 7;
+	public static final int EQUIP_INDEX_HAT = 8;
+	public static final int EQUIP_INDEX_USABLE = 9;
+	
 	public static final float WALK_ANIMATION_LENGTH = 0.15f;
 	public static final float ROLL_ANIMATION_LENGTH = 0.08f;
 	public static final float SPRINT_ANIMATION_LENGTH = 0.11f;
@@ -38,8 +50,10 @@ public enum ItemType {
 	public float critMultiplier;
 	public float critChance;
 	public int durability;
-	public boolean wearable;
-	public boolean usable;
+	public int equipType;
+	public boolean buff;
+	public boolean ammo;
+	public boolean consumable;
 	public boolean material;
 	public int numOfStyles;
 	public int numOfUseAnimations;
@@ -81,14 +95,16 @@ public enum ItemType {
 		this.critMultiplier = data.critMultiplier;
 		this.critChance = data.critChance;
 		this.durability = data.durability;
-		this.wearable = data.wearable;
-		this.usable = data.usable;
+		this.equipType = data.equipType;
+		this.buff = data.buff;
+		this.ammo = data.ammo;
+		this.consumable = data.consumable;
 		this.material = data.material;
 		this.numOfStyles = data.numOfStyles;
 		this.numOfUseAnimations = data.numOfUseAnimations;
 		this.useAnimationLength = data.useAnimationLength;
 		
-		if (usable)
+		if (equipType == EQUIP_INDEX_USABLE)
 			this.useType = useType;
 		else
 			useType = null;

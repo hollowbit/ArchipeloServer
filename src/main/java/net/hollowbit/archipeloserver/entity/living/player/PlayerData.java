@@ -16,6 +16,10 @@ public class PlayerData {
 	public Item[] cosmeticInventory;
 	public Item[] bankInventory;
 	public Item[] inventory;
+	public Item[] weaponInventory;
+	public Item[] consumablesInventory;
+	public Item[] buffsInventory;
+	public Item[] ammoInventory;
 	public Date lastPlayed, creationDate;
 	public String flags;
 	

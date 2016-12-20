@@ -67,6 +67,10 @@ public class DatabaseManager {
 			pd.cosmeticInventory = json.fromJson(Item[].class, rs.getString("cosmeticInventory"));
 			pd.bankInventory = json.fromJson(Item[].class, rs.getString("bankInventory"));
 			pd.inventory = json.fromJson(Item[].class, rs.getString("inventory"));
+			pd.weaponInventory = json.fromJson(Item[].class, rs.getString("weaponInventory"));
+			pd.consumablesInventory = json.fromJson(Item[].class, rs.getString("consumablesInventory"));
+			pd.buffsInventory = json.fromJson(Item[].class, rs.getString("buffsInventory"));
+			pd.ammoInventory = json.fromJson(Item[].class, rs.getString("ammoInventory"));
 			return pd;
 		} catch (SQLException e) {
 			System.out.println(e.getMessage());
@@ -83,7 +87,7 @@ public class DatabaseManager {
 	public ArrayList<PlayerData> getPlayerDataFromUser (String hbUuid) {
 		//Query database to get info on a player
 		try {
-			PreparedStatement statement = connection.prepareStatement("select name, island, lastPlayed, creationDate, uneditableEquippedInventory, equippedInventory, cosmeticInventory from players where hbUuid = ? and active = 1");
+			PreparedStatement statement = connection.prepareStatement("select name, island, lastPlayed, creationDate, weaponInventory, uneditableEquippedInventory, equippedInventory, cosmeticInventory from players where hbUuid = ? and active = 1");
 			statement.setString(1, hbUuid);
 			ResultSet rs = statement.executeQuery();
 			
@@ -100,6 +104,7 @@ public class DatabaseManager {
 				
 				//Inventory
 				Json json = new Json();
+				pd.weaponInventory = json.fromJson(Item[].class, rs.getString("weaponInventory"));
 				pd.uneditableEquippedInventory = json.fromJson(Item[].class, rs.getString("uneditableEquippedInventory"));
 				pd.equippedInventory = json.fromJson(Item[].class, rs.getString("equippedInventory"));
 				pd.cosmeticInventory = json.fromJson(Item[].class, rs.getString("cosmeticInventory"));
@@ -124,7 +129,7 @@ public class DatabaseManager {
 			public void run() {
 				//Insert row to database for player
 				try {
-					PreparedStatement statement = connection.prepareStatement("insert into players (`uuid`, `hbUuid`, `name`, `x`, `y`, `island`, `map`, `equippedInventory`, `cosmeticInventory`, `bankInventory`, `inventory`, `lastPlayed`, `creationDate`, `flags`) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
+					PreparedStatement statement = connection.prepareStatement("insert into players (`uuid`, `hbUuid`, `name`, `x`, `y`, `island`, `map`, `weaponInventory`, `consumablesInventory`, `buffsInventory`, `ammoInventory`, `uneditableEquippedInventory`, `equippedInventory`, `cosmeticInventory`, `bankInventory`, `inventory`, `lastPlayed`, `creationDate`, `flags`) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
 					statement.setString(1, player.getUUID());
 					statement.setString(2, player.getHollowBitUser().getUUID());
 					statement.setString(3, player.getName());
@@ -134,14 +139,19 @@ public class DatabaseManager {
 					statement.setString(7, player.getLocation().getMap().getName());
 					
 					//Inventory
-					statement.setString(8, player.getInventory().getEquippedInventory().getJson());
-					statement.setString(9, player.getInventory().getCosmeticInventory().getJson());
-					statement.setString(10, player.getInventory().getBankInventory().getJson());
-					statement.setString(11, player.getInventory().getMainInventory().getJson());
+					statement.setString(8, player.getInventory().getWeaponInventory().getJson());
+					statement.setString(9, player.getInventory().getConsumablesInventory().getJson());
+					statement.setString(10, player.getInventory().getBuffsInventory().getJson());
+					statement.setString(11, player.getInventory().getAmmoInventory().getJson());
+					statement.setString(12, player.getInventory().getUneditableEquippedInventory().getJson());
+					statement.setString(13, player.getInventory().getEquippedInventory().getJson());
+					statement.setString(14, player.getInventory().getCosmeticInventory().getJson());
+					statement.setString(15, player.getInventory().getBankInventory().getJson());
+					statement.setString(16, player.getInventory().getMainInventory().getJson());
 
-					statement.setDate(12, player.getLastPlayedDate());
-					statement.setDate(13, player.getCreationDate());
-					statement.setString(14, player.getFlagsManager().getFlagsJson());
+					statement.setDate(17, player.getLastPlayedDate());
+					statement.setDate(18, player.getCreationDate());
+					statement.setString(19, player.getFlagsManager().getFlagsJson());
 					
 					statement.executeUpdate();
 				} catch (SQLException e) {
@@ -178,7 +188,7 @@ public class DatabaseManager {
 			public void run() {
 				//Update player row in database
 				try {
-					PreparedStatement statement = connection.prepareStatement("update players set `name`=?, `x`=?, `y`=?, `island`=?, `map`=?, `equippedInventory`=?, `cosmeticInventory`=?, `bankInventory`=?, `inventory`=?, `lastPlayed`=?, `flags`=? where uuid = ?");
+					PreparedStatement statement = connection.prepareStatement("update players set `name`=?, `x`=?, `y`=?, `island`=?, `map`=?, `weaponInventory`=?, `consumablesInventory`=?, `buffsInventory`=?, `ammoInventory`=?, `uneditableEquippedInventory`=?, `equippedInventory`=?, `cosmeticInventory`=?, `bankInventory`=?, `inventory`=?, `lastPlayed`=?, `flags`=? where uuid = ?");
 					statement.setString(1, player.getName());
 					statement.setFloat(2, player.getLocation().getX());
 					statement.setFloat(3, player.getLocation().getY());
@@ -186,15 +196,20 @@ public class DatabaseManager {
 					statement.setString(5, player.getLocation().getMap().getName());
 					
 					//Inventory
-					statement.setString(6, player.getInventory().getEquippedInventory().getJson());
-					statement.setString(7, player.getInventory().getCosmeticInventory().getJson());
-					statement.setString(8, player.getInventory().getBankInventory().getJson());
-					statement.setString(9, player.getInventory().getMainInventory().getJson());
+					statement.setString(6, player.getInventory().getWeaponInventory().getJson());
+					statement.setString(7, player.getInventory().getConsumablesInventory().getJson());
+					statement.setString(8, player.getInventory().getBuffsInventory().getJson());
+					statement.setString(9, player.getInventory().getAmmoInventory().getJson());
+					statement.setString(10, player.getInventory().getUneditableEquippedInventory().getJson());
+					statement.setString(11, player.getInventory().getEquippedInventory().getJson());
+					statement.setString(12, player.getInventory().getCosmeticInventory().getJson());
+					statement.setString(13, player.getInventory().getBankInventory().getJson());
+					statement.setString(14, player.getInventory().getMainInventory().getJson());
 					
-					statement.setDate(10, getCurrentDate());
-					statement.setString(11, player.getFlagsManager().getFlagsJson());
+					statement.setDate(15, getCurrentDate());
+					statement.setString(16, player.getFlagsManager().getFlagsJson());
 					
-					statement.setString(12, player.getUUID());//Update where uuid is the same
+					statement.setString(17, player.getUUID());//Update where uuid is the same
 					
 					statement.executeUpdate();
 				} catch (SQLException e) {
@@ -221,7 +236,7 @@ public class DatabaseManager {
 					statement.setString(2, hbUuid);
 					
 					statement.executeUpdate();
-					System.out.println("DatabaseManager.java Player deleted: " + name);
+					ArchipeloServer.getServer().getLogger().info("DatabaseManager.java Player deleted: " + name);
 				} catch (SQLException e) {
 					ArchipeloServer.getServer().getLogger().caution("Was unable to delete player: " + name + "   Error: " + e.getMessage());
 				}

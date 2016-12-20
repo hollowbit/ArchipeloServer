@@ -352,7 +352,7 @@ public class World implements PacketHandler {
 					DateFormat createdFormat = new SimpleDateFormat("MMM d, yyyy");
 					
 					for (int i = 0; i < playerDatas.size(); i++) {
-						playerListPacket.playerEquippedInventories[i] = PlayerInventory.getDisplayInventory(playerDatas.get(i).uneditableEquippedInventory, playerDatas.get(i).equippedInventory, playerDatas.get(i).cosmeticInventory);;
+						playerListPacket.playerEquippedInventories[i] = PlayerInventory.getDisplayInventory(playerDatas.get(i).uneditableEquippedInventory, playerDatas.get(i).equippedInventory, playerDatas.get(i).cosmeticInventory, playerDatas.get(i).weaponInventory);
 						playerListPacket.names[i] = playerDatas.get(i).name;
 						playerListPacket.islands[i] = playerDatas.get(i).island;
 						playerListPacket.lastPlayedDateTimes[i] = lastPlayedFormat.format(playerDatas.get(i).lastPlayed);

@@ -13,6 +13,10 @@ public class InventoryForm extends RequestableForm {
 	private static final String KEY_MAIN_INVENTORY = "mainInventory";
 	private static final String KEY_EQUIPPED_INVENTORY = "equippedInventory";
 	private static final String KEY_COSMETIC_INVENTORY = "cosmeticInventory";
+	private static final String KEY_WEAPON_INVENTORY = "weaponInventory";
+	private static final String KEY_CONSUMABLES_INVENTORY = "consumablesInventory";
+	private static final String KEY_BUFFS_INVENTORY = "buffsInventory";
+	private static final String KEY_AMMO_INVENTORY = "ammoInventory";
 
 	private static final String KEY_FROM_SLOT = "fromSlot";
 	private static final String KEY_TO_SLOT = "toSlot";
@@ -35,6 +39,7 @@ public class InventoryForm extends RequestableForm {
 			int toInventory = Integer.parseInt(data.get(KEY_TO_INVENTORY));
 			
 			player.getInventory().move(fromSlot, toSlot, fromInventory, toInventory);
+			this.updateClient();
 			break;
 		}
 	}
@@ -55,6 +60,11 @@ public class InventoryForm extends RequestableForm {
 		data.put(KEY_MAIN_INVENTORY, player.getInventory().getMainInventory().getJson());
 		data.put(KEY_EQUIPPED_INVENTORY, player.getInventory().getEquippedInventory().getJson());
 		data.put(KEY_COSMETIC_INVENTORY, player.getInventory().getCosmeticInventory().getJson());
+		
+		data.put(KEY_WEAPON_INVENTORY, player.getInventory().getWeaponInventory().getJson());
+		data.put(KEY_CONSUMABLES_INVENTORY, player.getInventory().getConsumablesInventory().getJson());
+		data.put(KEY_BUFFS_INVENTORY, player.getInventory().getBuffsInventory().getJson());
+		data.put(KEY_AMMO_INVENTORY, player.getInventory().getAmmoInventory().getJson());
 		return new FormData(type.id, id, data);
 	}
 
