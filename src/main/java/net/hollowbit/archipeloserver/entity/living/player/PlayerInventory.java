@@ -155,12 +155,15 @@ public class PlayerInventory {
 		if (!inventoriesInArray[fromInventory].doesSlotExists(fromSlot) || !inventoriesInArray[toInventory].doesSlotExists(toSlot))
 			return false;
 		
+		Item fromItem = inventoriesInArray[fromInventory].getRawStorage()[fromSlot];
+		if (fromItem == null)
+			return false;
+		
 		/*if ((fromInventory == MAIN_INVENTORY && toInventory == BANK_INVENTORY) || (fromInventory == BANK_INVENTORY && toInventory == MAIN_INVENTORY)) {
 			//TODO Handle situation where player tries to deposit or withdraw without an ATM nearby
 		}*/
 			
 		if (fromInventory == toInventory) {
-			Item fromItem = inventoriesInArray[fromInventory].getRawStorage()[fromSlot];
 			if (toInventory == EQUIPPED_INVENTORY || toInventory == COSMETIC_INVENTORY) {
 				if (fromItem.getType().equipType != toSlot)
 					return false;
@@ -168,9 +171,7 @@ public class PlayerInventory {
 			inventoriesInArray[fromInventory].move(fromSlot, toSlot);
 			inventoryUpdated(fromInventory);
 		} else {
-			Item fromItem = inventoriesInArray[fromInventory].removeFromSlot(fromSlot);
-			if (fromItem == null)
-				return false;
+			fromItem = inventoriesInArray[fromInventory].removeFromSlot(fromSlot);
 			
 			//Make sure items are only being put in correct slots
 			if (toInventory == WEAPON_EQUIP_INVENTORY) {

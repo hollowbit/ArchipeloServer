@@ -24,6 +24,19 @@ public abstract class RequestableForm extends Form {
 	protected void updateClient () {
 		super.updateClient(player);
 	}
+	
+	@Override
+	public void remove() {
+		player.getOpenForms().remove(this);
+		super.remove();
+	}
+	
+	/**
+	 * This allows player to remove this form. Only use in Player.java
+	 */
+	public void removeSafe () {
+		super.remove();
+	}
 
 	@Override
 	public void close () {

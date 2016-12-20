@@ -1,6 +1,8 @@
 package net.hollowbit.archipeloserver.form;
 
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map.Entry;
 
 import net.hollowbit.archipeloserver.ArchipeloServer;
 import net.hollowbit.archipeloserver.entity.living.Player;
@@ -24,6 +26,10 @@ public class FormManager implements PacketHandler {
 		ArchipeloServer.getServer().getNetworkManager().addPacketHandler(this);
 	}
 	
+	/**
+	 * Add a form to the manager. Required in order to get player interactions.
+	 * @param form
+	 */
 	public void addForm (Form form) {
 		this.forms.put(form.getId(), form);
 	}
@@ -32,10 +38,18 @@ public class FormManager implements PacketHandler {
 		return forms.get(id);
 	}
 	
+	/**
+	 * Removes a form. It is best practice to use this on all no longer used for to release them from memory
+	 * @param form
+	 */
 	public void removeForm (Form form) {
 		this.removeForm(form.getId());
 	}
 	
+	/**
+	 * Removes a form. It is best practice to use this on all no longer used for to release them from memory
+	 * @param form
+	 */
 	public void removeForm (String id) {
 		forms.remove(id);
 	}
@@ -48,14 +62,8 @@ public class FormManager implements PacketHandler {
 				FormInteractPacket formInteractPacket = (FormInteractPacket) packet;
 				Form form = this.getForm(formInteractPacket.id);
 				
-				if (form.canInteractWith(player)) {
-					if (formInteractPacket.close) {
-						form.close();
-						this.removeForm(formInteractPacket.id);
-					} else {
-						form.interactWith(player, formInteractPacket.command, formInteractPacket.data);
-					}
-				}
+				if (form.canInteractWith(player))
+					form.interactWith(player, formInteractPacket.command, formInteractPacket.data);
 				return true;
 			}
 		} else if (packet.packetType == PacketType.FORM_REQUEST) {
@@ -68,6 +76,7 @@ public class FormManager implements PacketHandler {
 					if (!forms.containsKey(id)) {//If the player doesn't have an inventory open
 						formRequestPacket.data.put("player", player.getName());
 						RequestableForm form = (RequestableForm) FormType.createFormByFormData(new FormData(formRequestPacket.type, id, formRequestPacket.data), this);
+						player.getOpenForms().add(form);
 						this.addForm(form);
 						player.sendPacket(new FormDataPacket(form.getFormDataForClient()));
 					}
@@ -78,8 +87,24 @@ public class FormManager implements PacketHandler {
 		return false;
 	}
 	
+	/**
+	 * Properly disposes of this form manager.
+	 */
 	public void dispose () {
 		ArchipeloServer.getServer().getNetworkManager().removePacketHandler(this);
+	}
+	
+	/**
+	 * Print out all form IDs. For debugging purposes.
+	 */
+	public void print () {
+		System.out.println("Forms in FormManager:");
+		 Iterator<Entry<String, Form>> it = forms.entrySet().iterator();
+		 while (it.hasNext()) {
+			 Entry<String, Form> pair = (Entry<String, Form>)it.next();
+			 System.out.println("\t" + pair.getKey());
+			 //it.remove(); // avoids a ConcurrentModificationException
+		 }
 	}
 	
 }

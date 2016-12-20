@@ -20,6 +20,7 @@ import net.hollowbit.archipeloserver.entity.living.player.PlayerData;
 import net.hollowbit.archipeloserver.entity.living.player.PlayerFlagsManager;
 import net.hollowbit.archipeloserver.entity.living.player.PlayerInventory;
 import net.hollowbit.archipeloserver.entity.living.player.PlayerNpcDialogManager;
+import net.hollowbit.archipeloserver.form.RequestableForm;
 import net.hollowbit.archipeloserver.hollowbitserver.HollowBitUser;
 import net.hollowbit.archipeloserver.items.Item;
 import net.hollowbit.archipeloserver.items.ItemType;
@@ -85,6 +86,7 @@ public class Player extends LivingEntity implements PacketHandler {
 	PlayerNpcDialogManager npcDialogManager;
 	PlayerFlagsManager flagsManager;
 	PlayerInventory inventory;
+	ArrayList<RequestableForm> openForms;
 	
 	public Player (String name, String address, boolean firstTimeLogin) {
 		this.create(name, 0, location, address, firstTimeLogin);
@@ -93,6 +95,7 @@ public class Player extends LivingEntity implements PacketHandler {
 	public void create (String name, int style, Location location, String address, boolean firstTimeLogin) {
 		super.create(name, style, location, EntityType.PLAYER);
 		this.npcDialogManager = new PlayerNpcDialogManager(this);
+		openForms = new ArrayList<RequestableForm>();
 		this.address = address;
 		this.firstTimeLogin = firstTimeLogin;
 		controls = new boolean[Controls.TOTAL];
@@ -319,6 +322,9 @@ public class Player extends LivingEntity implements PacketHandler {
 	 * Updates player to database to be ready to be removed
 	 */
 	private void unload() {
+		for (RequestableForm form : this.openForms) {
+			form.removeSafe();
+		}
 		ArchipeloServer.getServer().getNetworkManager().removePacketHandler(this);
 		ArchipeloServer.getServer().getDatabaseManager().updatePlayer(this);
 	}
@@ -527,6 +533,10 @@ public class Player extends LivingEntity implements PacketHandler {
 	
 	public PlayerFlagsManager getFlagsManager () {
 		return flagsManager;
+	}
+	
+	public ArrayList<RequestableForm> getOpenForms () {
+		return openForms;
 	}
 	
 	private boolean doesCurrentPositionCollideWithMap () {

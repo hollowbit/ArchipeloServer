@@ -26,8 +26,16 @@ public abstract class Form {
 	 */
 	public void interactWith (Player player, String command, HashMap<String, String> data) {
 		if (command.endsWith("close")) {//If close command sent, close the form
-			formManager.removeForm(this);
+			this.remove();
 		}
+	}
+	
+	/**
+	 * Best way to remove a form completely.
+	 */
+	public void remove () {
+		formManager.removeForm(this);
+		this.close();
 	}
 	
 	public abstract void close ();
