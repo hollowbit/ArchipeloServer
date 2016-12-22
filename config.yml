@@ -7,6 +7,6 @@ hbServerPassword: astrongpassword
 motd: Welcome to Archipelo!
 region: 0
 spawnIsland: Archipelo
-spawnMap: Island
+spawnMap: island
 spawnX: 360.0
 spawnY: 400.0

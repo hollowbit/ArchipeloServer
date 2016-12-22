@@ -7,6 +7,7 @@ import net.hollowbit.archipeloserver.entity.living.Player;
 import net.hollowbit.archipeloserver.network.packets.PopupTextPacket;
 import net.hollowbit.archipeloserver.network.packets.TeleportPacket;
 import net.hollowbit.archipeloserver.tools.entity.Location;
+import net.hollowbit.archipeloserver.tools.event.events.EntityTeleportEvent;
 import net.hollowbit.archipeloserver.world.Island;
 import net.hollowbit.archipeloserver.world.Map;
 import net.hollowbit.archipeloserver.world.World;
@@ -107,98 +108,101 @@ public abstract class Entity {
 		return location;
 	}
 	
-	public void clearAfterTeleport () {
-		log.clearAll();
+	public void teleport (float x, float y) {
+		teleport(x, y, location.getDirection());
 	}
 	
-	public void teleport (float x, float y, int direction) {
-		teleport(x, y, direction, false);
+	public void teleport (float x, float y, Direction direction) {
+		teleport(x, y, direction, location.getMap().getName());
 	}
 	
-	private void teleport (float x, float y, int direction, boolean newMap) {
-		location.set(new Vector2(x, y));
-		if (direction >= 0)//Only set direction if it is positive
-			location.setDirection(Direction.values()[direction]);
-		moved();
+	public void teleport (float x, float y, Direction direction, String mapName) {
+		teleport(x, y, direction, mapName, location.getIsland().getName());
+	}
+	
+	public void teleport (Location location) {
+		teleport(location.getX(), location.getY(), location.getDirection(), location.getMap().getName(), location.getIsland().getName());
+	}
+	
+	/**
+	 * Teleport this entity to another one
+	 * @param entity
+	 */
+	public void teleportTo (Entity entity) {
+		teleport(entity.getLocation());
+	}
+	
+	/**
+	 * Full teleport. Loads new islands and maps if necessary.
+	 * @param x
+	 * @param y
+	 * @param direction
+	 * @param mapName
+	 * @param islandName
+	 */
+	public void teleport (float x, float y, Direction direction, String mapName, String islandName) {
+		Vector2 newPos = new Vector2(x, y);
 		
-		for (Player player : location.getMap().duplicatePlayerList()) {
-			player.sendPacket(new TeleportPacket(this.name, this.location.getX(), this.location.getY(), this.location.getDirectionInt(), newMap));
-		}
-		clearAfterTeleport();
-	}
-	
-	public void teleport (float x, float y, int direction, String mapName) {
-		//Don't bother running teleport logic for different map if on same map
-		if (location.getMap().getName().equals(mapName)) {
-			teleport(x, y, direction, false);
+		EntityTeleportEvent event = new EntityTeleportEvent(this, newPos, location.pos, location.map, mapName, islandName, location.getDirection(), direction);
+		event.trigger();
+		if (event.wasCanceled())
 			return;
-		}
 		
-		Island island = location.getIsland();
-		Map map = null;
+		newPos.x = event.getNewPos().x;
+		newPos.y = event.getNewPos().y;
+		direction = event.getNewDirection();
+		mapName = event.getNewMap();
+		islandName = event.getNewIsland();
 		
-		//Make sure map is loaded
-		if (!island.isMapLoaded(mapName)) {
-			if (!island.loadMap(mapName)) {
-				if (isPlayer()) {
-					Player p = (Player) this;
-					p.sendPacket(new PopupTextPacket("Unable to teleport.", PopupTextPacket.Type.NORMAL));
-					return;
-				}
-			}
-		}
-		map = island.getMap(mapName);
-		
-		//Add player to other map then remove it from current
-		map.addEntity(this);
-		location.getMap().removeEntity(this);
-		location.setMap(map);
-		teleport(x, y, direction, true);
-	}
-	
-	public void teleport (float x, float y, int direction, String mapName, String islandName) {
-		//Don't bother running teleport logic for different island if on same island
-		if (location.getIsland().getName().equals(islandName)) {
-			teleport(x, y, direction, mapName);
-			return;
-		}
+		boolean islandChanged = !location.getIsland().getName().equals(islandName);
+		boolean mapChanged = islandChanged || !location.getMap().getName().equals(mapName);
 		
 		World world = ArchipeloServer.getServer().getWorld();
 		Island island = null;
 		Map map = null;
 		
-		//Map sure island and map are loaded
-		if (!world.isIslandLoaded(islandName)) {
-			if (!world.loadIsland(islandName)) {
-				if (isPlayer()) {
-					Player p = (Player) this;
-					p.sendPacket(new PopupTextPacket("Unable to teleport.", PopupTextPacket.Type.NORMAL));
-					return;
+		if (islandChanged) {
+			//Map sure island and map are loaded
+			if (!world.isIslandLoaded(islandName)) {
+				if (!world.loadIsland(islandName)) {
+					if (isPlayer()) {
+						Player p = (Player) this;
+						p.sendPacket(new PopupTextPacket("Unable to teleport.", PopupTextPacket.Type.NORMAL));
+						return;
+					}
 				}
 			}
-		}
-		island = world.getIsland(islandName);
+			island = world.getIsland(islandName);
+		} else
+			island = location.getIsland();
 		
-		if (!island.isMapLoaded(mapName)) {
-			if (!island.loadMap(mapName)) {
-				if (isPlayer()) {
-					Player p = (Player) this;
-					p.sendPacket(new PopupTextPacket("Unable to teleport.", PopupTextPacket.Type.NORMAL));
-					return;
+		if (mapChanged) {
+			if (!island.isMapLoaded(mapName)) {
+				if (!island.loadMap(mapName)) {
+					if (isPlayer()) {
+						Player p = (Player) this;
+						p.sendPacket(new PopupTextPacket("Unable to teleport.", PopupTextPacket.Type.NORMAL));
+						return;
+					}
 				}
 			}
+			map = island.getMap(mapName);
+			
+			//Add player to other map then remove it from current
+			map.addEntity(this);
+			location.getMap().removeEntity(this);
+			location.setMap(map);
+		} else
+			map = location.getMap();
+		
+		location.set(newPos);
+		location.setDirection(direction);
+		
+		for (Player player : location.getMap().duplicatePlayerList()) {
+			player.sendPacket(new TeleportPacket(this.name, this.location.getX(), this.location.getY(), this.location.getDirectionInt(), mapChanged));
 		}
-		map = island.getMap(mapName);
 		
-		//Add player to other map then remove it from current
-		map.addEntity(this);
-		location.getMap().removeEntity(this);
-		location.setMap(map);
-		teleport(x, y, direction, true);
-	}
-	
-	public void moved () {
-		
+		log.clearAll();
 	}
 	
 	public boolean isAlive () {

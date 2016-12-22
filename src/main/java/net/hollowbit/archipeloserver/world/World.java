@@ -185,6 +185,7 @@ public class World implements PacketHandler {
 
 				@Override
 				public void run() {
+					System.out.println("World.java Player pick!!");
 					PlayerPickPacket playerPickPacket = (PlayerPickPacket) packet;
 					
 					if (playerPickPacket.name == null || playerPickPacket.name.equals(""))

@@ -2,8 +2,11 @@ package net.hollowbit.archipeloserver.entity;
 
 import java.util.ArrayList;
 
+import com.badlogic.gdx.math.Vector2;
+
 import net.hollowbit.archipeloserver.tools.entity.EntityStepOnData;
 import net.hollowbit.archipeloserver.tools.entity.Location;
+import net.hollowbit.archipeloserver.tools.event.events.EntityMoveEvent;
 import net.hollowbit.archipeloserver.world.Map;
 import net.hollowbit.archipeloshared.CollisionRect;
 
@@ -54,8 +57,20 @@ public abstract class LivingEntity extends Entity {
 		return snapshot;
 	}
 	
-	@Override
-	public void moved () {
+	/**
+	 * Proper way to move an entity
+	 * @param newPos
+	 */
+	public void move (Vector2 newPos) {
+		EntityMoveEvent event = (EntityMoveEvent) new EntityMoveEvent(this, location.pos, newPos).trigger();//trigger move event
+		
+		if (event.wasCanceled())
+			return;
+		
+		newPos = event.getNewPos();//Set new pos with new on from event
+		
+		location.set(newPos);
+		
 		ArrayList<Entity> entitiesOnMap = (ArrayList<Entity>) location.getMap().getEntityManager().duplicateEntityList();
 		for (Entity entity : entitiesOnMap) {
 			if (entity == this)
@@ -89,7 +104,6 @@ public abstract class LivingEntity extends Entity {
 			removeAllEntityFromStepList(entitiesStepOnToRemove);
 			
 		}
-		super.moved();
 	}
 	
 	@Override

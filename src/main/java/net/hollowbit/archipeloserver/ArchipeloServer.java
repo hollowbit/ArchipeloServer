@@ -7,6 +7,7 @@ import net.hollowbit.archipeloserver.network.NetworkManager;
 import net.hollowbit.archipeloserver.tools.Configuration;
 import net.hollowbit.archipeloserver.tools.DatabaseManager;
 import net.hollowbit.archipeloserver.tools.conditions.ConditionManager;
+import net.hollowbit.archipeloserver.tools.event.EventManager;
 import net.hollowbit.archipeloserver.tools.executables.ExecutableManager;
 import net.hollowbit.archipeloserver.tools.log.Logger;
 import net.hollowbit.archipeloserver.world.MapElementManager;
@@ -35,6 +36,7 @@ public class ArchipeloServer {
 	private HollowBitServerConnectivity hollowBitServerConnectivity;
 	private ConditionManager conditionManager;
 	private ExecutableManager executableManager;
+	private EventManager eventManager;
 	private Logger logger;
 	private World world;
 	private Thread tick30;
@@ -59,6 +61,7 @@ public class ArchipeloServer {
 		
 		conditionManager = new ConditionManager();
 		executableManager = new ExecutableManager();
+		eventManager = new EventManager();
 		
 		world = new World();
 		mapElementManager = new MapElementManager();
@@ -146,6 +149,10 @@ public class ArchipeloServer {
 		return executableManager;
 	}
 	
+	public EventManager getEventManager() {
+		return eventManager;
+	}
+
 	public void stop () {
 		hollowBitServerConnectivity.sendRemoveServerQuery();
 		hollowBitServerConnectivity.close();

@@ -1,8 +1,8 @@
 package net.hollowbit.archipeloserver.form;
 
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map.Entry;
+import java.util.LinkedList;
 
 import net.hollowbit.archipeloserver.ArchipeloServer;
 import net.hollowbit.archipeloserver.entity.living.Player;
@@ -12,18 +12,23 @@ import net.hollowbit.archipeloserver.network.PacketType;
 import net.hollowbit.archipeloserver.network.packets.FormDataPacket;
 import net.hollowbit.archipeloserver.network.packets.FormInteractPacket;
 import net.hollowbit.archipeloserver.network.packets.FormRequestPacket;
+import net.hollowbit.archipeloserver.tools.event.EventHandler;
+import net.hollowbit.archipeloserver.tools.event.events.PlayerLeaveEvent;
 import net.hollowbit.archipeloserver.world.Map;
 import net.hollowbit.archipeloshared.FormData;
 
-public class FormManager implements PacketHandler {
+public class FormManager implements PacketHandler, EventHandler {
 	
 	private HashMap<String, Form> forms;
+	private LinkedList<Form> formsList;
 	private Map map;
 	
 	public FormManager (Map map) {
 		this.map = map;
 		forms = new HashMap<String, Form>();
+		formsList = new LinkedList<Form>();
 		ArchipeloServer.getServer().getNetworkManager().addPacketHandler(this);
+		this.addToEventManager();
 	}
 	
 	/**
@@ -32,6 +37,7 @@ public class FormManager implements PacketHandler {
 	 */
 	public void addForm (Form form) {
 		this.forms.put(form.getId(), form);
+		this.formsList.add(form);
 	}
 	
 	public Form getForm (String id) {
@@ -43,15 +49,8 @@ public class FormManager implements PacketHandler {
 	 * @param form
 	 */
 	public void removeForm (Form form) {
-		this.removeForm(form.getId());
-	}
-	
-	/**
-	 * Removes a form. It is best practice to use this on all no longer used for to release them from memory
-	 * @param form
-	 */
-	public void removeForm (String id) {
-		forms.remove(id);
+		this.forms.remove(form.getId());
+		this.formsList.remove(form);
 	}
 
 	@Override
@@ -76,7 +75,6 @@ public class FormManager implements PacketHandler {
 					if (!forms.containsKey(id)) {//If the player doesn't have an inventory open
 						formRequestPacket.data.put("player", player.getName());
 						RequestableForm form = (RequestableForm) FormType.createFormByFormData(new FormData(formRequestPacket.type, id, formRequestPacket.data), this);
-						player.getOpenForms().add(form);
 						this.addForm(form);
 						player.sendPacket(new FormDataPacket(form.getFormDataForClient()));
 					}
@@ -87,11 +85,32 @@ public class FormManager implements PacketHandler {
 		return false;
 	}
 	
+	@Override
+	public boolean onPlayerLeave (PlayerLeaveEvent event) {
+		if (event.getPlayer().getMap() != this.map)
+			return false;
+		
+		ArrayList<Form> formsToRemove = new ArrayList<Form>();
+		for (Form form : formsList) {
+			if (form.getType().requestable) {
+				RequestableForm requestableForm = (RequestableForm) form;
+				if (requestableForm.getPlayer() == event.getPlayer())
+					formsToRemove.add(requestableForm);
+			}
+		}
+		
+		for (Form form : formsToRemove) {
+			this.removeForm(form);
+		}
+		return true;
+	}
+	
 	/**
 	 * Properly disposes of this form manager.
 	 */
 	public void dispose () {
 		ArchipeloServer.getServer().getNetworkManager().removePacketHandler(this);
+		this.removeFromEventManager();
 	}
 	
 	/**
@@ -99,12 +118,9 @@ public class FormManager implements PacketHandler {
 	 */
 	public void print () {
 		System.out.println("Forms in FormManager:");
-		 Iterator<Entry<String, Form>> it = forms.entrySet().iterator();
-		 while (it.hasNext()) {
-			 Entry<String, Form> pair = (Entry<String, Form>)it.next();
-			 System.out.println("\t" + pair.getKey());
-			 //it.remove(); // avoids a ConcurrentModificationException
-		 }
+		for (Form form : formsList) {
+			System.out.println("\t- " + form.getId());
+		}
 	}
 	
 }

@@ -27,7 +27,6 @@ public abstract class RequestableForm extends Form {
 	
 	@Override
 	public void remove() {
-		player.getOpenForms().remove(this);
 		super.remove();
 	}
 	
@@ -46,6 +45,10 @@ public abstract class RequestableForm extends Form {
 	@Override
 	public boolean canInteractWith (Player player) {
 		return this.player == player;
+	}
+	
+	public Player getPlayer () {
+		return player;
 	}
 
 }

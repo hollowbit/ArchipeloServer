@@ -7,13 +7,15 @@ import net.hollowbit.archipeloserver.entity.EntityType;
 import net.hollowbit.archipeloserver.entity.LifelessEntity;
 import net.hollowbit.archipeloserver.entity.living.Player;
 import net.hollowbit.archipeloserver.world.Map;
+import net.hollowbit.archipeloshared.Direction;
 
 public class Door extends LifelessEntity {
 	
 	float teleportX = 0, teleportY = 0;
 	String teleportIsland, teleportMap;
-	int teleportDirection;
+	Direction teleportDirection;
 	boolean teleports;
+	boolean changesDirection;
 	
 	private boolean open;
 	
@@ -25,7 +27,13 @@ public class Door extends LifelessEntity {
 		this.teleportY = fullSnapshot.getFloat("teleportY", 0);
 		this.teleportIsland = fullSnapshot.getString("teleportIsland", "");
 		this.teleportMap = fullSnapshot.getString("teleportMap", "");
-		this.teleportDirection = fullSnapshot.getInt("teleportDirection", -1);
+		int direction = fullSnapshot.getInt("teleportDirection", -1);
+		if (direction == -1)
+			changesDirection = false;
+		else {
+			changesDirection = true;
+			this.teleportDirection = Direction.values()[direction];
+		}
 		this.open = false;
 	}
 	
@@ -49,17 +57,22 @@ public class Door extends LifelessEntity {
 				return;
 			
 			if (interactionType == EntityInteraction.STEP_ON) {
+				Direction newDirection = teleportDirection;
+				if (!changesDirection)
+					newDirection = entity.getLocation().getDirection();
+				
 				if (entity.isPlayer()) {//don't allow intermap teleportation with non-players
 					Player p = (Player) entity;
+					
 					if (!teleportIsland.equals("")) {
-						p.teleport(teleportX, teleportY, teleportDirection, teleportMap, teleportIsland);
+						p.teleport(teleportX, teleportY, newDirection, teleportMap, teleportIsland);
 						return;
 					} else if (!teleportMap.equals("")) {
-						p.teleport(teleportX, teleportY, teleportDirection, teleportMap);
+						p.teleport(teleportX, teleportY, newDirection, teleportMap);
 						return;
 					}
 				}
-				entity.teleport(teleportX, teleportY, teleportDirection);
+				entity.teleport(teleportX, teleportY, newDirection);
 			}
 			break;
 		}
@@ -80,7 +93,10 @@ public class Door extends LifelessEntity {
 		snapshot.putFloat("teleportY", teleportY);
 		snapshot.putString("teleportIsland", teleportIsland);
 		snapshot.putString("teleportMap", teleportMap);
-		snapshot.putInt("teleportDirection", teleportDirection);
+		if (changesDirection)
+			snapshot.putInt("teleportDirection", teleportDirection.ordinal());
+		else
+			snapshot.putInt("teleportDirection", -1);
 		snapshot.putBoolean("open", open);
 		return snapshot;
 	}

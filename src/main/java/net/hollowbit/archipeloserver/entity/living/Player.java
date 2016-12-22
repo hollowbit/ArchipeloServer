@@ -20,7 +20,6 @@ import net.hollowbit.archipeloserver.entity.living.player.PlayerData;
 import net.hollowbit.archipeloserver.entity.living.player.PlayerFlagsManager;
 import net.hollowbit.archipeloserver.entity.living.player.PlayerInventory;
 import net.hollowbit.archipeloserver.entity.living.player.PlayerNpcDialogManager;
-import net.hollowbit.archipeloserver.form.RequestableForm;
 import net.hollowbit.archipeloserver.hollowbitserver.HollowBitUser;
 import net.hollowbit.archipeloserver.items.Item;
 import net.hollowbit.archipeloserver.items.ItemType;
@@ -36,6 +35,8 @@ import net.hollowbit.archipeloserver.tools.Configuration;
 import net.hollowbit.archipeloserver.tools.DatabaseManager;
 import net.hollowbit.archipeloserver.tools.entity.HitCalculator;
 import net.hollowbit.archipeloserver.tools.entity.Location;
+import net.hollowbit.archipeloserver.tools.event.events.PlayerJoinEvent;
+import net.hollowbit.archipeloserver.tools.event.events.PlayerLeaveEvent;
 import net.hollowbit.archipeloserver.world.Map;
 import net.hollowbit.archipeloshared.CollisionRect;
 import net.hollowbit.archipeloshared.Controls;
@@ -86,7 +87,6 @@ public class Player extends LivingEntity implements PacketHandler {
 	PlayerNpcDialogManager npcDialogManager;
 	PlayerFlagsManager flagsManager;
 	PlayerInventory inventory;
-	ArrayList<RequestableForm> openForms;
 	
 	public Player (String name, String address, boolean firstTimeLogin) {
 		this.create(name, 0, location, address, firstTimeLogin);
@@ -95,7 +95,6 @@ public class Player extends LivingEntity implements PacketHandler {
 	public void create (String name, int style, Location location, String address, boolean firstTimeLogin) {
 		super.create(name, style, location, EntityType.PLAYER);
 		this.npcDialogManager = new PlayerNpcDialogManager(this);
-		openForms = new ArrayList<RequestableForm>();
 		this.address = address;
 		this.firstTimeLogin = firstTimeLogin;
 		controls = new boolean[Controls.TOTAL];
@@ -110,6 +109,9 @@ public class Player extends LivingEntity implements PacketHandler {
 		this.creationDate = playerData.creationDate;
 		this.hbUser = hbUser;
 		this.flagsManager = new PlayerFlagsManager(playerData.flags, this);
+		
+		PlayerJoinEvent event = new PlayerJoinEvent(this);//Triggers player join event
+		event.trigger();
 	}
 	
 	@Override
@@ -182,8 +184,10 @@ public class Player extends LivingEntity implements PacketHandler {
 					changes.putInt("rolling-direction", rollingDirection.ordinal());
 				}
 				
-				if (isMoving()) 
+				if (isMoving())  {
+					System.out.println("Player.java DOWN LEFT!");
 					newPos.add((float) (-Tick.T_60 * getSpeed() / LivingEntity.DIAGONAL_FACTOR), (float) (-Tick.T_60 * getSpeed() / LivingEntity.DIAGONAL_FACTOR));
+				}
 			} else if (controls[Controls.RIGHT]) {//Down right
 				if (location.direction != Direction.DOWN_RIGHT && !controls[Controls.LOCK]) {
 					location.direction = Direction.DOWN_RIGHT;
@@ -248,10 +252,8 @@ public class Player extends LivingEntity implements PacketHandler {
 		}
 		
 		if (!collidesWithMap || doesCurrentPositionCollideWithMap()) {
-			location.set(newPos);
-			
 			if (isMoving())
-				moved();
+				move(newPos);
 		}
 		
 		//Rolling
@@ -322,9 +324,6 @@ public class Player extends LivingEntity implements PacketHandler {
 	 * Updates player to database to be ready to be removed
 	 */
 	private void unload() {
-		for (RequestableForm form : this.openForms) {
-			form.removeSafe();
-		}
 		ArchipeloServer.getServer().getNetworkManager().removePacketHandler(this);
 		ArchipeloServer.getServer().getDatabaseManager().updatePlayer(this);
 	}
@@ -344,6 +343,12 @@ public class Player extends LivingEntity implements PacketHandler {
 	 */
 	public void remove (LogoutReason reason, String alt) {
 		super.remove();
+		
+		PlayerLeaveEvent event = new PlayerLeaveEvent(this, reason, alt);
+		event.trigger();
+		reason = event.getReason();
+		alt = event.getReasonAlt();
+		
 		unload();
 		sendPacket(new LogoutPacket(reason.reason, alt));
 		
@@ -413,8 +418,9 @@ public class Player extends LivingEntity implements PacketHandler {
 		return ArchipeloServer.getServer().getNetworkManager().getConnectionByAddress(address);
 	}
 	
-	public void moved() {
-		super.moved();
+	@Override
+	public void move (Vector2 newPos) {
+		super.move(newPos);
 		npcDialogManager.playerMoved();
 	}
 	
@@ -535,10 +541,6 @@ public class Player extends LivingEntity implements PacketHandler {
 		return flagsManager;
 	}
 	
-	public ArrayList<RequestableForm> getOpenForms () {
-		return openForms;
-	}
-	
 	private boolean doesCurrentPositionCollideWithMap () {
 		for (CollisionRect rect : getCollisionRects(location.pos)) {//Checks to make sure no collision rect is intersecting with map
 			if (location.getMap().collidesWithMap(rect, this)) {
@@ -549,7 +551,6 @@ public class Player extends LivingEntity implements PacketHandler {
 	}
 	
 	public static PlayerData getNewPlayerData (String name, String hbUuid, Item hair, Item face, Item body) {
-		System.out.println("Player.java getting default player data");
 		Configuration config = ArchipeloServer.getServer().getConfig();
 		PlayerData playerData = new PlayerData();
 		playerData.uuid = UUID.randomUUID().toString();

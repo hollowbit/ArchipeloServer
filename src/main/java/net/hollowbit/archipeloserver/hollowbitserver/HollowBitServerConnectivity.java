@@ -23,7 +23,7 @@ public class HollowBitServerConnectivity extends WebSocketClient {
 	
 	public static final int GAME_ID = 0;
 	
-	private static final int TIMEOUT_LENGTH = 2000;//Time in milliseconds to wait to connect to HollowBitServer
+	private static final int TIMEOUT_LENGTH = 8000;//Time in milliseconds to wait to connect to HollowBitServer
 
 	private static final int VERIFY_PACKET_ID = 2;
 	private static final int GET_USER_DATA_PACKET_ID = 4;
