@@ -23,6 +23,14 @@ public class InfiniteInventory extends Inventory {
 		storage = startItems;
 	}
 	
+	public InfiniteInventory (Inventory inventoryToDuplicate) {
+		this.storage = new ArrayList<Item>();
+		
+		for (int i = 0; i < inventoryToDuplicate.getRawStorage().length; i++) {
+			this.storage.add(new Item(inventoryToDuplicate.getRawStorage()[i]));
+		}
+	}
+	
 	@Override
 	public Item add (Item item) {
 		for (Item storageItem : storage) {
@@ -142,7 +150,7 @@ public class InfiniteInventory extends Inventory {
 	}
 
 	@Override
-	protected boolean isSlotEmpty(int slot) {
+	public boolean isSlotEmpty (int slot) {
 		if (doesSlotExists(slot))
 			return storage.get(slot) == null;
 		else
@@ -195,6 +203,11 @@ public class InfiniteInventory extends Inventory {
 		Item[] storageArray = new Item[storage.size()];
 		storageArray = storage.toArray(storageArray);
 		return storageArray;
+	}
+
+	@Override
+	public Inventory duplicate () {
+		return new InfiniteInventory(this);
 	}
 	
 }

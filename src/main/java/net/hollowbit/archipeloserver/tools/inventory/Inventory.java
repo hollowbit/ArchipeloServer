@@ -93,7 +93,7 @@ public abstract class Inventory {
 	 * @param slot
 	 * @return
 	 */
-	protected abstract boolean isSlotEmpty(int slot);
+	public abstract boolean isSlotEmpty(int slot);
 	
 	/**
 	 * Returns if a slot exists within inventory.
@@ -118,5 +118,11 @@ public abstract class Inventory {
 	 * @return
 	 */
 	public abstract Item[] getRawStorage();
+	
+	/**
+	 * Duplicate this inventory;
+	 * @return
+	 */
+	public abstract Inventory duplicate();
 	
 }

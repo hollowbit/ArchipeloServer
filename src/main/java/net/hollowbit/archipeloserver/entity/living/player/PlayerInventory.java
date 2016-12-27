@@ -6,6 +6,11 @@ import net.hollowbit.archipeloserver.entity.living.Player;
 import net.hollowbit.archipeloserver.items.Item;
 import net.hollowbit.archipeloserver.items.ItemType;
 import net.hollowbit.archipeloserver.tools.StaticTools;
+import net.hollowbit.archipeloserver.tools.event.events.PlayerBankAddEvent;
+import net.hollowbit.archipeloserver.tools.event.events.PlayerInventoryAddEvent;
+import net.hollowbit.archipeloserver.tools.event.events.PlayerInventoryChangedEvent;
+import net.hollowbit.archipeloserver.tools.event.events.PlayerInventoryMoveEvent;
+import net.hollowbit.archipeloserver.tools.event.events.PlayerInventoryRemoveEvent;
 import net.hollowbit.archipeloserver.tools.inventory.FixedInventory;
 import net.hollowbit.archipeloserver.tools.inventory.InfiniteInventory;
 import net.hollowbit.archipeloserver.tools.inventory.Inventory;
@@ -72,27 +77,16 @@ public class PlayerInventory {
 	 * @return
 	 */
 	public boolean add (Item item) {
-		boolean bankUsed = addNoUpdate(item);
-		inventoryUpdated(MAIN_INVENTORY);
-		if (bankUsed)
-			inventoryUpdated(BANK_INVENTORY);
-		return bankUsed;
-	}
-	
-	/**
-	 * Adds to an inventory but does not call update handler
-	 * @param item
-	 * @return
-	 */
-	private boolean addNoUpdate (Item item) {
-		Item remainder = main.add(item);
+		Inventory oldInventory = main.duplicate();
 		
-		if (remainder == null)
-			return false;
-		else {
-			bank.add(remainder);
+		Item remainder = addNoUpdate(item);
+		inventoryUpdated(oldInventory, MAIN_INVENTORY);
+		
+		if (remainder != null) {
+			addToBank(remainder);
 			return true;
-		}
+		} else
+			return false;
 	}
 	
 	/**
@@ -101,21 +95,92 @@ public class PlayerInventory {
 	 * @return
 	 */
 	public boolean addAll (ArrayList<Item> items) {
-		boolean bankUsed = false;
+		Inventory oldInventory = main.duplicate();
+		ArrayList<Item> remainingItems = new ArrayList<Item>();
 		for (Item item : items) {
-			if (this.addNoUpdate(item))
-				bankUsed = true;
+			Item remainder = this.addNoUpdate(item);
+			
+			if (remainder != null)
+				remainingItems.add(remainder);
 		}
-		inventoryUpdated(MAIN_INVENTORY);
-		if (bankUsed)
-			inventoryUpdated(BANK_INVENTORY);
-		return bankUsed;
+		inventoryUpdated(oldInventory, MAIN_INVENTORY);
+		
+		if (remainingItems.size() > 0) {
+			addAllToBank(remainingItems);
+			return true;
+		} else
+			return false;
 	}
 	
+	/**
+	 * Adds to an inventory but does not call update handler.
+	 * @param item
+	 * @return
+	 */
+	private Item addNoUpdate (Item item) {
+		PlayerInventoryAddEvent event = new PlayerInventoryAddEvent(player, item);
+		event.trigger();
+		
+		if (event.wasCanceled())
+			return null;
+		
+		item = event.getItem();
+		
+		return main.add(item);
+	}
+	
+	/**
+	 * Add an item to the player's bank.
+	 * @param item
+	 */
+	public void addToBank (Item item) {
+		Inventory oldInventoryBank = bank.duplicate();
+		addToBankNoUpdate(item);
+		inventoryUpdated(oldInventoryBank, BANK_INVENTORY);
+	}
+	
+	private void addAllToBank (ArrayList<Item> items) {
+		Inventory oldInventoryBank = bank.duplicate();
+		for (Item item : items) {
+			addToBankNoUpdate(item);
+		}
+		inventoryUpdated(oldInventoryBank, BANK_INVENTORY);
+	}
+	
+	/**
+	 * Add an item to the player's bank but don't call update yet.
+	 * @param item
+	 */
+	private void addToBankNoUpdate (Item item) {
+		PlayerBankAddEvent event = new PlayerBankAddEvent(player, item);
+		event.trigger();
+		
+		if (event.wasCanceled())
+			return;
+		
+		item = event.getItem();
+		
+		bank.add(item);
+	}
+	
+	/**
+	 * Remove an item from the player's main inventory.
+	 * @param item
+	 * @return
+	 */
 	public boolean remove (Item item) {
+		PlayerInventoryRemoveEvent event = new PlayerInventoryRemoveEvent(player, item);
+		event.trigger();
+		
+		if (event.wasCanceled())
+			return false;
+		
+		item = event.getItem();
+		
+		Inventory oldInventory = main.duplicate();
 		boolean successful = main.remove(item);
 		if (successful)
-			inventoryUpdated(MAIN_INVENTORY);
+			inventoryUpdated(oldInventory, MAIN_INVENTORY);
 		return successful;
 	}
 	
@@ -159,18 +224,29 @@ public class PlayerInventory {
 		if (fromItem == null)
 			return false;
 		
-		/*if ((fromInventory == MAIN_INVENTORY && toInventory == BANK_INVENTORY) || (fromInventory == BANK_INVENTORY && toInventory == MAIN_INVENTORY)) {
-			//TODO Handle situation where player tries to deposit or withdraw without an ATM nearby
-		}*/
-			
+		PlayerInventoryMoveEvent event = new PlayerInventoryMoveEvent(player, toSlot, fromSlot, toInventory, fromInventory);
+		event.trigger();
+		
+		if (event.wasCanceled())
+			return false;
+		
+		toInventory = event.getToInventoryId();
+		fromInventory = event.getFromInventoryId();
+		toSlot = event.getToSlot();
+		fromSlot = event.getFromSlot();
+		
 		if (fromInventory == toInventory) {
+			Inventory oldInventory = inventoriesInArray[fromInventory].duplicate();
 			if (toInventory == EQUIPPED_INVENTORY || toInventory == COSMETIC_INVENTORY) {
 				if (fromItem.getType().equipType != toSlot)
 					return false;
 			}
 			inventoriesInArray[fromInventory].move(fromSlot, toSlot);
-			inventoryUpdated(fromInventory);
+			inventoryUpdated(oldInventory, fromInventory);
 		} else {
+			Inventory oldFromInventory = inventoriesInArray[fromInventory].duplicate();
+			Inventory oldToInventory = inventoriesInArray[toInventory].duplicate();
+			
 			fromItem = inventoriesInArray[fromInventory].removeFromSlot(fromSlot);
 			
 			//Make sure items are only being put in correct slots
@@ -212,8 +288,8 @@ public class PlayerInventory {
 				inventoriesInArray[toInventory].setSlot(toSlot, fromItem);
 			}
 
-			inventoryUpdated(fromInventory);
-			inventoryUpdated(toInventory);
+			inventoryUpdated(oldFromInventory, fromInventory);
+			inventoryUpdated(oldToInventory, toInventory);
 		}
 		
 		if (fromInventory == EQUIPPED_INVENTORY || fromInventory == COSMETIC_INVENTORY || toInventory == EQUIPPED_INVENTORY || toInventory == COSMETIC_INVENTORY)
@@ -226,9 +302,12 @@ public class PlayerInventory {
 	 * Event for when an inventory is updated
 	 * @param inventoryId
 	 */
-	private void inventoryUpdated (int inventoryId) {
+	private void inventoryUpdated (Inventory oldInventory, int inventoryId) {
 		if (inventoryId == EQUIPPED_INVENTORY || inventoryId == COSMETIC_INVENTORY)
 			player.getChangesSnapshot().putString("displayInventory", getDisplayInventoryJson());
+		
+		PlayerInventoryChangedEvent event = new PlayerInventoryChangedEvent(player, oldInventory, inventoriesInArray[inventoryId], inventoryId);
+		event.trigger();
 	}
 	
 	public String getDisplayInventoryJson () {
@@ -289,6 +368,10 @@ public class PlayerInventory {
 		
 		displayInventory[9] = weapon[0];
 		return displayInventory;
+	}
+	
+	public Inventory getInventoryById (int id) {
+		return inventoriesInArray[id];
 	}
 	
 }

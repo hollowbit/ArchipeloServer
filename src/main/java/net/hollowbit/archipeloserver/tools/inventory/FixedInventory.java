@@ -19,6 +19,14 @@ public class FixedInventory extends Inventory {
 	public FixedInventory (Item[] startItems) {
 		this.storage = startItems;
 	}
+	
+	public FixedInventory (Inventory inventoryToDuplicate) {
+		this.storage = new Item[inventoryToDuplicate.getRawStorage().length];
+		
+		for (int i = 0; i < this.storage.length; i++) {
+			this.storage[i] = new Item(inventoryToDuplicate.getRawStorage()[i]);
+		}
+	}
 
 	@Override
 	public Item add (Item item) {
@@ -149,7 +157,7 @@ public class FixedInventory extends Inventory {
 	}
 
 	@Override
-	protected boolean isSlotEmpty(int slot) {
+	public boolean isSlotEmpty(int slot) {
 		if (doesSlotExists(slot))
 			return storage[slot] == null;
 		else
@@ -213,6 +221,11 @@ public class FixedInventory extends Inventory {
 	@Override
 	public Item[] getRawStorage() {
 		return storage;
+	}
+
+	@Override
+	public Inventory duplicate () {
+		return new FixedInventory(this);
 	}
 	
 }

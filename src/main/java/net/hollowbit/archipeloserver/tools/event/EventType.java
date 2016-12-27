@@ -4,5 +4,10 @@ public enum EventType {
 	EntityMove,
 	EntityTeleport,
 	PlayerJoin,
-	PlayerLeave;
+	PlayerLeave,
+	PlayerInventoryAdd,
+	PlayerInventoryRemove,
+	PlayerInventoryMove,
+	PlayerInventoryChanged,
+	BankAdd;
 }
