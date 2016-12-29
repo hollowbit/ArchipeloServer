@@ -24,7 +24,8 @@ public class FixedInventory extends Inventory {
 		this.storage = new Item[inventoryToDuplicate.getRawStorage().length];
 		
 		for (int i = 0; i < this.storage.length; i++) {
-			this.storage[i] = new Item(inventoryToDuplicate.getRawStorage()[i]);
+			if (inventoryToDuplicate.getRawStorage()[i] != null)
+				this.storage[i] = new Item(inventoryToDuplicate.getRawStorage()[i]);
 		}
 	}
 

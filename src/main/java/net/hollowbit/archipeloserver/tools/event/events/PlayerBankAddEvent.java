@@ -12,7 +12,7 @@ public class PlayerBankAddEvent extends CancelableEvent {
 	private Item item;
 
 	public PlayerBankAddEvent (Player player, Item item) {
-		super(EventType.BankAdd);
+		super(EventType.PlayerBankAdd);
 		this.player = player;
 		this.item = item;
 	}

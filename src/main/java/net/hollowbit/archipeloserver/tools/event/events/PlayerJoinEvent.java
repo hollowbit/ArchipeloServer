@@ -3,15 +3,15 @@ package net.hollowbit.archipeloserver.tools.event.events;
 import java.sql.Date;
 
 import net.hollowbit.archipeloserver.entity.living.Player;
-import net.hollowbit.archipeloserver.tools.event.Event;
 import net.hollowbit.archipeloserver.tools.event.EventType;
+import net.hollowbit.archipeloserver.tools.event.ReadOnlyEvent;
 
 /**
  * Event on player join. No editable parameters.
  * @author Nathanael
  *
  */
-public class PlayerJoinEvent extends Event {
+public class PlayerJoinEvent extends ReadOnlyEvent {
 	
 	private Player player;
 	private Date timeJoined;

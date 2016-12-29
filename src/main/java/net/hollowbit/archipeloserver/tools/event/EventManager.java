@@ -54,6 +54,28 @@ public class EventManager {
 				if (eventHandler.onEntityTeleport((EntityTeleportEvent) event))
 					handled = true;
 				break;
+			case PlayerBankAdd:
+				if (eventHandler.onPlayerBankAdd((PlayerBankAddEvent) event))
+					handled = true;
+				break;
+			case PlayerInventoryAdd:
+				if (eventHandler.onPlayerInventoryAdd((PlayerInventoryAddEvent) event))
+					handled = true;
+				break;
+			case PlayerInventoryChanged:
+				if (eventHandler.onPlayerInventoryChanged((PlayerInventoryChangedEvent) event))
+					handled = true;
+				break;
+			case PlayerInventoryMove:
+				if (eventHandler.onPlayerInventoryMove((PlayerInventoryMoveEvent) event))
+					handled = true;
+				break;
+			case PlayerInventoryRemove:
+				if (eventHandler.onPlayerInventoryRemove((PlayerInventoryRemoveEvent) event))
+					handled = true;
+				break;
+			default:
+				break;
 			}
 		}
 		event.setHandled(handled);

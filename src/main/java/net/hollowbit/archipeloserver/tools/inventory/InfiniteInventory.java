@@ -27,7 +27,8 @@ public class InfiniteInventory extends Inventory {
 		this.storage = new ArrayList<Item>();
 		
 		for (int i = 0; i < inventoryToDuplicate.getRawStorage().length; i++) {
-			this.storage.add(new Item(inventoryToDuplicate.getRawStorage()[i]));
+			if (inventoryToDuplicate.getRawStorage()[i] != null)
+				this.storage.add(new Item(inventoryToDuplicate.getRawStorage()[i]));
 		}
 	}
 	

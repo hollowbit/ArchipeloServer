@@ -63,6 +63,9 @@ public class ArchipeloServer {
 		executableManager = new ExecutableManager();
 		eventManager = new EventManager();
 		
+		//Add test event handler to manager
+		//new EventHandler.DefaultEventHandler().addToEventManager();
+		
 		world = new World();
 		mapElementManager = new MapElementManager();
 		mapElementManager.loadMapElements();

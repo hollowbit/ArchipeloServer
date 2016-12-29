@@ -41,14 +41,8 @@ public enum ItemType {
 	public static final int WEARABLE_SIZE = 32;
 	
 	public String id;
-	public String name;
-	public String desc;
 	public int iconX, iconY;
-	public int minDamage;
-	public int maxDamage;
 	public int maxStackSize;
-	public float critMultiplier;
-	public float critChance;
 	public int durability;
 	public int equipType;
 	public boolean buff;
@@ -58,6 +52,15 @@ public enum ItemType {
 	public int numOfStyles;
 	public int numOfUseAnimations;
 	public float useAnimationLength;
+	
+	public int minDamage;
+	public int maxDamage;
+	public int defense;
+	public float damageMultiplier = 1;
+	public float defenseMultiplier = 1;
+	public float speedMultiplier = 1;
+	public float critMultiplier;
+	public int critChance;
 	
 	private UseType useType;
 	
@@ -85,12 +88,14 @@ public enum ItemType {
 		ItemTypeData data = json.fromJson(ItemTypeData.class, fileString);
 		
 		this.id = data.id;
-		this.name = data.name;
-		this.desc = data.desc;
 		this.iconX = data.iconX;
 		this.iconY = data.iconY;
 		this.minDamage = data.minDamage;
 		this.maxDamage = data.maxDamage;
+		this.defense = data.defense;
+		this.damageMultiplier = data.damageMultiplier;
+		this.defenseMultiplier = data.defenseMultiplier;
+		this.speedMultiplier = data.speedMultiplier;
 		this.maxStackSize = data.maxStackSize;
 		this.critMultiplier = data.critMultiplier;
 		this.critChance = data.critChance;

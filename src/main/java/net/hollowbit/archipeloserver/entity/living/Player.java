@@ -20,6 +20,7 @@ import net.hollowbit.archipeloserver.entity.living.player.PlayerData;
 import net.hollowbit.archipeloserver.entity.living.player.PlayerFlagsManager;
 import net.hollowbit.archipeloserver.entity.living.player.PlayerInventory;
 import net.hollowbit.archipeloserver.entity.living.player.PlayerNpcDialogManager;
+import net.hollowbit.archipeloserver.entity.living.player.PlayerStatsManager;
 import net.hollowbit.archipeloserver.hollowbitserver.HollowBitUser;
 import net.hollowbit.archipeloserver.items.Item;
 import net.hollowbit.archipeloserver.items.ItemType;
@@ -45,8 +46,6 @@ import net.hollowbit.archipeloshared.Direction;
 public class Player extends LivingEntity implements PacketHandler {
 	
 	public static final float CORRECTION_ERROR_PERCENTAGE = 0.9f;
-	public static final float ROLLING_SPEED_SCALE = 3.0f;//Scale of speed when rolling
-	public static final float SPRINTING_SPEED_SCALE = 1.4f;//^ when sprinting
 	public static final float ROLLING_DURATION = 0.4f;
 	public static final float ROLL_DOUBLE_CLICK_DURATION = 0.3f;
 	public static final float HIT_RANGE = 8;
@@ -87,6 +86,7 @@ public class Player extends LivingEntity implements PacketHandler {
 	PlayerNpcDialogManager npcDialogManager;
 	PlayerFlagsManager flagsManager;
 	PlayerInventory inventory;
+	PlayerStatsManager statsManager;
 	
 	public Player (String name, String address, boolean firstTimeLogin) {
 		this.create(name, 0, location, address, firstTimeLogin);
@@ -109,6 +109,7 @@ public class Player extends LivingEntity implements PacketHandler {
 		this.creationDate = playerData.creationDate;
 		this.hbUser = hbUser;
 		this.flagsManager = new PlayerFlagsManager(playerData.flags, this);
+		this.statsManager = new PlayerStatsManager(this);
 		
 		PlayerJoinEvent event = new PlayerJoinEvent(this);//Triggers player join event
 		event.trigger();
@@ -185,7 +186,6 @@ public class Player extends LivingEntity implements PacketHandler {
 				}
 				
 				if (isMoving())  {
-					System.out.println("Player.java DOWN LEFT!");
 					newPos.add((float) (-Tick.T_60 * getSpeed() / LivingEntity.DIAGONAL_FACTOR), (float) (-Tick.T_60 * getSpeed() / LivingEntity.DIAGONAL_FACTOR));
 				}
 			} else if (controls[Controls.RIGHT]) {//Down right
@@ -282,7 +282,7 @@ public class Player extends LivingEntity implements PacketHandler {
 	
 	@Override
 	public float getSpeed () {
-		return entityType.getSpeed() * (isRolling() ? ROLLING_SPEED_SCALE : (controls[Controls.ROLL] ? SPRINTING_SPEED_SCALE : 1));
+		return statsManager.getSpeed(controls[Controls.ROLL], isRolling());
 	}
 	
 	@Override
@@ -324,6 +324,7 @@ public class Player extends LivingEntity implements PacketHandler {
 	 * Updates player to database to be ready to be removed
 	 */
 	private void unload() {
+		statsManager.dispose();
 		ArchipeloServer.getServer().getNetworkManager().removePacketHandler(this);
 		ArchipeloServer.getServer().getDatabaseManager().updatePlayer(this);
 	}
@@ -428,6 +429,7 @@ public class Player extends LivingEntity implements PacketHandler {
 	public EntitySnapshot getFullSnapshot() {
 		EntitySnapshot snapshot = super.getFullSnapshot();
 		snapshot.putString("displayInventory", inventory.getDisplayInventoryJson());
+		snapshot.putFloat("speed", statsManager.getSpeed());
 		return snapshot;
 	}
 	
