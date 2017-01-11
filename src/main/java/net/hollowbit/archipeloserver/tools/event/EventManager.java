@@ -62,8 +62,8 @@ public class EventManager {
 				if (eventHandler.onPlayerInventoryAdd((PlayerInventoryAddEvent) event))
 					handled = true;
 				break;
-			case PlayerInventoryChanged:
-				if (eventHandler.onPlayerInventoryChanged((PlayerInventoryChangedEvent) event))
+			case PlayerInventoryChange:
+				if (eventHandler.onPlayerInventoryChanged((PlayerInventoryChangeEvent) event))
 					handled = true;
 				break;
 			case PlayerInventoryMove:
@@ -74,7 +74,9 @@ public class EventManager {
 				if (eventHandler.onPlayerInventoryRemove((PlayerInventoryRemoveEvent) event))
 					handled = true;
 				break;
-			default:
+			case PlayerStatsChange:
+				if (eventHandler.onPlayerStatsChange((PlayerStatsChangeEvent) event))
+					handled = true;
 				break;
 			}
 		}

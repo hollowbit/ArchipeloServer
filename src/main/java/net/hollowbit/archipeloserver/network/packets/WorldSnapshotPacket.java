@@ -1,6 +1,7 @@
 package net.hollowbit.archipeloserver.network.packets;
 
-import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map.Entry;
 
 import com.badlogic.gdx.utils.Json;
 
@@ -14,7 +15,7 @@ public class WorldSnapshotPacket extends Packet {
 	public double timeCreatedMillis;
 	public int time;
 	public int type;
-	public ArrayList<String> entitySnapshots;
+	public HashMap<String, String> entitySnapshots;
 	public String mapSnapshot;
 	
 	public WorldSnapshotPacket (WorldSnapshot snapshot) {
@@ -22,10 +23,10 @@ public class WorldSnapshotPacket extends Packet {
 		timeCreatedMillis = (double) snapshot.timeCreatedMillis;
 		time = snapshot.time;
 		type = snapshot.type;
-		entitySnapshots = new ArrayList<String>();
+		entitySnapshots = new HashMap<String, String>();
 		Json json = new Json();
-		for (EntitySnapshot entitySnapshot : snapshot.entitySnapshots) {
-			entitySnapshots.add(json.toJson(entitySnapshot));
+		for (Entry<String, EntitySnapshot> entry : snapshot.entitySnapshots.entrySet()) {
+			entitySnapshots.put(entry.getKey(), json.toJson(entry.getValue()));
 		}
 		mapSnapshot = json.toJson(snapshot.mapSnapshot);
 	}

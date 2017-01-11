@@ -5,7 +5,8 @@ import net.hollowbit.archipeloserver.entity.living.Player;
 import net.hollowbit.archipeloserver.items.Item;
 import net.hollowbit.archipeloserver.tools.StaticTools;
 import net.hollowbit.archipeloserver.tools.event.EventHandler;
-import net.hollowbit.archipeloserver.tools.event.events.PlayerInventoryChangedEvent;
+import net.hollowbit.archipeloserver.tools.event.events.PlayerInventoryChangeEvent;
+import net.hollowbit.archipeloserver.tools.event.events.PlayerStatsChangeEvent;
 
 public class PlayerStatsManager implements EventHandler {
 
@@ -34,82 +35,85 @@ public class PlayerStatsManager implements EventHandler {
 		Item weapon = player.getInventory().getWeaponInventory().getRawStorage()[0];
 		Item[] equipped = player.getInventory().getEquippedInventory().getRawStorage();
 		Item[] buffs = player.getInventory().getBuffsInventory().getRawStorage();
-		
+
 		//Set speed to default player speed for now
-		this.speed = EntityType.PLAYER.getSpeed();
+		speed = EntityType.PLAYER.getSpeed();
 		
 		//Calculate min/max damage
 		if (weapon != null) {
-			this.minDamage = weapon.getType().minDamage;
-			this.maxDamage = weapon.getType().maxDamage;
+			minDamage = weapon.getType().minDamage;
+			maxDamage = weapon.getType().maxDamage;
 		} else {
-			this.minDamage = 0;
-			this.maxDamage = 0;
+			minDamage = 0;
+			maxDamage = 0;
 		}
 		
 		//Calculate defense
 		this.defense = 0;
 		for (Item item : equipped) {
 			if (item != null)
-				this.defense += item.getType().defense;
+				defense += item.getType().defense;
 		}
 		for (Item item : buffs) {
 			if (item != null)
-				this.defense += item.getType().defense;
+				defense += item.getType().defense;
 		}
 		if (weapon != null)
-			this.defense += weapon.getType().defense;
+			defense += weapon.getType().defense;
 		
 		//Calculate damage multiplier
-		this.damageMultiplier = 1;
+		damageMultiplier = 1;
 		for (Item item : equipped) {
 			if (item != null)
-				this.damageMultiplier *= item.getType().damageMultiplier;
+				damageMultiplier *= item.getType().damageMultiplier;
 		}
 		for (Item item : buffs) {
 			if (item != null)
-				this.damageMultiplier *= item.getType().damageMultiplier;
+				damageMultiplier *= item.getType().damageMultiplier;
 		}
 		if (weapon != null)
-			this.damageMultiplier *= weapon.getType().damageMultiplier;
+			damageMultiplier *= weapon.getType().damageMultiplier;
 		
 		//Calculate defense multiplier
-		this.defenseMultiplier = 1;
+		defenseMultiplier = 1;
 		for (Item item : equipped) {
 			if (item != null)
-				this.defenseMultiplier *= item.getType().defenseMultiplier;
+				defenseMultiplier *= item.getType().defenseMultiplier;
 		}
 		for (Item item : buffs) {
 			if (item != null)
-				this.defenseMultiplier *= item.getType().defenseMultiplier;
+				defenseMultiplier *= item.getType().defenseMultiplier;
 		}
 		if (weapon != null)
-			this.defenseMultiplier *= weapon.getType().defenseMultiplier;
+			defenseMultiplier *= weapon.getType().defenseMultiplier;
 		
 		//Calculate speed multiplier
-		this.speedMultiplier = 1;
+		speedMultiplier = 1;
 		for (Item item : equipped) {
 			if (item != null)
-				this.speedMultiplier *= item.getType().speedMultiplier;
+				speedMultiplier *= item.getType().speedMultiplier;
 		}
 		for (Item item : buffs) {
 			if (item != null)
-				this.speedMultiplier *= item.getType().speedMultiplier;
+				speedMultiplier *= item.getType().speedMultiplier;
 		}
 		if (weapon != null)
-			this.speedMultiplier *= weapon.getType().speedMultiplier;
+			speedMultiplier *= weapon.getType().speedMultiplier;
 		
 		//Calculate crit stuff
 		if (weapon != null) {
-			this.critMultiplier = weapon.getType().critMultiplier;
-			this.critChance = weapon.getType().critChance;
+			critMultiplier = weapon.getType().critMultiplier;
+			critChance = weapon.getType().critChance;
 		} else {
-			this.critMultiplier = 1f;
-			this.critChance = 0;
+			critMultiplier = 1f;
+			critChance = 0;
 		}
 		
+		PlayerStatsChangeEvent event = new PlayerStatsChangeEvent(player, speed, minDamage, maxDamage, defense, damageMultiplier, defenseMultiplier, speedMultiplier, critMultiplier, critChance);
+		event.trigger();
+		
 		//Update speed for players
-		player.getChangesSnapshot().putFloat("speed", this.speed * speedMultiplier);
+		player.getChangesSnapshot().putFloat("speed", this.speed * this.speedMultiplier);
 	}
 	
 	/**
@@ -180,7 +184,7 @@ public class PlayerStatsManager implements EventHandler {
 	}
 	
 	@Override
-	public boolean onPlayerInventoryChanged (PlayerInventoryChangedEvent event) {
+	public boolean onPlayerInventoryChanged (PlayerInventoryChangeEvent event) {
 		if (event.getPlayer() == player) {
 			if (event.getInventoryId() == PlayerInventory.BUFFS_EQUIP_INVENTORY || event.getInventoryId() == PlayerInventory.EQUIPPED_INVENTORY || event.getInventoryId() == PlayerInventory.WEAPON_EQUIP_INVENTORY) {
 				update();

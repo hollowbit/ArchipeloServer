@@ -7,12 +7,14 @@ import com.badlogic.gdx.utils.reflect.ReflectionException;
 
 import net.hollowbit.archipeloserver.ArchipeloServer;
 import net.hollowbit.archipeloserver.form.forms.InventoryForm;
+import net.hollowbit.archipeloserver.form.forms.PlayerStatsForm;
 import net.hollowbit.archipeloshared.FormData;
 
 @SuppressWarnings("rawtypes")
 public enum FormType {
 	
-	INVENTORY ("inventory", InventoryForm.class, true);
+	INVENTORY ("inventory", InventoryForm.class, true),
+	PLAYER_STATS ("stats", PlayerStatsForm.class, true);
 	
 	public String id;
 	public Class formClass;

@@ -1,6 +1,6 @@
 package net.hollowbit.archipeloserver.world;
 
-import java.util.ArrayList;
+import java.util.HashMap;
 
 import net.hollowbit.archipeloserver.entity.Entity;
 import net.hollowbit.archipeloserver.entity.EntitySnapshot;
@@ -15,31 +15,31 @@ public class WorldSnapshot {
 	public long timeCreatedMillis;
 	public int time;
 	public int type;
-	public ArrayList<EntitySnapshot> entitySnapshots;
+	public HashMap<String, EntitySnapshot> entitySnapshots;
 	public MapSnapshot mapSnapshot;
 	
 	public WorldSnapshot (World world, Map map, int type) {
 		this.time = world.getTime();
 		this.type = type;
 		
-		entitySnapshots = new ArrayList<EntitySnapshot>();
+		entitySnapshots = new HashMap<String, EntitySnapshot>();
 		switch(type) {
 		case TYPE_INTERP:
 			for (Entity entity : map.getEntityManager().duplicateEntityList()) {
-				entitySnapshots.add(entity.getInterpSnapshot());
+				entitySnapshots.put(entity.getName(), entity.getInterpSnapshot());
 			}
 			break;
 		case TYPE_CHANGES:
 			mapSnapshot = map.getChangesSnapshot();
 			for (Entity entity : map.getEntityManager().duplicateEntityList()) {
 				if (!entity.getChangesSnapshot().isEmpty())
-					entitySnapshots.add(entity.getChangesSnapshot());
+					entitySnapshots.put(entity.getName(), entity.getChangesSnapshot());
 			}
 			break;
 		case TYPE_FULL:
 			mapSnapshot = map.getFullSnapshot();
 			for (Entity entity : map.getEntityManager().duplicateEntityList()) {
-				entitySnapshots.add(entity.getFullSnapshot());
+				entitySnapshots.put(entity.getName(), entity.getFullSnapshot());
 			}
 			timeCreatedMillis = System.currentTimeMillis();
 			break;
@@ -53,9 +53,10 @@ public class WorldSnapshot {
 	}
 	
 	public void clear () {
-		for (EntitySnapshot snapshot : entitySnapshots) {
+		for (EntitySnapshot snapshot: entitySnapshots.values()) {
 			snapshot.clear();
 		}
+		
 		mapSnapshot.clear();
 	}
 	

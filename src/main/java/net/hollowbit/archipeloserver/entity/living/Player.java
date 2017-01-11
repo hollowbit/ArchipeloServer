@@ -543,6 +543,10 @@ public class Player extends LivingEntity implements PacketHandler {
 		return flagsManager;
 	}
 	
+	public PlayerStatsManager getStatsManager () {
+		return statsManager;
+	}
+	
 	private boolean doesCurrentPositionCollideWithMap () {
 		for (CollisionRect rect : getCollisionRects(location.pos)) {//Checks to make sure no collision rect is intersecting with map
 			if (location.getMap().collidesWithMap(rect, this)) {

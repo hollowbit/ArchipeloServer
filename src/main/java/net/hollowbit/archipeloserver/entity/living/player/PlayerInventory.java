@@ -8,7 +8,7 @@ import net.hollowbit.archipeloserver.items.ItemType;
 import net.hollowbit.archipeloserver.tools.StaticTools;
 import net.hollowbit.archipeloserver.tools.event.events.PlayerBankAddEvent;
 import net.hollowbit.archipeloserver.tools.event.events.PlayerInventoryAddEvent;
-import net.hollowbit.archipeloserver.tools.event.events.PlayerInventoryChangedEvent;
+import net.hollowbit.archipeloserver.tools.event.events.PlayerInventoryChangeEvent;
 import net.hollowbit.archipeloserver.tools.event.events.PlayerInventoryMoveEvent;
 import net.hollowbit.archipeloserver.tools.event.events.PlayerInventoryRemoveEvent;
 import net.hollowbit.archipeloserver.tools.inventory.FixedInventory;
@@ -306,7 +306,7 @@ public class PlayerInventory {
 		if (inventoryId == EQUIPPED_INVENTORY || inventoryId == COSMETIC_INVENTORY)
 			player.getChangesSnapshot().putString("displayInventory", getDisplayInventoryJson());
 		
-		PlayerInventoryChangedEvent event = new PlayerInventoryChangedEvent(player, oldInventory, inventoriesInArray[inventoryId], inventoryId);
+		PlayerInventoryChangeEvent event = new PlayerInventoryChangeEvent(player, oldInventory, inventoriesInArray[inventoryId], inventoryId);
 		event.trigger();
 	}
 	

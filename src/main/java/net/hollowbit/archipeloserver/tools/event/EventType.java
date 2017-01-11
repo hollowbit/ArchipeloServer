@@ -8,6 +8,7 @@ public enum EventType {
 	PlayerInventoryAdd,
 	PlayerInventoryRemove,
 	PlayerInventoryMove,
-	PlayerInventoryChanged,
+	PlayerInventoryChange,
+	PlayerStatsChange,
 	PlayerBankAdd;
 }
