@@ -18,15 +18,12 @@ public class PlayerFlagsManager {
 	 * Manages player flags. Player flags are used to determine if a player has triggered a certain event already.
 	 * @param flagsJson
 	 */
-	public PlayerFlagsManager (String flagsJson, Player player) {
+	public PlayerFlagsManager (ArrayList<String> flagsData, Player player) {
 		this.player = player;
 		json = new Json();
 		
 		flags = new HashSet<String>();
-		
-		ArrayList<String> flagsArray = json.fromJson(FlagsData.class, flagsJson).flags;
-		
-		for (String flag : flagsArray)
+		for (String flag : flagsData)
 			flags.add(flag);
 	}
 	
@@ -38,8 +35,9 @@ public class PlayerFlagsManager {
 		FlagsData flagsData = new FlagsData();
 		flagsData.flags = new ArrayList<String>();
 		
-		for (String flag : flags)
+		for (String flag : flags) {
 			flagsData.flags.add(flag);
+		}
 		
 		return json.toJson(flagsData);
 	}

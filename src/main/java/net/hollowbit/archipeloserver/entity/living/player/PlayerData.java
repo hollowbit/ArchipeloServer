@@ -1,12 +1,13 @@
 package net.hollowbit.archipeloserver.entity.living.player;
 
-import java.sql.Date;
+import java.util.ArrayList;
+import java.util.Date;
 
 import net.hollowbit.archipeloserver.items.Item;
 
 public class PlayerData {
 	
-	public String uuid;
+	public String id;
 	public String name;
 	public String bhUuid;
 	public float x, y;
@@ -21,6 +22,6 @@ public class PlayerData {
 	public Item[] buffsInventory;
 	public Item[] ammoInventory;
 	public Date lastPlayed, creationDate;
-	public String flags;
+	public ArrayList<String> flags;
 	
 }

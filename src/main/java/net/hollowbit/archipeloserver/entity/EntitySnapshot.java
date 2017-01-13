@@ -73,10 +73,6 @@ public class EntitySnapshot {
 		}
 	}
 	
-	public void setSpeed (float speed) {
-		
-	}
-	
 	public void clear () {
 		properties.clear();
 	}

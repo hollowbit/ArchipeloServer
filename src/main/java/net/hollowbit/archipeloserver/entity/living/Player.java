@@ -1,8 +1,8 @@
 package net.hollowbit.archipeloserver.entity.living;
 
-import java.sql.Date;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.UUID;
 
 import org.java_websocket.WebSocket;
@@ -33,7 +33,7 @@ import net.hollowbit.archipeloserver.network.packets.ControlsPacket;
 import net.hollowbit.archipeloserver.network.packets.LogoutPacket;
 import net.hollowbit.archipeloserver.network.packets.PopupTextPacket;
 import net.hollowbit.archipeloserver.tools.Configuration;
-import net.hollowbit.archipeloserver.tools.DatabaseManager;
+import net.hollowbit.archipeloserver.tools.database.DatabaseManager;
 import net.hollowbit.archipeloserver.tools.entity.HitCalculator;
 import net.hollowbit.archipeloserver.tools.entity.Location;
 import net.hollowbit.archipeloserver.tools.event.events.PlayerJoinEvent;
@@ -71,7 +71,7 @@ public class Player extends LivingEntity implements PacketHandler {
 	
 	public static final float PERMITTED_ERROR_MULTIPLIER = 20;
 	
-	String uuid;
+	String id;
 	String address;
 	boolean firstTimeLogin;
 	boolean[] controls;
@@ -102,7 +102,7 @@ public class Player extends LivingEntity implements PacketHandler {
 	}
 	
 	public void load (Map map, PlayerData playerData, HollowBitUser hbUser) {
-		this.uuid = playerData.uuid;
+		this.id = playerData.id;
 		this.location = new Location(map, new Vector2(playerData.x, playerData.y));
 		this.inventory = new PlayerInventory(this, playerData.inventory, playerData.uneditableEquippedInventory, playerData.equippedInventory, playerData.cosmeticInventory, new ArrayList<Item>(Arrays.asList(playerData.bankInventory)), playerData.weaponInventory, playerData.consumablesInventory, playerData.buffsInventory, playerData.ammoInventory);
 		this.lastPlayed = playerData.lastPlayed;
@@ -511,8 +511,8 @@ public class Player extends LivingEntity implements PacketHandler {
 		ArchipeloServer.getServer().getNetworkManager().sendPacket(packet, ArchipeloServer.getServer().getNetworkManager().getConnectionByAddress(address));
 	}
 	
-	public String getUUID () {
-		return uuid;
+	public String getId () {
+		return id;
 	}
 	
 	public PlayerInventory getInventory () {
@@ -559,7 +559,7 @@ public class Player extends LivingEntity implements PacketHandler {
 	public static PlayerData getNewPlayerData (String name, String hbUuid, Item hair, Item face, Item body) {
 		Configuration config = ArchipeloServer.getServer().getConfig();
 		PlayerData playerData = new PlayerData();
-		playerData.uuid = UUID.randomUUID().toString();
+		playerData.id = UUID.randomUUID().toString();
 		playerData.bhUuid = hbUuid;
 		playerData.name = name;
 		playerData.x = config.spawnX;
@@ -568,7 +568,7 @@ public class Player extends LivingEntity implements PacketHandler {
 		playerData.map = config.spawnMap;
 		playerData.lastPlayed = DatabaseManager.getCurrentDate();
 		playerData.creationDate = DatabaseManager.getCurrentDate();
-		playerData.flags = "{flags:[]}";
+		playerData.flags = new ArrayList<String>();
 		
 		//Default inventory
 		playerData.inventory = new Item[PlayerInventory.INVENTORY_SIZE];

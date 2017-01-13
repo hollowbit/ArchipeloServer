@@ -1,5 +1,7 @@
 package net.hollowbit.archipeloserver.tools.inventory;
 
+import java.util.ArrayList;
+
 import net.hollowbit.archipeloserver.items.Item;
 import net.hollowbit.archipeloserver.tools.StaticTools;
 
@@ -18,6 +20,14 @@ public class FixedInventory extends Inventory {
 	
 	public FixedInventory (Item[] startItems) {
 		this.storage = startItems;
+	}
+	
+	public FixedInventory (ArrayList<Item> startItems, int size) {
+		this.storage = new Item[size];
+		
+		for (int i = 0; i < size; i++) {
+			storage[i] = startItems.get(i);
+		}
 	}
 	
 	public FixedInventory (Inventory inventoryToDuplicate) {
