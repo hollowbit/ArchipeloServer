@@ -57,13 +57,6 @@ public abstract class LivingEntity extends Entity {
 		return snapshot;
 	}
 	
-	@Override
-	public EntitySnapshot getFullSnapshot() {
-		EntitySnapshot fullSnapshot = super.getFullSnapshot();
-		fullSnapshot.putFloat("speed", getSpeed());
-		return super.getFullSnapshot();
-	}
-	
 	/**
 	 * Proper way to move an entity
 	 * @param newPos

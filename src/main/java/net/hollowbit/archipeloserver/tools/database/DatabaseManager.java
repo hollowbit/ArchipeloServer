@@ -5,6 +5,8 @@ import static com.mongodb.client.model.Filters.eq;
 
 import java.sql.Date;
 import java.util.ArrayList;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.bson.Document;
 import org.bson.codecs.Codec;
@@ -32,6 +34,11 @@ public class DatabaseManager {
 	public DatabaseManager () {
 		//Connect to database
 		try {
+			System.setProperty("DEBUG.MONGO", "false");
+			System.setProperty("DB.TRACE", "false");
+			Logger mongoLogger = Logger.getLogger( "com.mongodb" );
+			mongoLogger.setLevel(Level.SEVERE);
+			
 			Codec<Document> defaultDocumentCodec = MongoClient.getDefaultCodecRegistry().get(Document.class);
 			itemArrayCodec = new ItemArrayCodec(defaultDocumentCodec);
 			
