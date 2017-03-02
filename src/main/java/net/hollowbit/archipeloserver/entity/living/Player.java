@@ -33,6 +33,7 @@ import net.hollowbit.archipeloserver.network.packets.ChatMessagePacket;
 import net.hollowbit.archipeloserver.network.packets.ControlsPacket;
 import net.hollowbit.archipeloserver.network.packets.LogoutPacket;
 import net.hollowbit.archipeloserver.network.packets.PopupTextPacket;
+import net.hollowbit.archipeloserver.network.packets.PositionCorrectionPacket;
 import net.hollowbit.archipeloserver.tools.Configuration;
 import net.hollowbit.archipeloserver.tools.database.DatabaseManager;
 import net.hollowbit.archipeloserver.tools.entity.Location;
@@ -458,7 +459,8 @@ public class Player extends LivingEntity implements PacketHandler {
 		if (this.address.equals(address)) {
 			switch (packet.packetType) {
 			case PacketType.CONTROLS:
-				boolean[] newControls = ((ControlsPacket) packet).parse();
+				ControlsPacket cPacket = (ControlsPacket) packet;
+				boolean[] newControls = cPacket.parse();
 				
 				if (controls == null || controls.length != Controls.TOTAL)
 					return true;
@@ -482,6 +484,7 @@ public class Player extends LivingEntity implements PacketHandler {
 				}
 				
 				updateControls(newControls);
+				this.sendPacket(new PositionCorrectionPacket(location.pos.x, location.pos.y, cPacket.id));
 				return true;
 			case PacketType.CHAT_MESSAGE:
 				ChatMessagePacket messagePacket = (ChatMessagePacket) packet;
