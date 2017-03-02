@@ -2,6 +2,7 @@ package net.hollowbit.archipeloserver.tools.event;
 
 import java.util.LinkedList;
 
+import net.hollowbit.archipeloserver.tools.event.events.EntityInteractionEvent;
 import net.hollowbit.archipeloserver.tools.event.events.EntityMoveEvent;
 import net.hollowbit.archipeloserver.tools.event.events.EntityTeleportEvent;
 import net.hollowbit.archipeloserver.tools.event.events.PlayerBankAddEvent;
@@ -85,6 +86,10 @@ public class EventManager {
 				break;
 			case PlayerStatsChange:
 				if (eventHandler.onPlayerStatsChange((PlayerStatsChangeEvent) event))
+					handled = true;
+				break;
+			case EntityInteraction:
+				if (eventHandler.onEntityInteraction((EntityInteractionEvent) event))
 					handled = true;
 				break;
 			}

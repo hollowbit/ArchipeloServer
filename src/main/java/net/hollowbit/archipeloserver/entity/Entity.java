@@ -1,5 +1,7 @@
 package net.hollowbit.archipeloserver.entity;
 
+import java.util.ArrayList;
+
 import com.badlogic.gdx.math.Vector2;
 
 import net.hollowbit.archipeloserver.ArchipeloServer;
@@ -8,6 +10,7 @@ import net.hollowbit.archipeloserver.entity.living.Player;
 import net.hollowbit.archipeloserver.network.packets.PopupTextPacket;
 import net.hollowbit.archipeloserver.network.packets.TeleportPacket;
 import net.hollowbit.archipeloserver.tools.entity.Location;
+import net.hollowbit.archipeloserver.tools.event.events.EntityInteractionEvent;
 import net.hollowbit.archipeloserver.tools.event.events.EntityTeleportEvent;
 import net.hollowbit.archipeloserver.world.Island;
 import net.hollowbit.archipeloserver.world.Map;
@@ -24,8 +27,11 @@ public abstract class Entity {
 	protected EntitySnapshot changes;
 	protected EntityLog log;
 	protected EntityAnimationManager animationManager;
+	protected ArrayList<EntityComponent> components;
 	
-	public Entity () {}
+	public Entity () {
+		components = new ArrayList<EntityComponent>();
+	}
 	
 	public void create (String name, int style, Location location, EntityType entityType) {
 		this.name = name;
@@ -65,17 +71,29 @@ public abstract class Entity {
 	public void tick20 (float deltaTime) {
 		animationManager.update(deltaTime);
 		log.removeOldEntitySnapshotsFromLog();
+		
+		for (EntityComponent component : components)
+			component.tick20(deltaTime);
 	}
 	
 	public void tick60 (float deltaTime) {
 		log.addEntry(new EntityLogEntry(location.getX(), location.getY(), getSpeed()));
+		
+		for (EntityComponent component : components)
+			component.tick60(deltaTime);
 	}
 	
-	public void interactWith (Entity entity, String collisionRectName, EntityInteraction interactionType) {
-		entity.interactFrom(this, collisionRectName, interactionType);
+	protected void interactWith (Entity target, String collisionRectName, EntityInteractionType interactionType) {
+		EntityInteractionEvent event = new EntityInteractionEvent(this, target, collisionRectName, interactionType);
+		event.trigger();
+		
+		if (event.wasCanceled())
+			return;
+		
+		target.interactFrom(this, collisionRectName, interactionType);
 	}
 	
-	public void interactFrom (Entity entity, String collisionRectName, EntityInteraction interactionType) {}
+	protected void interactFrom (Entity entity, String collisionRectName, EntityInteractionType interactionType) {}
 	
 	public String getName () {
 		return name;
@@ -98,6 +116,9 @@ public abstract class Entity {
 	
 	public void remove () {
 		location.getMap().removeEntity(this);
+		
+		for (EntityComponent component : components)
+			component.remove();
 	}
 	
 	/**
@@ -108,7 +129,12 @@ public abstract class Entity {
 	 * @return
 	 */
 	public boolean ignoreHardnessOfCollisionRects (Player player, String rectName) {
-		return false;
+		boolean ignore = false;
+		for (EntityComponent component : components) {
+			if (component.ignoreHardnessOfCollisionRects(player, rectName))
+				ignore = true;
+		}
+		return ignore;
 	}
 	
 	/**
@@ -118,6 +144,9 @@ public abstract class Entity {
 	public EntitySnapshot getInterpSnapshot () {
 		EntitySnapshot snapshot = new EntitySnapshot(this, true);
 		animationManager.applyToEntitySnapshot(snapshot);
+		
+		for (EntityComponent component : components)
+			component.editInterpSnapshot(snapshot);
 		return snapshot;
 	}
 	
@@ -140,6 +169,9 @@ public abstract class Entity {
 		snapshot.putInt("direction", this.getLocation().getDirectionInt());
 		snapshot.putInt("style", style);
 		animationManager.applyToEntitySnapshot(snapshot);
+		
+		for (EntityComponent component : components)
+			component.editFullSnapshot(snapshot);
 		return snapshot;
 	}
 	
@@ -153,6 +185,9 @@ public abstract class Entity {
 		snapshot.putFloat("y", this.getY());
 		snapshot.putInt("direction", this.getLocation().getDirectionInt());
 		snapshot.putInt("style", style);
+		
+		for (EntityComponent component : components)
+			component.editSaveSnapshot(snapshot);
 		return snapshot;
 	}
 	

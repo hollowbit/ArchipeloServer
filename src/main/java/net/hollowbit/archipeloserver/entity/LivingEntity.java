@@ -32,7 +32,7 @@ public abstract class LivingEntity extends Entity {
 	public void tick20(float deltaTime) {
 		super.tick20(deltaTime);
 		for (EntityStepOnData entityStepOnData : duplicateEntitiesStepList()) {
-			this.interactWith(entityStepOnData.entity, entityStepOnData.collisionRectName, EntityInteraction.STEP_CONTINUAL);
+			this.interactWith(entityStepOnData.entity, entityStepOnData.collisionRectName, EntityInteractionType.STEP_CONTINUAL);
 		}
 	}
 	
@@ -89,7 +89,7 @@ public abstract class LivingEntity extends Entity {
 			for (EntityStepOnData data : rectsSteppedOn) {
 				if (!entitiesSteppedOn.contains(data)) {
 					addEntityToStepList(data);
-					this.interactWith(data.entity, data.collisionRectName, EntityInteraction.STEP_ON);
+					this.interactWith(data.entity, data.collisionRectName, EntityInteractionType.STEP_ON);
 				}
 			}
 			
@@ -98,7 +98,7 @@ public abstract class LivingEntity extends Entity {
 			for (EntityStepOnData data : entitiesSteppedOn) {
 				if ((!rectsSteppedOn.contains(data) && data.entity.equals(entity)) || !entity.getMap().equals(this.getMap())) {//If there is an entry for the same entity that is not in rectsSteppedOn, remvoe it and do a step off event
 					entitiesStepOnToRemove.add(data);
-					this.interactWith(data.entity, data.collisionRectName, EntityInteraction.STEP_OFF);
+					this.interactWith(data.entity, data.collisionRectName, EntityInteractionType.STEP_OFF);
 				}
 			}
 			removeAllEntityFromStepList(entitiesStepOnToRemove);

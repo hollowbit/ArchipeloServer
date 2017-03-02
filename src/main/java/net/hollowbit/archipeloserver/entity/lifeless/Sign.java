@@ -2,7 +2,7 @@ package net.hollowbit.archipeloserver.entity.lifeless;
 
 import net.hollowbit.archipeloserver.entity.Entity;
 import net.hollowbit.archipeloserver.entity.EntityAnimationManager.EntityAnimationObject;
-import net.hollowbit.archipeloserver.entity.EntityInteraction;
+import net.hollowbit.archipeloserver.entity.EntityInteractionType;
 import net.hollowbit.archipeloserver.entity.EntitySnapshot;
 import net.hollowbit.archipeloserver.entity.EntityType;
 import net.hollowbit.archipeloserver.entity.LifelessEntity;
@@ -20,12 +20,12 @@ public class Sign extends LifelessEntity {
 	}
 	
 	@Override
-	public void interactFrom(Entity entity, String collisionRectName, EntityInteraction interactionType) {
+	public void interactFrom(Entity entity, String collisionRectName, EntityInteractionType interactionType) {
 		super.interactFrom(entity, collisionRectName, interactionType);
 		
 		switch(collisionRectName) {
 		case "full":
-			if (interactionType == EntityInteraction.HIT && entity instanceof Player) {
+			if (interactionType == EntityInteractionType.HIT && entity instanceof Player) {
 				Player player = (Player) entity;
 				player.getNpcDialogManager().sendNpcDialog(this, startMessageId);
 			}

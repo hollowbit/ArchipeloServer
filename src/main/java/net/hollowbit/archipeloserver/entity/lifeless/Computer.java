@@ -3,7 +3,7 @@ package net.hollowbit.archipeloserver.entity.lifeless;
 import net.hollowbit.archipeloserver.ArchipeloServer;
 import net.hollowbit.archipeloserver.entity.Entity;
 import net.hollowbit.archipeloserver.entity.EntityAnimationManager.EntityAnimationObject;
-import net.hollowbit.archipeloserver.entity.EntityInteraction;
+import net.hollowbit.archipeloserver.entity.EntityInteractionType;
 import net.hollowbit.archipeloserver.entity.EntitySnapshot;
 import net.hollowbit.archipeloserver.entity.EntityType;
 import net.hollowbit.archipeloserver.entity.LifelessEntity;
@@ -27,10 +27,10 @@ public class Computer extends LifelessEntity implements EventHandler {
 	}
 	
 	@Override
-	public void interactFrom(Entity entity, String collisionRectName, EntityInteraction interactionType) {
+	public void interactFrom(Entity entity, String collisionRectName, EntityInteractionType interactionType) {
 		if (entity instanceof Player) {
 			Player p = (Player) entity;
-			if (interactionType == EntityInteraction.HIT) {
+			if (interactionType == EntityInteractionType.HIT) {
 				if (!on)
 					turnOn(p);
 				else

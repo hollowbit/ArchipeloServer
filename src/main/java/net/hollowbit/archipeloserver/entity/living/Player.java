@@ -13,7 +13,7 @@ import com.badlogic.gdx.math.Vector2;
 import net.hollowbit.archipeloserver.ArchipeloServer;
 import net.hollowbit.archipeloserver.entity.Entity;
 import net.hollowbit.archipeloserver.entity.EntityAnimationManager.EntityAnimationObject;
-import net.hollowbit.archipeloserver.entity.EntityInteraction;
+import net.hollowbit.archipeloserver.entity.EntityInteractionType;
 import net.hollowbit.archipeloserver.entity.EntitySnapshot;
 import net.hollowbit.archipeloserver.entity.EntityType;
 import net.hollowbit.archipeloserver.entity.LivingEntity;
@@ -243,7 +243,7 @@ public class Player extends LivingEntity implements PacketHandler {
 	}
 	
 	@Override
-	public void interactFrom (Entity entity, String collisionRectName, EntityInteraction interactionType) {
+	public void interactFrom (Entity entity, String collisionRectName, EntityInteractionType interactionType) {
 		super.interactFrom(entity, collisionRectName, interactionType);
 		
 		//Handle interaction with other player
@@ -365,7 +365,7 @@ public class Player extends LivingEntity implements PacketHandler {
 					
 					//Run hit event for every collision rect hit on entity
 					for (String rectHit : HitCalculator.getCollRectsHit(this.getCenterPoint().x, this.getCenterPoint().y, entity.getCollisionRects(), HIT_RANGE, location.getDirection())) {
-						this.interactWith(entity, rectHit, EntityInteraction.HIT);
+						this.interactWith(entity, rectHit, EntityInteractionType.HIT);
 						
 						//If the entity is not hittable, don't use the animation
 						if (!entity.getEntityType().isHittable())

@@ -2,7 +2,7 @@ package net.hollowbit.archipeloserver.entity.lifeless;
 
 import net.hollowbit.archipeloserver.entity.Entity;
 import net.hollowbit.archipeloserver.entity.EntityAnimationManager.EntityAnimationObject;
-import net.hollowbit.archipeloserver.entity.EntityInteraction;
+import net.hollowbit.archipeloserver.entity.EntityInteractionType;
 import net.hollowbit.archipeloserver.entity.EntitySnapshot;
 import net.hollowbit.archipeloserver.entity.EntityType;
 import net.hollowbit.archipeloserver.entity.LifelessEntity;
@@ -39,20 +39,20 @@ public class Door extends LifelessEntity {
 	}
 	
 	@Override
-	public void interactFrom(Entity entity, String collisionRectName, EntityInteraction interactionType) {
+	public void interactFrom(Entity entity, String collisionRectName, EntityInteractionType interactionType) {
 		super.interactFrom(entity, collisionRectName, interactionType);
 		switch (collisionRectName) {
 		case "bottom":
-			if (interactionType == EntityInteraction.STEP_ON)
+			if (interactionType == EntityInteractionType.STEP_ON)
 				openDoor();
-			else if (interactionType == EntityInteraction.STEP_OFF)
+			else if (interactionType == EntityInteractionType.STEP_OFF)
 				closeDoor();
 			break;
 		case "top":
 			if (!teleports)//If this door doesn't teleport, don't run teleport logic
 				return;
 			
-			if (interactionType == EntityInteraction.STEP_ON) {
+			if (interactionType == EntityInteractionType.STEP_ON) {
 				Direction newDirection = teleportDirection;
 				if (!changesDirection)
 					newDirection = entity.getLocation().getDirection();

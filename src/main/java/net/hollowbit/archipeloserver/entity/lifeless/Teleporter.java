@@ -2,7 +2,7 @@ package net.hollowbit.archipeloserver.entity.lifeless;
 
 import net.hollowbit.archipeloserver.entity.Entity;
 import net.hollowbit.archipeloserver.entity.EntityAnimationManager.EntityAnimationObject;
-import net.hollowbit.archipeloserver.entity.EntityInteraction;
+import net.hollowbit.archipeloserver.entity.EntityInteractionType;
 import net.hollowbit.archipeloserver.entity.EntitySnapshot;
 import net.hollowbit.archipeloserver.entity.EntityType;
 import net.hollowbit.archipeloserver.entity.LifelessEntity;
@@ -34,9 +34,9 @@ public class Teleporter extends LifelessEntity {
 	}
 	
 	@Override
-	public void interactFrom(Entity entity, String collisionRectName, EntityInteraction interactionType) {
+	public void interactFrom(Entity entity, String collisionRectName, EntityInteractionType interactionType) {
 		super.interactFrom(entity, collisionRectName, interactionType);
-		if (interactionType == EntityInteraction.STEP_ON) {
+		if (interactionType == EntityInteractionType.STEP_ON) {
 
 			Direction newDirection = teleportDirection;
 			if (!changesDirection)

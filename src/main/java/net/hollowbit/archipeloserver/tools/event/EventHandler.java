@@ -1,6 +1,7 @@
 package net.hollowbit.archipeloserver.tools.event;
 
 import net.hollowbit.archipeloserver.ArchipeloServer;
+import net.hollowbit.archipeloserver.tools.event.events.EntityInteractionEvent;
 import net.hollowbit.archipeloserver.tools.event.events.EntityMoveEvent;
 import net.hollowbit.archipeloserver.tools.event.events.EntityTeleportEvent;
 import net.hollowbit.archipeloserver.tools.event.events.PlayerBankAddEvent;
@@ -24,6 +25,7 @@ public interface EventHandler {
 	public default boolean onPlayerInventoryRemove (PlayerInventoryRemoveEvent event) {return false;}
 	public default boolean onPlayerInventoryMove (PlayerInventoryMoveEvent event) {return false;}
 	public default boolean onPlayerStatsChange (PlayerStatsChangeEvent event) {return false;}
+	public default boolean onEntityInteraction (EntityInteractionEvent event) {return false;}
 	
 	public default void addToEventManager() {
 		ArchipeloServer.getServer().getEventManager().add(this);
@@ -45,6 +47,7 @@ public interface EventHandler {
 		public boolean onPlayerInventoryRemove (PlayerInventoryRemoveEvent event) {System.out.println("EventHandler.java Event Triggered: Player Inventory Removed"); return false;}
 		public boolean onPlayerInventoryMove (PlayerInventoryMoveEvent event) {System.out.println("EventHandler.java Event Triggered: Player Inventory Move"); return false;}
 		public boolean onPlayerStatsChange (PlayerStatsChangeEvent event) {System.out.println("EventHandler.java Event Triggered: Player Stats Change"); return false;}
+		public boolean onEntityInteraction (EntityInteractionEvent event) {System.out.println("EventHandler.java Event Triggered: Entity Interaction Occured"); return false;}
 		
 	}
 	
