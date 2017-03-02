@@ -1,6 +1,7 @@
 package net.hollowbit.archipeloserver.entity;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 
 import com.badlogic.gdx.math.Vector2;
 
@@ -12,24 +13,24 @@ import net.hollowbit.archipeloshared.CollisionRect;
 
 public abstract class LivingEntity extends Entity {
 	
-	private ArrayList<EntityStepOnData> entitiesSteppedOn;
+	private LinkedList<EntityStepOnData> entitiesSteppedOn;
 	public static final double DIAGONAL_FACTOR = Math.sqrt(2);
 	
 	@Override
 	public void create(String name, int style, Location location, EntityType entityType) {
 		super.create(name, style, location, entityType);
-		entitiesSteppedOn = new ArrayList<EntityStepOnData>();
+		entitiesSteppedOn = new LinkedList<EntityStepOnData>();
 	}
 	
 	@Override
 	public void create(EntitySnapshot fullSnapshot, Map map, EntityType entityType) {
 		super.create(fullSnapshot, map, entityType);
-		entitiesSteppedOn = new ArrayList<EntityStepOnData>();
+		entitiesSteppedOn = new LinkedList<EntityStepOnData>();
 	}
 	
 	@Override
-	public void tick20() {
-		super.tick20();
+	public void tick20(float deltaTime) {
+		super.tick20(deltaTime);
 		for (EntityStepOnData entityStepOnData : duplicateEntitiesStepList()) {
 			this.interactWith(entityStepOnData.entity, entityStepOnData.collisionRectName, EntityInteraction.STEP_CONTINUAL);
 		}
@@ -43,7 +44,7 @@ public abstract class LivingEntity extends Entity {
 		entitiesSteppedOn.removeAll(entityStepOnDatas);
 	}
 	
-	public synchronized ArrayList<EntityStepOnData> duplicateEntitiesStepList () {
+	private synchronized ArrayList<EntityStepOnData> duplicateEntitiesStepList () {
 		ArrayList<EntityStepOnData> entitiesStepList = new ArrayList<EntityStepOnData>();
 		entitiesStepList.addAll(entitiesSteppedOn);
 		return entitiesStepList;
@@ -67,8 +68,7 @@ public abstract class LivingEntity extends Entity {
 		if (event.wasCanceled())
 			return;
 		
-		newPos = event.getNewPos();//Set new pos with new on from event
-		
+		newPos = event.getNewPos();//Set new pos with new one from event
 		location.set(newPos);
 		
 		ArrayList<Entity> entitiesOnMap = (ArrayList<Entity>) location.getMap().getEntityManager().duplicateEntityList();
@@ -76,7 +76,7 @@ public abstract class LivingEntity extends Entity {
 			if (entity == this)
 				continue;
 			
-			//Check which rects are being stepped on
+			//Check which rects are being stepped on currently
 			ArrayList<EntityStepOnData> rectsSteppedOn = new ArrayList<EntityStepOnData>();
 			for (CollisionRect entityRect : entity.getCollisionRects()) {
 				for (CollisionRect thisRect : this.getCollisionRects()) {
@@ -102,7 +102,6 @@ public abstract class LivingEntity extends Entity {
 				}
 			}
 			removeAllEntityFromStepList(entitiesStepOnToRemove);
-			
 		}
 	}
 	

@@ -4,6 +4,7 @@ import net.hollowbit.archipeloserver.entity.Entity;
 import net.hollowbit.archipeloserver.entity.EntityInteraction;
 import net.hollowbit.archipeloserver.entity.EntitySnapshot;
 import net.hollowbit.archipeloserver.entity.EntityType;
+import net.hollowbit.archipeloserver.entity.EntityAnimationManager.EntityAnimationObject;
 import net.hollowbit.archipeloserver.entity.living.Player;
 import net.hollowbit.archipeloserver.world.Map;
 
@@ -57,6 +58,11 @@ public class DoorLocked extends Door {
 		EntitySnapshot snapshot = super.getSaveSnapshot();
 		snapshot.putString("unlockFlag", unlockFlag);
 		return snapshot;
+	}
+
+	@Override
+	public EntityAnimationObject animationCompleted(String animationId) {
+		return super.animationCompleted(animationId);
 	}
 	
 }

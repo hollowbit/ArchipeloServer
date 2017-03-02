@@ -1,4 +1,4 @@
-package net.hollowbit.archipeloserver.tools.executables;
+package net.hollowbit.archipeloserver.tools;
 
 import java.util.HashMap;
 
@@ -6,7 +6,7 @@ import com.badlogic.gdx.utils.Json;
 
 import net.hollowbit.archipeloserver.entity.Entity;
 import net.hollowbit.archipeloserver.entity.living.Player;
-import net.hollowbit.archipeloserver.items.Item;
+import net.hollowbit.archipeloserver.tools.executables.ExecutionCommand;
 
 public class ExecutableManager {
 	
@@ -94,25 +94,6 @@ public class ExecutableManager {
 				} else
 					return false;
 			}
-		});
-		
-		executables.put("GIVEITEMS", new Executable() {
-
-			@Override
-			public boolean execute (Entity sender, Entity target, HashMap<String, String> arguments) {
-				if (target != null && target instanceof Player) {
-					Player player = (Player) target;
-					
-					if (arguments.containsKey("items")) {
-						for (Item item : Item.getManyFromString(arguments.get("items")))
-							player.getInventory().add(item);
-						return true;
-					}else
-						return false;
-				} else
-					return false;
-			}
-			
 		});
 		
 		//TODO add more executables here

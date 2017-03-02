@@ -1,59 +1,41 @@
 package net.hollowbit.archipeloserver.tools.database;
 
-import static com.mongodb.client.model.Filters.and;
-import static com.mongodb.client.model.Filters.eq;
-
+import java.sql.Connection;
 import java.sql.Date;
+import java.sql.DriverManager;
 import java.util.ArrayList;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-import org.bson.Document;
-import org.bson.codecs.Codec;
-import org.bson.codecs.configuration.CodecRegistries;
-import org.bson.codecs.configuration.CodecRegistry;
-
-import com.mongodb.Block;
-import com.mongodb.MongoClient;
-import com.mongodb.MongoClientOptions;
-import com.mongodb.client.FindIterable;
-import com.mongodb.client.MongoCollection;
-import com.mongodb.client.MongoDatabase;
 
 import net.hollowbit.archipeloserver.ArchipeloServer;
 import net.hollowbit.archipeloserver.entity.living.Player;
-import net.hollowbit.archipeloserver.entity.living.player.PlayerData;
+import net.hollowbit.archipeloserver.tools.Configuration;
+import net.hollowbit.archipeloserver.tools.database.QueryTaskResponseHandler.PlayerCountQueryTaskResponseHandler;
+import net.hollowbit.archipeloserver.tools.database.QueryTaskResponseHandler.PlayerDataQueryTaskResponseHandler;
+import net.hollowbit.archipeloserver.tools.database.QueryTaskResponseHandler.PlayerExistsQueryTaskResponseHandler;
+import net.hollowbit.archipeloserver.tools.database.QueryTaskResponseHandler.PlayerListQueryTaskResponseHandler;
+import net.hollowbit.archipeloserver.tools.database.querytasks.PlayerCountResponseQueryTask;
+import net.hollowbit.archipeloserver.tools.database.querytasks.PlayerCreateQueryTask;
+import net.hollowbit.archipeloserver.tools.database.querytasks.PlayerDataResponseQueryTask;
+import net.hollowbit.archipeloserver.tools.database.querytasks.PlayerDeleteQueryTask;
+import net.hollowbit.archipeloserver.tools.database.querytasks.PlayerExistsResponseQueryTask;
+import net.hollowbit.archipeloserver.tools.database.querytasks.PlayerListResponseQueryTask;
+import net.hollowbit.archipeloserver.tools.database.querytasks.PlayerUpdateQueryTask;
 
 public class DatabaseManager {
 	
-	MongoClient client;
-	MongoDatabase db;
-	MongoCollection<Document> players;
-	ItemArrayCodec itemArrayCodec;
+	private static final int MIN_MILLIS = 1000 / 20;//Minimum time to spend in a loop
+	
+	Connection connection;
+	volatile ArrayList<QueryTask> queryTasks;
+	Thread asyncThread;
+	boolean running = false;
 	
 	public DatabaseManager () {
+		this.queryTasks = new ArrayList<QueryTask>();
+		
 		//Connect to database
 		try {
-			System.setProperty("DEBUG.MONGO", "false");
-			System.setProperty("DB.TRACE", "false");
-			Logger mongoLogger = Logger.getLogger( "com.mongodb" );
-			mongoLogger.setLevel(Level.SEVERE);
-			
-			Codec<Document> defaultDocumentCodec = MongoClient.getDefaultCodecRegistry().get(Document.class);
-			itemArrayCodec = new ItemArrayCodec(defaultDocumentCodec);
-			
-			CodecRegistry codecRegistry = CodecRegistries.fromRegistries(
-					MongoClient.getDefaultCodecRegistry(),
-				    CodecRegistries.fromCodecs(itemArrayCodec)
-				);
-			
-			MongoClientOptions options = MongoClientOptions.builder().codecRegistry(codecRegistry).build();
-			
-			client = new MongoClient("localhost:27017", options);
-			client.getAddress();
-			db = client.getDatabase("archipelo_server");
-			players = db.getCollection("players");
-			
+			Configuration config = ArchipeloServer.getServer().getConfig();
+			connection = DriverManager.getConnection("jdbc:mysql://" + config.dbAddress + "/archipelo_server?autoReconnect=true", config.dbUsername, config.dbPassword);
 			ArchipeloServer.getServer().getLogger().info("Connected to database!");
 		} catch (Exception e) {
 			System.out.println(e.getMessage());
@@ -62,81 +44,106 @@ public class DatabaseManager {
 	}
 	
 	/**
+	 * Starts async tasks
+	 */
+	public void start () {
+		if (asyncThread != null && running)
+			stop();
+		
+		running = true;
+		asyncThread = new Thread(new Runnable() {
+			
+			@Override
+			public void run() {
+				while (running) {
+					long startTime = System.currentTimeMillis();
+					
+					//Process the currently queued query tasks
+					ArrayList<QueryTask> tasks = cloneQueryTasks();
+					for (QueryTask task : tasks) {
+						task.execute(connection);
+					}
+					removeQueryTasks(tasks);//Remove them once finished
+					
+					//Make thread sleep if it has not reached minimum run time
+					long timeDiff = System.currentTimeMillis() - startTime;
+					if (timeDiff < MIN_MILLIS) {
+						try {
+							Thread.sleep(MIN_MILLIS - timeDiff);
+						} catch (InterruptedException e) {}
+					}
+				}
+			}
+			
+		});
+		asyncThread.start();
+	}
+	
+	/**
+	 * 
+	 */
+	private synchronized ArrayList<QueryTask> cloneQueryTasks () {
+		ArrayList<QueryTask> tasks = new ArrayList<QueryTask>();
+		for (QueryTask task : queryTasks)
+			tasks.add(task);
+		return tasks;
+	}
+	
+	private synchronized void removeQueryTasks (ArrayList<QueryTask> tasks) {
+		queryTasks.removeAll(tasks);
+	}
+	
+	private synchronized void addQueryTask (QueryTask task) {
+		queryTasks.add(task);
+	}
+	
+	/**
+	 * Stops async tasks
+	 */
+	public void stop () {
+		try {
+			running = false;
+			asyncThread.join();
+		} catch (Exception e) {
+			ArchipeloServer.getServer().getLogger().error("Could not stop database async thread.");
+		}
+	}
+	
+	/**
 	 * Get player data of a specified player.
 	 * @param name
 	 * @param hbUuid
-	 * @return
+	 * @param handler Will be called once query response has been received
 	 */
-	@SuppressWarnings("unchecked")
-	public PlayerData getPlayerData (String name, String hbUuid) {
-		PlayerData data = new PlayerData();
-		
-		Document doc = players.find(and(eq("name", name), eq("hbUuid", hbUuid))).first();
-		data.name = name;
-		data.bhUuid = hbUuid;
-		data.id = doc.getString("uuid");
-		data.x = doc.getDouble("x").floatValue();
-		data.y = doc.getDouble("y").floatValue();
-		data.island = doc.getString("island");
-		data.map = doc.getString("map");
-		data.uneditableEquippedInventory = itemArrayCodec.decode((Document) doc.get("uneditableEquippedInventory"));
-		data.equippedInventory = itemArrayCodec.decode((Document) doc.get("equippedInventory"));
-		data.cosmeticInventory = itemArrayCodec.decode((Document) doc.get("cosmeticInventory"));
-		data.bankInventory = itemArrayCodec.decode((Document) doc.get("bankInventory"));
-		data.inventory = itemArrayCodec.decode((Document) doc.get("inventory"));
-		data.weaponInventory = itemArrayCodec.decode((Document) doc.get("weaponInventory"));
-		data.consumablesInventory = itemArrayCodec.decode((Document) doc.get("consumablesInventory"));
-		data.buffsInventory = itemArrayCodec.decode((Document) doc.get("buffsInventory"));
-		data.ammoInventory = itemArrayCodec.decode((Document) doc.get("ammoInventory"));
-		data.lastPlayed = doc.getDate("lastPlayedDate");
-		data.creationDate = doc.getDate("creationDate");
-		data.flags = (ArrayList<String>) doc.get("flags");
-		
-		return data;
+	public void getPlayerData (String name, String hbUuid, PlayerDataQueryTaskResponseHandler handler) {
+		this.addQueryTask(new PlayerDataResponseQueryTask(name, hbUuid, handler));
 	}
 	
 	/**
 	 * Gets player data of all players belonging to the specified user
 	 * @param hbUuid
-	 * @return
+	 * @param handler Will be called once query response has been received
 	 */
-	public ArrayList<PlayerData> getPlayerDataFromUser (String hbUuid) {
-		ArrayList<PlayerData> datas = new ArrayList<PlayerData>();
-		
-		FindIterable<Document> iterable = players.find(eq("hbUuid", hbUuid));
-		iterable.forEach(new Block<Document>() {
-			
-			@SuppressWarnings("unchecked")
-			@Override
-			public void apply (Document doc) {
-				PlayerData data = new PlayerData();
-
-				data.bhUuid = hbUuid;
-				data.id = doc.getString("uuid");
-				data.name = doc.getString("name");
-				data.x = doc.getDouble("x").floatValue();
-				data.y = doc.getDouble("y").floatValue();
-				data.island = doc.getString("island");
-				data.map = doc.getString("map");
-				data.uneditableEquippedInventory = itemArrayCodec.decode((Document) doc.get("uneditableEquippedInventory"));
-				data.equippedInventory = itemArrayCodec.decode((Document) doc.get("equippedInventory"));
-				data.cosmeticInventory = itemArrayCodec.decode((Document) doc.get("cosmeticInventory"));
-				data.bankInventory = itemArrayCodec.decode((Document) doc.get("bankInventory"));
-				data.inventory = itemArrayCodec.decode((Document) doc.get("inventory"));
-				data.weaponInventory = itemArrayCodec.decode((Document) doc.get("weaponInventory"));
-				data.consumablesInventory = itemArrayCodec.decode((Document) doc.get("consumablesInventory"));
-				data.buffsInventory = itemArrayCodec.decode((Document) doc.get("buffsInventory"));
-				data.ammoInventory = itemArrayCodec.decode((Document) doc.get("ammoInventory"));
-				data.lastPlayed = doc.getDate("lastPlayedDate");
-				data.creationDate = doc.getDate("creationDate");
-				data.flags = (ArrayList<String>) doc.get("flags");
-				
-				datas.add(data);
-			}
-			
-		});
-		
-		return datas;
+	public void getPlayerListFromUser (String hbUuid, PlayerListQueryTaskResponseHandler handler) {
+		this.addQueryTask(new PlayerListResponseQueryTask(hbUuid, handler));
+	}
+	
+	/**
+	 * Returns whether a player with that name exists.
+	 * @param name
+	 * @param handler Will be called once query response has been received
+	 */
+	public void doesPlayerExist (String name, PlayerExistsQueryTaskResponseHandler handler) {
+		this.addQueryTask(new PlayerExistsResponseQueryTask(name, handler));
+	}
+	
+	/**
+	 * Gets player count for this user
+	 * @param hbUuid UUID of user to test for
+	 * @param handler Will be called once query response has been received
+	 */
+	public void getPlayerCount (String hbUuid, PlayerCountQueryTaskResponseHandler handler) {
+		this.addQueryTask(new PlayerCountResponseQueryTask(hbUuid, handler));
 	}
 	
 	/**
@@ -144,72 +151,14 @@ public class DatabaseManager {
 	 * @param player
 	 */
 	public void createPlayer (Player player) {
-		Thread thread = new Thread(new Runnable() {//Use a thread so that this task is done asynchronously
-			@Override
-			public void run() {
-				players.insertOne(new Document()
-						.append("hbUuid", player.getHollowBitUser().getUUID())
-						.append("name", player.getName())
-						.append("x", player.getLocation().getX())
-						.append("y", player.getLocation().getY())
-						.append("island", player.getLocation().getIsland().getName())
-						.append("map", player.getLocation().getMap().getName())
-						.append("uneditableEquippedInventory", player.getInventory().getUneditableEquippedInventory().getRawStorage())
-						.append("equippedInventory", player.getInventory().getEquippedInventory().getRawStorage())
-						.append("cosmeticInventory", player.getInventory().getCosmeticInventory().getRawStorage())
-						.append("bankInventory", player.getInventory().getBankInventory().getRawStorage())
-						.append("inventory", player.getInventory().getMainInventory().getRawStorage())
-						.append("weaponInventory", player.getInventory().getWeaponInventory().getRawStorage())
-						.append("consumablesInventory", player.getInventory().getConsumablesInventory().getRawStorage())
-						.append("buffsInventory", player.getInventory().getBuffsInventory().getRawStorage())
-						.append("ammoInventory", player.getInventory().getAmmoInventory().getRawStorage())
-						.append("lastPlayedDate", player.getLastPlayedDate())
-						.append("creationDate", player.getCreationDate())
-						.append("flags", player.getFlagsManager().getFlagsList())
-					);
-			}
-		});
-		thread.start();
+		this.addQueryTask(new PlayerCreateQueryTask(player));
 	}
-	
-	/**
-	 * Returns whether a player with that name exists.
-	 * @param name
-	 * @return
-	 */
-	public boolean doesPlayerExist (String name) {
-		return players.find(eq("name", name)).first() != null;
-	}
-	
 	/**
 	 * Update data of a player.
 	 * @param player
 	 */
 	public void updatePlayer (Player player) {
-		Thread thread = new Thread(new Runnable(){//Use a thread so that this task is done asynchronously
-			@Override
-			public void run() {
-				players.updateOne(eq("uuid", player.getId()), new Document("$set", new Document()
-						.append("name", player.getName())
-						.append("x", player.getLocation().getX())
-						.append("y", player.getLocation().getY())
-						.append("island", player.getLocation().getIsland().getName())
-						.append("map", player.getLocation().getMap().getName())
-						.append("uneditableEquippedInventory", player.getInventory().getUneditableEquippedInventory().getRawStorage())
-						.append("equippedInventory", player.getInventory().getEquippedInventory().getRawStorage())
-						.append("cosmeticInventory", player.getInventory().getCosmeticInventory().getRawStorage())
-						.append("bankInventory", player.getInventory().getBankInventory().getRawStorage())
-						.append("inventory", player.getInventory().getMainInventory().getRawStorage())
-						.append("weaponInventory", player.getInventory().getWeaponInventory().getRawStorage())
-						.append("consumablesInventory", player.getInventory().getConsumablesInventory().getRawStorage())
-						.append("buffsInventory", player.getInventory().getBuffsInventory().getRawStorage())
-						.append("ammoInventory", player.getInventory().getAmmoInventory().getRawStorage())
-						.append("lastPlayedDate", player.getLastPlayedDate())
-						.append("flags", player.getFlagsManager().getFlagsList())
-					));
-			}
-		});
-		thread.start();
+		this.addQueryTask(new PlayerUpdateQueryTask(player));
 	}
 	
 	/**
@@ -218,31 +167,15 @@ public class DatabaseManager {
 	 * @param hbUuid
 	 */
 	public void deletePlayer (String name, String hbUuid) {
-		Thread thread = new Thread(new Runnable(){//Use a thread so that this task is done asynchronously
-			@Override
-			public void run() {
-				//Delete players in database
-				players.deleteOne(and(eq("name", name), eq("hbUuid", hbUuid)));
-			}
-		});
-		thread.start();
+		this.addQueryTask(new PlayerDeleteQueryTask(name, hbUuid));
 	}
 	
 	/**
-	 * Gets player count for this user
-	 * @param hbUuid UUID of user to test for
+	 * Returns the current datetime in java.sql.Date
 	 * @return
 	 */
-	public long getPlayerCount (String hbUuid) {
-		return players.count();
-	}
-	
 	public static final Date getCurrentDate () {
 		return new Date(System.currentTimeMillis());
-	}
-	
-	public void dispose () {
-		client.close();
 	}
 	
 }

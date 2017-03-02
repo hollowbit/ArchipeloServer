@@ -12,6 +12,10 @@ public abstract class Packet {
 		this.packetType = type;
 	}
 	
+	public void send (String address) {
+		this.send(ArchipeloServer.getServer().getNetworkManager().getConnectionByAddress(address));
+	}
+	
 	public void send (WebSocket conn) {
 		ArchipeloServer.getServer().getNetworkManager().sendPacket(this, conn);
 	}

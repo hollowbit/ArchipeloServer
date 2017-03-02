@@ -28,15 +28,15 @@ public class Island {
 		return players;
 	}
 	
-	public void tick20 () {
+	public void tick20 (float deltaTime) {
 		for (Map map : duplicateMapList()) {
-			map.tick20();
+			map.tick20(deltaTime);
 		}
 	}
 	
-	public void tick60 () {
+	public void tick60 (float deltaTime) {
 		for (Map map : duplicateMapList()) {
-			map.tick60();
+			map.tick60(deltaTime);
 		}
 	}
 	

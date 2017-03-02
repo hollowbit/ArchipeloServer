@@ -11,5 +11,9 @@
 
 {id:"smithyDoorLocked", interruptable: true},
 {id:"smithyDoorUnlock", interruptable: true, choices:["smithyDoorUnlocked",""]},
-{id:"smithyDoorUnlocked", interruptable: true, endConversation: true, exec:[{id:"addFlag", args:{flag:"Archipelo-island-smithyDoorUnlock"}}]}
+{id:"smithyDoorUnlocked", interruptable: true, endConversation: true, exec:[{id:"addFlag", args:{flag:"Archipelo-island-smithyDoorUnlock"}}]},
+
+{id:"blobbyGraveStart", interruptable: true, cond:{id:"hasFlag", args:{flag:"blobbyGraveCrushed"}}, change:"blobbyGraveCrushed"},
+{id:"blobbyGraveCrushed", interruptable: true, cond:{id:"hasFlag", args:{flag:"blobbyGraveGotAshes"}}, change:"blobbyGraveEnd", exec:[{id:"addFlag", args:{flag:"blobbyGraveGotAshes"}}, {id:"giveItems", args:{items:"[{id:blobby_ashes}]"}}]},
+{id:"blobbyGraveEnd", interruptable: true}
 ]}

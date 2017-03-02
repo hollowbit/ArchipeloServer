@@ -3,6 +3,7 @@ package net.hollowbit.archipeloserver.items;
 import com.badlogic.gdx.graphics.Color;
 
 import net.hollowbit.archipeloserver.entity.living.Player;
+import net.hollowbit.archipeloserver.tools.StaticTools;
 
 public class Item {
 	
@@ -80,6 +81,24 @@ public class Item {
 			return isSameType(item);
 		else
 			return isSameTypeAndStyle(item);
+	}
+	
+	/**
+	 * Convert a json item string to an item object.
+	 * @param json
+	 * @return
+	 */
+	public static Item getFromString(String json) {
+		return StaticTools.getJson().fromJson(Item.class, json);
+	}
+	
+	/**
+	 * Convert a json item array to an array of item objects.
+	 * @param json
+	 * @return
+	 */
+	public static Item[] getManyFromString(String json) {
+		return StaticTools.getJson().fromJson(Item[].class, json);
 	}
 	
 }

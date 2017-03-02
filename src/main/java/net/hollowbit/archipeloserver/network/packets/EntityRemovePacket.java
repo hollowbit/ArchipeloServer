@@ -6,11 +6,11 @@ import net.hollowbit.archipeloserver.network.PacketType;
 
 public class EntityRemovePacket extends Packet {
 	
-	public String username;
+	public String name;
 	
 	public EntityRemovePacket (Entity entity) {
 		super(PacketType.ENTITY_REMOVE);
-		username = entity.getName();
+		name = entity.getName();
 	}
 	
 }

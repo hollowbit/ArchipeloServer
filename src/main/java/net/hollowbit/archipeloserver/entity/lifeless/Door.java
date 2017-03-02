@@ -1,6 +1,7 @@
 package net.hollowbit.archipeloserver.entity.lifeless;
 
 import net.hollowbit.archipeloserver.entity.Entity;
+import net.hollowbit.archipeloserver.entity.EntityAnimationManager.EntityAnimationObject;
 import net.hollowbit.archipeloserver.entity.EntityInteraction;
 import net.hollowbit.archipeloserver.entity.EntitySnapshot;
 import net.hollowbit.archipeloserver.entity.EntityType;
@@ -34,7 +35,7 @@ public class Door extends LifelessEntity {
 			changesDirection = true;
 			this.teleportDirection = Direction.values()[direction];
 		}
-		this.open = false;
+		this.closeDoor();
 	}
 	
 	@Override
@@ -42,15 +43,10 @@ public class Door extends LifelessEntity {
 		super.interactFrom(entity, collisionRectName, interactionType);
 		switch (collisionRectName) {
 		case "bottom":
-			boolean wasOpen = open;
 			if (interactionType == EntityInteraction.STEP_ON)
-				open = true;
+				openDoor();
 			else if (interactionType == EntityInteraction.STEP_OFF)
-				open = false;
-			
-			//If status of door being open has changes, update it on clients
-			if (wasOpen != open)
-				changes.putBoolean("open", open);
+				closeDoor();
 			break;
 		case "top":
 			if (!teleports)//If this door doesn't teleport, don't run teleport logic
@@ -78,6 +74,20 @@ public class Door extends LifelessEntity {
 		}
 	}
 	
+	public void openDoor () {
+		if (!open)
+			changes.putBoolean("open", true);
+		this.open = true;
+		this.animationManager.change("open");
+	}
+	
+	public void closeDoor () {
+		if (open)
+			changes.putBoolean("open", false);
+		this.open = true;
+		this.animationManager.change("closed");
+	}
+	
 	@Override
 	public EntitySnapshot getFullSnapshot() {
 		EntitySnapshot snapshot = super.getFullSnapshot();
@@ -99,6 +109,11 @@ public class Door extends LifelessEntity {
 			snapshot.putInt("teleportDirection", -1);
 		snapshot.putBoolean("open", open);
 		return snapshot;
+	}
+
+	@Override
+	public EntityAnimationObject animationCompleted(String animationId) {
+		return null;
 	}
 
 }

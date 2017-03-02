@@ -32,15 +32,15 @@ public class EntityManager {
 		return entityList;
 	}
 	
-	public void tick20 () {
+	public void tick20 (float deltaTime) {
 		for (Entity entity : duplicateEntityList()) {
-			entity.tick20();
+			entity.tick20(deltaTime);
 		}
 	}
 	
-	public void tick60 () {
+	public void tick60 (float deltaTime) {
 		for (Entity entity : duplicateEntityList()) {
-			entity.tick60();
+			entity.tick60(deltaTime);
 		}
 	}
 	

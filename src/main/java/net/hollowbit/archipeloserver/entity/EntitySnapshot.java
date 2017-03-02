@@ -5,18 +5,22 @@ import java.util.HashMap;
 public class EntitySnapshot {
 	
 	public String name;
-	public String entityType;
-	public int style = 0;
+	public String type;
+	public String anim;
+	public float animTime;
+	public String animMeta = "";
 	public HashMap<String, String> properties;
 	
 	public EntitySnapshot () {
 		properties = new HashMap<String, String>();
 	}
 	
-	public EntitySnapshot (Entity entity) {
+	public EntitySnapshot (Entity entity, boolean ignoreType) {
 		this.name = entity.getName();
-		this.entityType = entity.getEntityType().getId();
-		this.style = entity.getStyle();
+		if (ignoreType)
+			this.type = null;
+		else
+			this.type = entity.getEntityType().getId();
 		properties = new HashMap<String, String>();
 	}
 	

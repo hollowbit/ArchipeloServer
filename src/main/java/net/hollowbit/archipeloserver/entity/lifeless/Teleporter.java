@@ -1,6 +1,7 @@
 package net.hollowbit.archipeloserver.entity.lifeless;
 
 import net.hollowbit.archipeloserver.entity.Entity;
+import net.hollowbit.archipeloserver.entity.EntityAnimationManager.EntityAnimationObject;
 import net.hollowbit.archipeloserver.entity.EntityInteraction;
 import net.hollowbit.archipeloserver.entity.EntitySnapshot;
 import net.hollowbit.archipeloserver.entity.EntityType;
@@ -58,7 +59,7 @@ public class Teleporter extends LifelessEntity {
 	
 	@Override
 	public EntitySnapshot getSaveSnapshot() {
-		EntitySnapshot snapshot = super.getFullSnapshot();
+		EntitySnapshot snapshot = super.getSaveSnapshot();
 		snapshot.putFloat("teleportX", teleportX);
 		snapshot.putFloat("teleportY", teleportY);
 		snapshot.putString("teleportIsland", teleportIsland);
@@ -68,6 +69,11 @@ public class Teleporter extends LifelessEntity {
 		else
 			snapshot.putInt("teleportDirection", -1);
 		return snapshot;
+	}
+
+	@Override
+	public EntityAnimationObject animationCompleted(String animationId) {
+		return null;
 	}
 	
 }

@@ -1,3 +1,5 @@
+
+
 package net.hollowbit.archipeloserver.entity.living.player;
 
 import net.hollowbit.archipeloserver.entity.EntityType;
@@ -132,11 +134,11 @@ public class PlayerStatsManager implements EventHandler {
 	
 	public float getSpeed (boolean isSprinting, boolean isRolling) {
 		if (isRolling)
-			return speed * ROLLING_SPEED_SCALE * speedMultiplier;
+			return getSpeed() * ROLLING_SPEED_SCALE;
 		else if (isSprinting)
-			return speed * SPRINTING_SPEED_SCALE * speedMultiplier;
+			return getSpeed() * SPRINTING_SPEED_SCALE;
 		else
-			return speed * speedMultiplier;
+			return getSpeed();
 	}
 	
 	public float getSpeed () {

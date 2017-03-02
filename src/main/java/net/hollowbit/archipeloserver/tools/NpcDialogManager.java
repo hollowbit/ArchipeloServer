@@ -1,4 +1,4 @@
-package net.hollowbit.archipeloserver.tools.npcdialogs;
+package net.hollowbit.archipeloserver.tools;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -7,6 +7,8 @@ import java.util.Scanner;
 
 import com.badlogic.gdx.utils.Json;
 
+import net.hollowbit.archipeloserver.tools.npcdialogs.NpcDialog;
+import net.hollowbit.archipeloserver.tools.npcdialogs.NpcDialogs;
 import net.hollowbit.archipeloserver.world.Map;
 
 public class NpcDialogManager {
@@ -30,12 +32,15 @@ public class NpcDialogManager {
 	}
 	
 	/**
-	 * Gets an NPC dialog by id. Can return a null value.
+	 * Gets an NPC dialog by id
 	 * @param id
 	 * @return
 	 */
 	public NpcDialog getNpcDialogById (String id) {
-		return npcDialogs.get(id);
+		if (npcDialogs.containsKey(id))
+			return npcDialogs.get(id);
+		else
+			return new NpcDialog();
 	}
 	
 	private static NpcDialogs getNpcDialogsFileByMap (Map map) {
@@ -54,7 +59,7 @@ public class NpcDialogManager {
 				while (scanner.hasNext()) {
 					file += scanner.next();
 				}
-				npcDialogs = (NpcDialogs) json.fromJson(NpcDialogs.class, file);
+				npcDialogs = (NpcDialogs) json.fromJson(NpcDialogs.class, file.trim());
 				
 				scanner.close();
 				return npcDialogs;

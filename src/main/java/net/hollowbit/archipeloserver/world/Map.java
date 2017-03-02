@@ -58,12 +58,12 @@ public class Map {
 		changes = new MapSnapshot(name, displayName);
 	}
 	
-	public void tick20 () {
-		entityManager.tick20();
+	public void tick20 (float deltaTime) {
+		entityManager.tick20(deltaTime);
 	}
 	
-	public void tick60 () {
-		entityManager.tick60();
+	public void tick60 (float deltaTime) {
+		entityManager.tick60(deltaTime);
 	}
 
 	//If you wish to add this map, load it from its island, not here.

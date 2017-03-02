@@ -23,6 +23,9 @@ import net.hollowbit.archipeloserver.network.packets.PlayerDeletePacket;
 import net.hollowbit.archipeloserver.network.packets.PlayerListPacket;
 import net.hollowbit.archipeloserver.network.packets.PlayerPickPacket;
 import net.hollowbit.archipeloserver.tools.Configuration;
+import net.hollowbit.archipeloserver.tools.database.QueryTaskResponseHandler.PlayerCountQueryTaskResponseHandler;
+import net.hollowbit.archipeloserver.tools.database.QueryTaskResponseHandler.PlayerDataQueryTaskResponseHandler;
+import net.hollowbit.archipeloserver.tools.database.QueryTaskResponseHandler.PlayerListQueryTaskResponseHandler;
 import net.hollowbit.archipeloshared.StringValidator;
 
 public class World implements PacketHandler {
@@ -70,7 +73,7 @@ public class World implements PacketHandler {
 		return null;
 	}
 	
-	public void tick20 () {//Executed 20 times per second.
+	public void tick20 (float deltaTime) {//Executed 20 times per second.
 		time++;
 		if (time > TICKS_PER_DAY) {//This allows for 30 minute days.
 			time = 0;
@@ -78,7 +81,7 @@ public class World implements PacketHandler {
 		
 		//Tick all islands
 		for (Island island : duplicateIslandList()) {
-			island.tick20();
+			island.tick20(deltaTime);
 		}
 		
 		//Create world snapshots and send them
@@ -118,9 +121,9 @@ public class World implements PacketHandler {
 		}
 	}
 	
-	public void tick60 () {//Executed 60 times per second.
+	public void tick60 (float deltaTime) {//Executed 60 times per second.
 		for (Island island : duplicateIslandList()) {
-			island.tick60();
+			island.tick60(deltaTime);
 		}
 	}
 	
@@ -176,35 +179,92 @@ public class World implements PacketHandler {
 		return hollowBitUser.getPlayer();
 	}
 	
+	private void loadPlayerUsingPlayerData (String address, HollowBitUser hbu, PlayerPickPacket playerPickPacket, PlayerData pd, boolean firstTimeLogin) {
+		Configuration config = ArchipeloServer.getServer().getConfig();
+		Island island = null;
+		Map map = null;
+		
+		String islandName = null;
+		String mapName = null;
+		
+		//If island isn't loaded already, load it
+		if (!isIslandLoaded(pd.island)) {
+			if (!loadIsland(pd.island)) {
+				//If island didn't load, send player to (their) spawn
+				if (!isIslandLoaded(config.spawnIsland)) {
+					loadIsland(config.spawnIsland);
+				}
+				islandName = config.spawnIsland;
+			} else {
+				islandName = pd.island;
+			}
+		} else {
+			islandName = pd.island;
+		}
+		
+		island = getIsland(islandName);
+		
+		//If map isn't loaded already, load it
+		if (!island.isMapLoaded(pd.map)) {
+			if (!island.loadMap(pd.map)) {
+				//If map didn't load, send player to (their) spawn
+				if (!island.isMapLoaded(config.spawnMap)) {
+					island.loadMap(config.spawnMap);
+				}
+				mapName = config.spawnMap;
+			} else {
+				mapName = pd.map;
+			}
+		} else {
+			mapName = pd.map;
+		}
+		
+		map = island.getMap(mapName);
+		
+		Player player = new Player(pd.name, address, firstTimeLogin);
+		player.load(map, pd, hbu);
+		if (firstTimeLogin)
+			ArchipeloServer.getServer().getDatabaseManager().createPlayer(player);
+		
+		//set hollowbit user player to this player
+		hbu.setPlayer(player);
+		
+		map.addEntity(player);
+		
+		//Login was successful so tell client
+		playerPickPacket.result = PlayerPickPacket.RESULT_SUCCESSFUL;
+		player.sendPacket(playerPickPacket);
+		
+		player.sendPacket(new FlagsAddPacket(player.getFlagsManager().getFlagsList()));
+		
+		//Send messages for login
+		ArchipeloServer.getServer().getLogger().broadcastAsServer("<{join}>", player.getName());
+		player.sendPacket(new ChatMessagePacket("{serverTag}", ArchipeloServer.getServer().getConfig().motd, "server"));
+	}
+	
 	@Override
 	public boolean handlePacket (Packet packet, String address) {
+		HollowBitUser hbu;
 		switch(packet.packetType) {
 		case PacketType.PLAYER_PICK:
-			//Use a thread to run code asynchronously since this makes database calls that can overall lag the server.
-			Thread thread = new Thread(new Runnable(){
-
-				@Override
-				public void run() {
-					System.out.println("World.java Player pick!!");
-					PlayerPickPacket playerPickPacket = (PlayerPickPacket) packet;
+			PlayerPickPacket playerPickPacket = (PlayerPickPacket) packet;
+			
+			if (playerPickPacket.name == null || playerPickPacket.name.equals(""))
+				return true;
+			hbu = ArchipeloServer.getServer().getNetworkManager().getUser(address);
+			
+			if (playerPickPacket.isNew) {
+				ArchipeloServer.getServer().getDatabaseManager().getPlayerCount(hbu.getUUID(), new PlayerCountQueryTaskResponseHandler() {
 					
-					if (playerPickPacket.name == null || playerPickPacket.name.equals(""))
-						return;
-					
-					Configuration config = ArchipeloServer.getServer().getConfig();
-					
-					HollowBitUser hbu = ArchipeloServer.getServer().getNetworkManager().getUser(address);
-					
-					boolean firstTimeLogin = false;
-					PlayerData pd;
-					if (playerPickPacket.isNew) {
+					@Override
+					public void responseReceived (int playerCount) {
 						//Check if user has too many characters
-						if (ArchipeloServer.getServer().getDatabaseManager().getPlayerCount(hbu.getUUID()) >= ArchipeloServer.MAX_CHARACTERS_PER_PLAYER) {
+						if (playerCount >= ArchipeloServer.MAX_CHARACTERS_PER_PLAYER) {
 							playerPickPacket.result = PlayerPickPacket.RESULT_TOO_MANY_CHARACTERS;
 							playerPickPacket.send(ArchipeloServer.getServer().getNetworkManager().getConnectionByAddress(address));
 							return;
 						}
-						
+								
 						//Check if user name is valid
 						if (!StringValidator.isStringValid(playerPickPacket.name, StringValidator.USERNAME, StringValidator.MAX_USERNAME_LENGTH)) {
 							playerPickPacket.result = PlayerPickPacket.RESULT_INVALID_USERNAME;
@@ -212,102 +272,50 @@ public class World implements PacketHandler {
 							return;
 						}
 						
-						//Send error response if name is taken
-						if (ArchipeloServer.getServer().getDatabaseManager().doesPlayerExist(playerPickPacket.name)) {
-							playerPickPacket.result = PlayerPickPacket.RESULT_NAME_ALREADY_TAKEN;
-							playerPickPacket.send(ArchipeloServer.getServer().getNetworkManager().getConnectionByAddress(address));
-							return;
-						}
-						
-						Item body = new Item(ItemType.BODY);
-						body.color = Color.rgba8888(PlayerPickPacket.BODY_COLORS[playerPickPacket.bodyColor]);
-						Item hair = new Item(PlayerPickPacket.HAIR_STYLES[playerPickPacket.selectedHair]);
-						hair.color = Color.rgba8888(PlayerPickPacket.HAIR_COLORS[playerPickPacket.hairColor]);
-						Item face = new Item(PlayerPickPacket.FACE_STYLES[playerPickPacket.selectedFace]);
-						face.color = Color.rgba8888(PlayerPickPacket.EYE_COLORS[playerPickPacket.eyeColor]);
-						pd = Player.getNewPlayerData(playerPickPacket.name, hbu.getUUID(), hair, face, body);
-						firstTimeLogin = true;
-					} else {
-						pd = ArchipeloServer.getServer().getDatabaseManager().getPlayerData(playerPickPacket.name, hbu.getUUID());
-						
+						ArchipeloServer.getServer().getDatabaseManager().doesPlayerExist(playerPickPacket.name, new PlayerExistsQueryTaskResponseHandler() {
+							
+							@Override
+							public void responseReceived(boolean playerExists) {
+								//Send error response if name is taken
+								if (playerExists) {
+									playerPickPacket.result = PlayerPickPacket.RESULT_NAME_ALREADY_TAKEN;
+									playerPickPacket.send(ArchipeloServer.getServer().getNetworkManager().getConnectionByAddress(address));
+									return;
+								}
+										
+								Item body = new Item(ItemType.BODY);
+								body.color = Color.rgba8888(PlayerPickPacket.BODY_COLORS[playerPickPacket.bodyColor]);
+								Item hair = new Item(PlayerPickPacket.HAIR_STYLES[playerPickPacket.selectedHair]);
+								hair.color = Color.rgba8888(PlayerPickPacket.HAIR_COLORS[playerPickPacket.hairColor]);
+								Item face = new Item(PlayerPickPacket.FACE_STYLES[playerPickPacket.selectedFace]);
+								face.color = Color.rgba8888(PlayerPickPacket.EYE_COLORS[playerPickPacket.eyeColor]);
+								
+								loadPlayerUsingPlayerData(address, hbu, playerPickPacket, Player.getNewPlayerData(playerPickPacket.name, hbu.getUUID(), hair, face, body), true);
+							}
+						});
+					}
+				});
+			} else {
+				//Check if user is already online
+				if (isPlayerOnline(playerPickPacket.name)) {
+					playerPickPacket.result = PlayerPickPacket.RESULT_ALREADY_LOGGED_IN;
+					playerPickPacket.send(ArchipeloServer.getServer().getNetworkManager().getConnectionByAddress(address));
+					return true;
+				}
+				ArchipeloServer.getServer().getDatabaseManager().getPlayerData(playerPickPacket.name, hbu.getUUID(), new PlayerDataQueryTaskResponseHandler() {
+					
+					@Override
+					public void responseReceived(PlayerData playerData) {
 						//If pd is null, then the player doesn't exist
-						if (pd == null) {
+						if (playerData == null) {
 							playerPickPacket.result = PlayerPickPacket.RESULT_NO_PLAYER_WITH_NAME;
 							playerPickPacket.send(ArchipeloServer.getServer().getNetworkManager().getConnectionByAddress(address));
 							return;
 						}
-						
-						//Check if user is already online
-						if (isPlayerOnline(playerPickPacket.name)) {
-							playerPickPacket.result = PlayerPickPacket.RESULT_ALREADY_LOGGED_IN;
-							playerPickPacket.send(ArchipeloServer.getServer().getNetworkManager().getConnectionByAddress(address));
-							return;
-						}
+						loadPlayerUsingPlayerData(address, hbu, playerPickPacket, playerData, false);
 					}
-					
-					Island island = null;
-					Map map = null;
-					
-					String islandName = null;
-					String mapName = null;
-					
-					//If island isn't loaded already, load it
-					if (!isIslandLoaded(pd.island)) {
-						if (!loadIsland(pd.island)) {
-							//If island didn't load, send player to (their) spawn
-							if (!isIslandLoaded(config.spawnIsland)) {
-								loadIsland(config.spawnIsland);
-							}
-							islandName = config.spawnIsland;
-						} else {
-							islandName = pd.island;
-						}
-					} else {
-						islandName = pd.island;
-					}
-					
-					island = getIsland(islandName);
-					
-					//If map isn't loaded already, load it
-					if (!island.isMapLoaded(pd.map)) {
-						if (!island.loadMap(pd.map)) {
-							//If map didn't load, send player to (their) spawn
-							if (!island.isMapLoaded(config.spawnMap)) {
-								island.loadMap(config.spawnMap);
-							}
-							mapName = config.spawnMap;
-						} else {
-							mapName = pd.map;
-						}
-					} else {
-						mapName = pd.map;
-					}
-					
-					map = island.getMap(mapName);
-					
-					Player player = new Player(pd.name, address, firstTimeLogin);
-					player.load(map, pd, hbu);
-					if (firstTimeLogin)
-						ArchipeloServer.getServer().getDatabaseManager().createPlayer(player);
-					
-					//set hollowbit user player to this player
-					hbu.setPlayer(player);
-					
-					map.addEntity(player);
-					
-					//Login was successful so tell client
-					playerPickPacket.result = PlayerPickPacket.RESULT_SUCCESSFUL;
-					player.sendPacket(playerPickPacket);
-					
-					player.sendPacket(new FlagsAddPacket(player.getFlagsManager().getFlagsList()));
-					
-					//Send messages for login
-					ArchipeloServer.getServer().getLogger().broadcastAsServer("<{join}>", player.getName());
-					player.sendPacket(new ChatMessagePacket("{serverTag}", ArchipeloServer.getServer().getConfig().motd, "server"));
-				}
-				
-			});
-			thread.start();
+				});
+			}
 			return true;
 		case PacketType.PLAYER_DELETE:
 			PlayerDeletePacket playerDeletePacket = (PlayerDeletePacket) packet;
@@ -320,51 +328,51 @@ public class World implements PacketHandler {
 				return true;//Don't bother trying to delete if name is invalid
 			}
 			
-			HollowBitUser hbu = ArchipeloServer.getServer().getNetworkManager().getUser(address);
+			hbu = ArchipeloServer.getServer().getNetworkManager().getUser(address);
 			ArchipeloServer.getServer().getDatabaseManager().deletePlayer(playerDeletePacket.name, hbu.getUUID());
 			return true;
 		case PacketType.PLAYER_LIST:
-			Thread thread2 = new Thread (new Runnable() {
+			PlayerListPacket playerListPacket = (PlayerListPacket) packet;
+					
+			if (playerListPacket.email == null || playerListPacket.email.equals(""))
+				return true;
+			
+			hbu = ArchipeloServer.getServer().getNetworkManager().getUser(address);
+			
+			//Make sure user is only getting player data from players that belong to them
+			if (!playerListPacket.email.equals(hbu.getEmailAddress())) {
+				playerListPacket.result = PlayerListPacket.RESULT_INVALID_LOGIN;
+				playerListPacket.send(ArchipeloServer.getServer().getNetworkManager().getConnectionByAddress(address));
+				return true;
+			}
+					
+			//Get player datas from database and parse them into the packet
+			ArchipeloServer.getServer().getDatabaseManager().getPlayerListFromUser(hbu.getUUID(), new PlayerListQueryTaskResponseHandler() {
+				
 				@Override
-				public void run() {
-					PlayerListPacket playerListPacket = (PlayerListPacket) packet;
-					
-					if (playerListPacket.email == null || playerListPacket.email.equals(""))
-						return;
-					
-					HollowBitUser hbu = ArchipeloServer.getServer().getNetworkManager().getUser(address);
-					
-					//Make sure user is only getting player data from players that belong to them
-					if (!playerListPacket.email.equals(hbu.getEmailAddress())) {
-						playerListPacket.result = PlayerListPacket.RESULT_INVALID_LOGIN;
-						playerListPacket.send(ArchipeloServer.getServer().getNetworkManager().getConnectionByAddress(address));
-						return;
-					}
-					
-					//Get player datas from database and parse them into the packet
-					ArrayList<PlayerData> playerDatas = ArchipeloServer.getServer().getDatabaseManager().getPlayerDataFromUser(hbu.getUUID());
-					playerListPacket.playerEquippedInventories = new Item[playerDatas.size()][PlayerInventory.DISPLAY_EQUIP_SIZE];
-					playerListPacket.names = new String[playerDatas.size()];
-					playerListPacket.islands = new String[playerDatas.size()];
-					playerListPacket.lastPlayedDateTimes = new String[playerDatas.size()];
-					playerListPacket.creationDateTimes = new String[playerDatas.size()];
+				public void responseReceived (ArrayList<PlayerData> playerList) {
+					playerListPacket.playerEquippedInventories = new Item[playerList.size()][PlayerInventory.DISPLAY_EQUIP_SIZE];
+					playerListPacket.names = new String[playerList.size()];
+					playerListPacket.islands = new String[playerList.size()];
+					playerListPacket.lastPlayedDateTimes = new String[playerList.size()];
+					playerListPacket.creationDateTimes = new String[playerList.size()];
 					
 					DateFormat lastPlayedFormat = new SimpleDateFormat("MMM d, yyyy k:m:s");
 					DateFormat createdFormat = new SimpleDateFormat("MMM d, yyyy");
 					
-					for (int i = 0; i < playerDatas.size(); i++) {
-						playerListPacket.playerEquippedInventories[i] = PlayerInventory.getDisplayInventory(playerDatas.get(i).uneditableEquippedInventory, playerDatas.get(i).equippedInventory, playerDatas.get(i).cosmeticInventory, playerDatas.get(i).weaponInventory);
-						playerListPacket.names[i] = playerDatas.get(i).name;
-						playerListPacket.islands[i] = playerDatas.get(i).island;
-						playerListPacket.lastPlayedDateTimes[i] = lastPlayedFormat.format(playerDatas.get(i).lastPlayed);
-						playerListPacket.creationDateTimes[i] = createdFormat.format(playerDatas.get(i).creationDate);
+					for (int i = 0; i < playerList.size(); i++) {
+						playerListPacket.playerEquippedInventories[i] = PlayerInventory.getDisplayInventory(playerList.get(i).uneditableEquippedInventory, playerList.get(i).equippedInventory, playerList.get(i).cosmeticInventory, playerList.get(i).weaponInventory);
+						playerListPacket.names[i] = playerList.get(i).name;
+						playerListPacket.islands[i] = playerList.get(i).island;
+						playerListPacket.lastPlayedDateTimes[i] = lastPlayedFormat.format(playerList.get(i).lastPlayed);
+						playerListPacket.creationDateTimes[i] = createdFormat.format(playerList.get(i).creationDate);
 					}
-					
+							
 					//Send packet with player datas
 					playerListPacket.send(ArchipeloServer.getServer().getNetworkManager().getConnectionByAddress(address));
+					
 				}
 			});
-			thread2.start();
 			return true;
 		}
 		return false;

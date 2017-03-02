@@ -3,6 +3,7 @@ package net.hollowbit.archipeloserver.entity;
 import com.badlogic.gdx.math.Vector2;
 
 import net.hollowbit.archipeloserver.ArchipeloServer;
+import net.hollowbit.archipeloserver.entity.EntityAnimationManager.EntityAnimationObject;
 import net.hollowbit.archipeloserver.entity.living.Player;
 import net.hollowbit.archipeloserver.network.packets.PopupTextPacket;
 import net.hollowbit.archipeloserver.network.packets.TeleportPacket;
@@ -22,6 +23,7 @@ public abstract class Entity {
 	protected Location location;
 	protected EntitySnapshot changes;
 	protected EntityLog log;
+	protected EntityAnimationManager animationManager;
 	
 	public Entity () {}
 	
@@ -30,24 +32,42 @@ public abstract class Entity {
 		this.style = style;
 		this.entityType = entityType;
 		this.location = location;
-		changes = new EntitySnapshot(this);
+		changes = new EntitySnapshot(this, true);
 		log = new EntityLog();
+		animationManager = new EntityAnimationManager(this, entityType.getDefaultAnimationId(), "", 0);
 	}
 	
 	public void create (EntitySnapshot fullSnapshot, Map map, EntityType entityType) {
 		this.name = fullSnapshot.name;
-		this.style = fullSnapshot.style;
 		this.entityType = entityType;
 		this.location =  new Location(map, new Vector2(fullSnapshot.getFloat("x", 0), fullSnapshot.getFloat("y", 0)), fullSnapshot.getInt("direction", 0));
-		changes = new EntitySnapshot(this);
+		
+		//Make sure style is valid
+		this.style = fullSnapshot.getInt("style", 0);
+		if (this.style >= entityType.getNumberOfStyles()) {
+			this.style = 0;
+			ArchipeloServer.getServer().getLogger().caution("Entity " + this.name + " on map " + this.getMap().getIsland().getName() + ":" + this.getMap().getName() + " has a bad style attribute.");
+		}
+		
+		changes = new EntitySnapshot(this, true);
 		log = new EntityLog();
+		animationManager = new EntityAnimationManager(this, fullSnapshot.anim, fullSnapshot.animMeta, fullSnapshot.animTime);
 	}
 	
-	public void tick20 () {
+	/**
+	 * Should only be called in the EntityAnimationManager.
+	 * This is a listener to handle when the current non-looping animation has finished.
+	 * Usually, this should return a looping animation just to be safe.
+	 * Safe to return null in many cases.
+	 */
+	public abstract EntityAnimationObject animationCompleted (String animationId);
+	
+	public void tick20 (float deltaTime) {
+		animationManager.update(deltaTime);
 		log.removeOldEntitySnapshotsFromLog();
 	}
 	
-	public void tick60 () {
+	public void tick60 (float deltaTime) {
 		log.addEntry(new EntityLogEntry(location.getX(), location.getY(), getSpeed()));
 	}
 	
@@ -59,6 +79,17 @@ public abstract class Entity {
 	
 	public String getName () {
 		return name;
+	}
+	
+	/**
+	 * Change the entities style on the fly. It also makes sure the style is available first.
+	 * @param style
+	 */
+	public void setStyle (int style) {
+		if (style < entityType.getNumberOfStyles()) {
+			this.style = style;
+			this.changes.putInt("style", style);
+		}
 	}
 	
 	public int getStyle () {
@@ -80,28 +111,49 @@ public abstract class Entity {
 		return false;
 	}
 	
-	//InterpSnapshots are for thing like position that can be interpolated between and can be skipped.
+	/**
+	 * InterpSnapshots are for things like position that can be interpolated between. Packet dropping should not be an issue for these data values.
+	 * @return
+	 */
 	public EntitySnapshot getInterpSnapshot () {
-		EntitySnapshot snapshot = new EntitySnapshot(this);
+		EntitySnapshot snapshot = new EntitySnapshot(this, true);
+		animationManager.applyToEntitySnapshot(snapshot);
 		return snapshot;
 	}
 	
-	//Changes since last tick. Unlike InterpSnapshots, these are changes that MUST be applied.
+	/**
+	 * Changes since last tick. Unlike InterpSnapshots, these are changes that MUST be applied.
+	 * @return
+	 */
 	public EntitySnapshot getChangesSnapshot () {
 		return changes;
 	}
 	
-	//Full data of an entity. This is used for EntityAddPackets.
+	/**
+	 * Full data of an entity. This is used for EntityAddPackets.
+	 * @return
+	 */
 	public EntitySnapshot getFullSnapshot () {
-		EntitySnapshot snapshot = new EntitySnapshot(this);
+		EntitySnapshot snapshot = new EntitySnapshot(this, false);
 		snapshot.putFloat("x", this.getX());
 		snapshot.putFloat("y", this.getY());
+		snapshot.putInt("direction", this.getLocation().getDirectionInt());
+		snapshot.putInt("style", style);
+		animationManager.applyToEntitySnapshot(snapshot);
 		return snapshot;
 	}
 	
-	//Get a snapshot of an entity to save them when map unloads
+	/**
+	 * Get a snapshot of an entity to save them when map unloads
+	 * @return
+	 */
 	public EntitySnapshot getSaveSnapshot () {
-		return getFullSnapshot();
+		EntitySnapshot snapshot = new EntitySnapshot(this, false);
+		snapshot.putFloat("x", this.getX());
+		snapshot.putFloat("y", this.getY());
+		snapshot.putInt("direction", this.getLocation().getDirectionInt());
+		snapshot.putInt("style", style);
+		return snapshot;
 	}
 	
 	public Location getLocation () {
@@ -209,6 +261,10 @@ public abstract class Entity {
 		return false;
 	}
 	
+	/**
+	 * Returns whether this entity is a player type.
+	 * @return
+	 */
 	public boolean isPlayer () {
 		return false;
 	}
@@ -229,18 +285,27 @@ public abstract class Entity {
 		return location.getMap();
 	}
 	
-	public boolean equals (Entity entity) {
-		return (this.name.equalsIgnoreCase(entity.getName()));
-	}
-	
+	/**
+	 * Returns array of all collisions rects for this entity
+	 * @return
+	 */
 	public CollisionRect[] getCollisionRects () {
 		return entityType.getCollisionRects(location.getX(), location.getY());
 	}
 	
+	/**
+	 * Get collision rects of this entity considering it were at a specified position.
+	 * @param potentialPosition
+	 * @return
+	 */
 	public CollisionRect[] getCollisionRects (Vector2 potentialPosition) {
 		return entityType.getCollisionRects(potentialPosition.x, potentialPosition.y);
 	}
 	
+	/**
+	 * Exact center point of the entities view rect.
+	 * @return
+	 */
 	public Vector2 getCenterPoint () {
 		CollisionRect viewRect = entityType.getViewRect(location.getX(), location.getY());
 		return new Vector2(location.getX() + viewRect.width / 2, location.getY() + viewRect.height / 2);

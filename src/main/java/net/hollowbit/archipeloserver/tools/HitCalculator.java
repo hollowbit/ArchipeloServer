@@ -1,4 +1,4 @@
-package net.hollowbit.archipeloserver.tools.entity;
+package net.hollowbit.archipeloserver.tools;
 
 import java.util.ArrayList;
 

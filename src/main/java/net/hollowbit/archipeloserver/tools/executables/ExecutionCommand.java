@@ -10,7 +10,6 @@ public class ExecutionCommand  {
 	public String id;
 	public HashMap<String, String> args;
 	
-	
 	public void execute (Entity sender, Entity target) {
 		ArchipeloServer.getServer().getExecutableManager().execute(this, sender, target);
 	}

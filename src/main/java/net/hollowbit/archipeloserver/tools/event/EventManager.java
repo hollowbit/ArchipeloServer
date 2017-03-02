@@ -1,15 +1,24 @@
 package net.hollowbit.archipeloserver.tools.event;
 
-import java.util.ArrayList;
+import java.util.LinkedList;
 
-import net.hollowbit.archipeloserver.tools.event.events.*;
+import net.hollowbit.archipeloserver.tools.event.events.EntityMoveEvent;
+import net.hollowbit.archipeloserver.tools.event.events.EntityTeleportEvent;
+import net.hollowbit.archipeloserver.tools.event.events.PlayerBankAddEvent;
+import net.hollowbit.archipeloserver.tools.event.events.PlayerInventoryAddEvent;
+import net.hollowbit.archipeloserver.tools.event.events.PlayerInventoryChangeEvent;
+import net.hollowbit.archipeloserver.tools.event.events.PlayerInventoryMoveEvent;
+import net.hollowbit.archipeloserver.tools.event.events.PlayerInventoryRemoveEvent;
+import net.hollowbit.archipeloserver.tools.event.events.PlayerJoinEvent;
+import net.hollowbit.archipeloserver.tools.event.events.PlayerLeaveEvent;
+import net.hollowbit.archipeloserver.tools.event.events.PlayerStatsChangeEvent;
 
 public class EventManager {
 	
-	private ArrayList<EventHandler> eventHandlers;
+	private LinkedList<EventHandler> eventHandlers;
 	
 	public EventManager () {
-		eventHandlers = new ArrayList<EventHandler>();
+		eventHandlers = new LinkedList<EventHandler>();
 	}
 	
 	/**

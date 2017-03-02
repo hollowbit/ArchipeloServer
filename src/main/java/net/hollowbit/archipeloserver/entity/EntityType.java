@@ -11,6 +11,8 @@ import com.badlogic.gdx.utils.reflect.ClassReflection;
 import com.badlogic.gdx.utils.reflect.ReflectionException;
 
 import net.hollowbit.archipeloserver.ArchipeloServer;
+import net.hollowbit.archipeloserver.entity.lifeless.BlobbyGrave;
+import net.hollowbit.archipeloserver.entity.lifeless.Computer;
 import net.hollowbit.archipeloserver.entity.lifeless.Door;
 import net.hollowbit.archipeloserver.entity.lifeless.DoorLocked;
 import net.hollowbit.archipeloserver.entity.lifeless.Sign;
@@ -18,6 +20,7 @@ import net.hollowbit.archipeloserver.entity.lifeless.Teleporter;
 import net.hollowbit.archipeloserver.entity.living.Player;
 import net.hollowbit.archipeloserver.world.Map;
 import net.hollowbit.archipeloshared.CollisionRect;
+import net.hollowbit.archipeloshared.EntityAnimationData;
 import net.hollowbit.archipeloshared.EntityTypeData;
 
 @SuppressWarnings("rawtypes")
@@ -27,13 +30,17 @@ public enum EntityType {
 	TELEPORTER ("teleporter", Teleporter.class),
 	DOOR ("door", Door.class),
 	DOOR_LOCKED ("door-locked", DoorLocked.class),
-	SIGN ("sign", Sign.class);
+	SIGN ("sign", Sign.class),
+	BLOBBY_GRAVE ("blobby_grave", BlobbyGrave.class),
+	COMPUTER ("computer", Computer.class);
 	
 	private String id;
 	private Class entityClass;
+	private HashMap<String, EntityAnimationData> animations;
 	private int numberOfStyles;
 	private boolean hittable;
 	private float speed;
+	private String defaultAnimation = "";
 
 	//Rects
 	private CollisionRect viewRect;
@@ -70,6 +77,17 @@ public enum EntityType {
 		for (int i = 0; i < collRects.length; i++) {
 			this.collRects[i] = new CollisionRect(data.collisionRects[i]);
 		}
+		
+		animations = new HashMap<String, EntityAnimationData>();
+		boolean first = true;
+		for (EntityAnimationData animationData : data.animations) {
+			animations.put(animationData.id, animationData);
+			
+			if (first) {//Set the first animation as the default
+				defaultAnimation = animationData.id;
+				first = false;
+			}
+		}
 	}
 
 	@SuppressWarnings("unchecked")
@@ -87,10 +105,23 @@ public enum EntityType {
 		return id;
 	}
 	
+	/**
+	 * Returns the view rect for this entity at the specified location.
+	 * The view rect is a rect to specify what part of the entity is visible for rendering optimizations.
+	 * @param x
+	 * @param y
+	 * @return
+	 */
 	public CollisionRect getViewRect (float x, float y) {
 		return viewRect.move(x, y);
 	}
 	
+	/**
+	 * Returns a list of all collision rects for this entity at the specified location.
+	 * @param x
+	 * @param y
+	 * @return
+	 */
 	public CollisionRect[] getCollisionRects (float x, float y) {
 		for (CollisionRect rect : collRects) {
 			rect.move(x, y);
@@ -118,6 +149,22 @@ public enum EntityType {
 		return viewRect.height;
 	}
 	
+	/**
+	 * Default animation to play for this entity
+	 * @return
+	 */
+	public String getDefaultAnimationId () {
+		return defaultAnimation;
+	}
+	
+	public boolean hasAnimation (String animationId) {
+		return animations.containsKey(animationId);
+	}
+	
+	public EntityAnimationData getAnimationDataById (String animationId) {
+		return animations.get(animationId);
+	}
+	
 	//Static
 	private static HashMap<String, EntityType> entityTypeMap;
 	
@@ -129,7 +176,7 @@ public enum EntityType {
 	}
 	
 	public static Entity createEntityBySnapshot (EntitySnapshot fullSnapshot, Map map) {
-		EntityType entityType = entityTypeMap.get(fullSnapshot.entityType);
+		EntityType entityType = entityTypeMap.get(fullSnapshot.type);
 		Entity entity = entityType.createEntityOfType();
 		entity.create(fullSnapshot, map, entityType);
 		return entity;

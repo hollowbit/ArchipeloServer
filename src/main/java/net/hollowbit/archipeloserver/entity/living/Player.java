@@ -1,17 +1,18 @@
 package net.hollowbit.archipeloserver.entity.living;
 
+import java.sql.Date;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.UUID;
 
 import org.java_websocket.WebSocket;
 
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.Vector2;
 
 import net.hollowbit.archipeloserver.ArchipeloServer;
-import net.hollowbit.archipeloserver.Tick;
 import net.hollowbit.archipeloserver.entity.Entity;
+import net.hollowbit.archipeloserver.entity.EntityAnimationManager.EntityAnimationObject;
 import net.hollowbit.archipeloserver.entity.EntityInteraction;
 import net.hollowbit.archipeloserver.entity.EntitySnapshot;
 import net.hollowbit.archipeloserver.entity.EntityType;
@@ -34,7 +35,6 @@ import net.hollowbit.archipeloserver.network.packets.LogoutPacket;
 import net.hollowbit.archipeloserver.network.packets.PopupTextPacket;
 import net.hollowbit.archipeloserver.tools.Configuration;
 import net.hollowbit.archipeloserver.tools.database.DatabaseManager;
-import net.hollowbit.archipeloserver.tools.entity.HitCalculator;
 import net.hollowbit.archipeloserver.tools.entity.Location;
 import net.hollowbit.archipeloserver.tools.event.events.PlayerJoinEvent;
 import net.hollowbit.archipeloserver.tools.event.events.PlayerLeaveEvent;
@@ -42,13 +42,13 @@ import net.hollowbit.archipeloserver.world.Map;
 import net.hollowbit.archipeloshared.CollisionRect;
 import net.hollowbit.archipeloshared.Controls;
 import net.hollowbit.archipeloshared.Direction;
+import net.hollowbit.archipeloshared.HitCalculator;
 
 public class Player extends LivingEntity implements PacketHandler {
 	
-	public static final float CORRECTION_ERROR_PERCENTAGE = 0.9f;
-	public static final float ROLLING_DURATION = 0.4f;
 	public static final float ROLL_DOUBLE_CLICK_DURATION = 0.3f;
 	public static final float HIT_RANGE = 8;
+	public static final float EMPTY_HAND_USE_ANIMATION_LENTH = 0.5f;
 	
 	//Equipped Inventory Index
 	public static final int EQUIP_SIZE = 6;
@@ -77,16 +77,15 @@ public class Player extends LivingEntity implements PacketHandler {
 	boolean[] controls;
 	Direction rollingDirection;
 	boolean newOnMap = false;//This is to know if the player needs to be sent a new map.
-	float rollTimer;
 	float rollDoubleClickTimer = 0;
 	boolean wasMoving;
-	boolean isSprinting;
 	Date lastPlayed, creationDate;
 	HollowBitUser hbUser;
 	PlayerNpcDialogManager npcDialogManager;
 	PlayerFlagsManager flagsManager;
 	PlayerInventory inventory;
 	PlayerStatsManager statsManager;
+	long lastControlsUpdate;
 	
 	public Player (String name, String address, boolean firstTimeLogin) {
 		this.create(name, 0, location, address, firstTimeLogin);
@@ -110,165 +109,80 @@ public class Player extends LivingEntity implements PacketHandler {
 		this.hbUser = hbUser;
 		this.flagsManager = new PlayerFlagsManager(playerData.flags, this);
 		this.statsManager = new PlayerStatsManager(this);
+		this.lastControlsUpdate = System.currentTimeMillis();
 		
 		PlayerJoinEvent event = new PlayerJoinEvent(this);//Triggers player join event
 		event.trigger();
 	}
 	
 	@Override
-	public void tick60 () {
+	public void tick60 (float deltaTime) {
 		//Tick timer for roll double-click
 		if (rollDoubleClickTimer >= 0) {
-			rollDoubleClickTimer -= Tick.T_60;
+			rollDoubleClickTimer -= deltaTime;
 			if (rollDoubleClickTimer < 0)
 				rollDoubleClickTimer = 0;
 		}
 		
-		//Check whether the player started/stopped moving
-		if (isMoving() != wasMoving)
-			changes.putBoolean("is-moving", isMoving());
-		wasMoving = isMoving();
+		super.tick60(deltaTime);
+	}
+	
+	public void updateControls (boolean[] controls) {
+		float deltaTime = (System.currentTimeMillis() - lastControlsUpdate) / 1000f;
+		lastControlsUpdate = System.currentTimeMillis();
 		
-		Vector2 newPos = new Vector2(location.getX(), location.getY());
-		
-		//Direction
-		if (controls[Controls.UP]) {
-			if (controls[Controls.LEFT]) {//Up left
-				if (location.direction != Direction.UP_LEFT && !controls[Controls.LOCK]) {
-					location.direction = Direction.UP_LEFT;
-					changes.putInt("direction", location.direction.ordinal());
-				}
-				
-				if (rollingDirection != Direction.UP_LEFT) {
-					rollingDirection = Direction.UP_LEFT;
-					changes.putInt("rolling-direction", rollingDirection.ordinal());
-				}
-				
-				if (isMoving())
-					newPos.add((float) (-Tick.T_60 * getSpeed() / LivingEntity.DIAGONAL_FACTOR), (float) (Tick.T_60 * getSpeed() / LivingEntity.DIAGONAL_FACTOR));
-			} else if (controls[Controls.RIGHT]) {//Up right
-				if (location.direction != Direction.UP_RIGHT && !controls[Controls.LOCK]) {
-					location.direction = Direction.UP_RIGHT;
-					changes.putInt("direction", location.direction.ordinal());
-				}
-				
-				if (rollingDirection != Direction.UP_RIGHT) {
-					rollingDirection = Direction.UP_RIGHT;
-					changes.putInt("rolling-direction", rollingDirection.ordinal());
-				}
-				
-				if (isMoving()) 
-					newPos.add((float) (Tick.T_60 * getSpeed() / LivingEntity.DIAGONAL_FACTOR), (float) (Tick.T_60 * getSpeed() / LivingEntity.DIAGONAL_FACTOR));
-			} else {//Up
-				if (location.direction != Direction.UP && !controls[Controls.LOCK]) {
-					location.direction = Direction.UP;
-					changes.putInt("direction", location.direction.ordinal());
-				}
-				
-				if (rollingDirection != Direction.UP) {
-					rollingDirection = Direction.UP;
-					changes.putInt("rolling-direction", rollingDirection.ordinal());
-				}
-				
-				if (isMoving())
-					newPos.add(0, Tick.T_60 * getSpeed());
-			}
-		} else if (controls[Controls.DOWN]) {
-			if (controls[Controls.LEFT]) {//Down left
-				if (location.direction != Direction.DOWN_LEFT && !controls[Controls.LOCK]) {
-					location.direction = Direction.DOWN_LEFT;
-					changes.putInt("direction", location.direction.ordinal());
-				}
-				
-				if (rollingDirection != Direction.DOWN_LEFT) {
-					rollingDirection = Direction.DOWN_LEFT;
-					changes.putInt("rolling-direction", rollingDirection.ordinal());
-				}
-				
-				if (isMoving())  {
-					newPos.add((float) (-Tick.T_60 * getSpeed() / LivingEntity.DIAGONAL_FACTOR), (float) (-Tick.T_60 * getSpeed() / LivingEntity.DIAGONAL_FACTOR));
-				}
-			} else if (controls[Controls.RIGHT]) {//Down right
-				if (location.direction != Direction.DOWN_RIGHT && !controls[Controls.LOCK]) {
-					location.direction = Direction.DOWN_RIGHT;
-					changes.putInt("direction", location.direction.ordinal());
-				}
-				
-				if (rollingDirection != Direction.DOWN_RIGHT) {
-					rollingDirection = Direction.DOWN_RIGHT;
-					changes.putInt("rolling-direction", rollingDirection.ordinal());
-				}
-				
-				if (isMoving())
-					newPos.add((float) (Tick.T_60 * getSpeed() / LivingEntity.DIAGONAL_FACTOR), (float) (-Tick.T_60 * getSpeed() / LivingEntity.DIAGONAL_FACTOR));
-			} else {//Down
-				if (location.direction != Direction.DOWN && !controls[Controls.LOCK]) {
-					location.direction = Direction.DOWN;
-					changes.putInt("direction", location.direction.ordinal());
-				}
-				
-				if (rollingDirection != Direction.DOWN) {
-					rollingDirection = Direction.DOWN;
-					changes.putInt("rolling-direction", rollingDirection.ordinal());
-				}
-				
-				if (isMoving())
-					newPos.add(0, -Tick.T_60 * getSpeed());
-			}
-		} else if (controls[Controls.LEFT]) {//Left
-			if (location.direction != Direction.LEFT && !controls[Controls.LOCK]) {
-				location.direction = Direction.LEFT;
-				changes.putInt("direction", location.direction.ordinal());
-			}
+		if (isMoving()) {
+			Vector2 newPos = new Vector2(location.getX(), location.getY());
 			
-			if (rollingDirection != Direction.LEFT) {
-				rollingDirection = Direction.LEFT;
-				changes.putInt("rolling-direction", rollingDirection.ordinal());
-			}
-			
-			if (isMoving())
-				newPos.add(-Tick.T_60 * getSpeed(), 0);
-		} else if (controls[Controls.RIGHT]) {//Right
-			if (location.direction != Direction.RIGHT && !controls[Controls.LOCK]) {
-				location.direction = Direction.RIGHT;
-				changes.putInt("direction", location.direction.ordinal());
-			}
-			
-			if (rollingDirection != Direction.RIGHT) {
-				rollingDirection = Direction.RIGHT;
-				changes.putInt("rolling-direction", rollingDirection.ordinal());
-			}
-			
-			if (isMoving())
-				newPos.add(Tick.T_60 * getSpeed(), 0);
-		}
-		
-		boolean collidesWithMap = false;
-		for (CollisionRect rect : getCollisionRects(newPos)) {//Checks to make sure no collision rect is intersecting with map
-			if (location.getMap().collidesWithMap(rect, this)) {
-				collidesWithMap = true;
+			Direction direction = getMovementDirection();
+			switch (direction) {
+			case UP:
+				newPos.add(0, (float) (deltaTime * getSpeed() / LivingEntity.DIAGONAL_FACTOR));
+				break;
+			case LEFT:
+				newPos.add((float) (-deltaTime * getSpeed() / LivingEntity.DIAGONAL_FACTOR), 0);
+				break;
+			case DOWN:
+				newPos.add(0, (float) (-deltaTime * getSpeed() / LivingEntity.DIAGONAL_FACTOR));
+				break;
+			case RIGHT:
+				newPos.add((float) (deltaTime * getSpeed() / LivingEntity.DIAGONAL_FACTOR), 0);
+				break;
+			case UP_LEFT:
+				newPos.add((float) (-deltaTime * getSpeed() / LivingEntity.DIAGONAL_FACTOR), (float) (deltaTime * getSpeed() / LivingEntity.DIAGONAL_FACTOR));
+				break;
+			case UP_RIGHT:
+				newPos.add((float) (deltaTime * getSpeed() / LivingEntity.DIAGONAL_FACTOR), (float) (deltaTime * getSpeed() / LivingEntity.DIAGONAL_FACTOR));
+				break;
+			case DOWN_LEFT:
+				newPos.add((float) (-deltaTime * getSpeed() / LivingEntity.DIAGONAL_FACTOR), (float) (-deltaTime * getSpeed() / LivingEntity.DIAGONAL_FACTOR));
+				break;
+			case DOWN_RIGHT:
+				newPos.add((float) (deltaTime * getSpeed() / LivingEntity.DIAGONAL_FACTOR), (float) (-deltaTime * getSpeed() / LivingEntity.DIAGONAL_FACTOR));
 				break;
 			}
-		}
-		
-		if (!collidesWithMap || doesCurrentPositionCollideWithMap()) {
-			if (isMoving())
-				move(newPos);
-		}
-		
-		//Rolling
-		if (rollTimer > 0) {
-			rollTimer -= Tick.T_60;
-			if (rollTimer < 0) {
-				rollTimer = 0;
+			
+			if (location.direction != direction && !controls[Controls.LOCK]) {
+				location.direction = direction;
+				changes.putInt("direction", location.direction.ordinal());
+			}
+			
+			boolean collidesWithMap = false;
+			for (CollisionRect rect : getCollisionRects(newPos)) {//Checks to make sure no collision rect is intersecting with map
+				if (location.getMap().collidesWithMap(rect, this)) {
+					collidesWithMap = true;
+					break;
+				}
+			}
+			
+			if (!collidesWithMap || doesCurrentPositionCollideWithMap()) {
+				if (isMoving())
+					move(newPos);
 			}
 		}
-		
-		super.tick60();
 	}
 	
 	public void stopMovement () {
-		rollTimer = 0;
 		rollDoubleClickTimer = 0;
 		controls[Controls.UP] = false;
 		controls[Controls.LEFT] = false;
@@ -276,13 +190,56 @@ public class Player extends LivingEntity implements PacketHandler {
 		controls[Controls.RIGHT] = false;
 	}
 	
+	public Direction getMovementDirection () {
+		if (controls[Controls.UP]) {
+			if (controls[Controls.LEFT])
+				return Direction.UP_LEFT;
+			else if (controls[Controls.RIGHT])
+				return Direction.UP_RIGHT;
+			else
+				return Direction.UP;
+		} else if (controls[Controls.DOWN]) {
+			if (controls[Controls.LEFT])
+				return Direction.DOWN_LEFT;
+			else if (controls[Controls.RIGHT])
+				return Direction.DOWN_RIGHT;
+			else
+				return Direction.DOWN;
+		} else if (controls[Controls.LEFT])
+			return Direction.LEFT;
+		else if (controls[Controls.RIGHT])
+			return Direction.RIGHT;
+		
+		return null;
+	}
+	
 	public boolean isMoving () {
 		return controls[Controls.UP] || controls[Controls.LEFT] || controls[Controls.DOWN] || controls[Controls.RIGHT];
 	}
 	
+	public boolean isSprinting () {
+		return controls[Controls.ROLL];
+	}
+	
+	public boolean isDirectionLocked () {
+		return controls[Controls.LOCK];
+	}
+	
+	public boolean isRolling () {
+		return animationManager.getAnimationId().equals("roll");
+	}
+	
+	/**
+	 * Tells whether the player is currently in a use animation
+	 * @return
+	 */
+	public boolean isUsing () {
+		return animationManager.getAnimationId().equals("use") || animationManager.getAnimationId().equals("usewalk");
+	}
+	
 	@Override
 	public float getSpeed () {
-		return statsManager.getSpeed(controls[Controls.ROLL], isRolling());
+		return statsManager.getSpeed(isSprinting(), isRolling());
 	}
 	
 	@Override
@@ -321,15 +278,6 @@ public class Player extends LivingEntity implements PacketHandler {
 	}
 	
 	/**
-	 * Updates player to database to be ready to be removed
-	 */
-	private void unload() {
-		statsManager.dispose();
-		ArchipeloServer.getServer().getNetworkManager().removePacketHandler(this);
-		ArchipeloServer.getServer().getDatabaseManager().updatePlayer(this);
-	}
-	
-	/**
 	 * Proper way to simply remove a player from the game
 	 */
 	@Override
@@ -344,13 +292,15 @@ public class Player extends LivingEntity implements PacketHandler {
 	 */
 	public void remove (LogoutReason reason, String alt) {
 		super.remove();
+		statsManager.dispose();
+		ArchipeloServer.getServer().getNetworkManager().removePacketHandler(this);
+		ArchipeloServer.getServer().getDatabaseManager().updatePlayer(this);
 		
 		PlayerLeaveEvent event = new PlayerLeaveEvent(this, reason, alt);
 		event.trigger();
 		reason = event.getReason();
 		alt = event.getReasonAlt();
 		
-		unload();
 		sendPacket(new LogoutPacket(reason.reason, alt));
 		
 		//Build leave message
@@ -366,7 +316,23 @@ public class Player extends LivingEntity implements PacketHandler {
 	private void controlUp (int control) {
 		switch (control) {
 		case Controls.ROLL:
-			changes.putBoolean("is-sprinting", false);
+			if (!isRolling()) {
+				if (isMoving())
+					animationManager.change("walk");
+				else
+					animationManager.change("default");
+			}
+			break;
+		case Controls.UP:
+		case Controls.LEFT:
+		case Controls.DOWN:
+		case Controls.RIGHT:
+			if (!isMoving() && !isRolling()) {
+				if (isUsing())
+					animationManager.change("use");
+				else
+					animationManager.change("default");
+			}
 			break;
 		}
 	}
@@ -374,32 +340,86 @@ public class Player extends LivingEntity implements PacketHandler {
 	private void controlDown (int control) {
 		switch (control) {
 		case Controls.ROLL:
-			if (rollDoubleClickTimer <= 0) {
-				rollDoubleClickTimer = ROLL_DOUBLE_CLICK_DURATION;
-			} else {
-				rollDoubleClickTimer = 0;
-				if (!isRolling()) {
-					rollTimer = ROLLING_DURATION;
-					changes.putBoolean("is-rolling", true);
-					sendPacket(new PopupTextPacket("{youJustRolled}", PopupTextPacket.Type.NORMAL));
-					sendPacket(new ChatMessagePacket("{serverTag}", "{youJustRolled}", "server"));
+			if (!isUsing() && isMoving()) {
+				animationManager.change("sprint");
+				if (rollDoubleClickTimer <= 0) {
+					rollDoubleClickTimer = ROLL_DOUBLE_CLICK_DURATION;
+				} else {
+					rollDoubleClickTimer = 0;
+					if (!isRolling()) {//Don't roll if already rolling
+						animationManager.change("roll", "" + getMovementDirection().ordinal());
+						sendPacket(new PopupTextPacket("{youJustRolled}", PopupTextPacket.Type.NORMAL));
+						sendPacket(new ChatMessagePacket("{serverTag}", "{youJustRolled}", "server"));
+					}
 				}
 			}
 			
-			changes.putBoolean("is-sprinting", true);
 			break;
 		case Controls.ATTACK:
-			ArrayList<Entity> entitiesOnMap = (ArrayList<Entity>) location.getMap().getEntities();
-			for (Entity entity : entitiesOnMap) {
-				if (entity == this)
-					continue;
+			if (!isRolling() && !isUsing()) {
+				ArrayList<Entity> entitiesOnMap = (ArrayList<Entity>) location.getMap().getEntities();
+				boolean useHitAnimation = true;
+				for (Entity entity : entitiesOnMap) {
+					if (entity == this)
+						continue;
+					
+					//Run hit event for every collision rect hit on entity
+					for (String rectHit : HitCalculator.getCollRectsHit(this.getCenterPoint().x, this.getCenterPoint().y, entity.getCollisionRects(), HIT_RANGE, location.getDirection())) {
+						this.interactWith(entity, rectHit, EntityInteraction.HIT);
+						
+						//If the entity is not hittable, don't use the animation
+						if (!entity.getEntityType().isHittable())
+							useHitAnimation = false;
+					}
+				}
 				
-				//Run hit event for every collision rect hit on entity
-				for (String rectHit : HitCalculator.getCollRectsHit(this, entity, HIT_RANGE, location.getDirection())) {
-					this.interactWith(entity, rectHit, EntityInteraction.HIT);
+				//Use item if no "non-hittable" entity hit
+				if(useHitAnimation) {
+					Item item = inventory.getWeaponInventory().getRawStorage()[0];
+					playUseAnimation(item);
+					if (item != null)
+						item.use(this);
 				}
 			}
 			break;
+		case Controls.UP:
+		case Controls.LEFT:
+		case Controls.DOWN:
+		case Controls.RIGHT:
+			if (!isRolling()) {
+				if (isUsing())
+					animationManager.change("usewalk");
+				else
+					animationManager.change("walk");
+			}
+			break;
+		}
+	}
+	
+	/**
+	 * Play use animation for current player with the specified item
+	 * @param item
+	 */
+	public void playUseAnimation (Item item) {
+		String animationMeta = "";
+		float useAnimationLength = EMPTY_HAND_USE_ANIMATION_LENTH;
+		
+		if (item != null) {
+			Color color = new Color(item.color);
+			animationMeta = item.getType() + ";" + 0 + ";" + item.style + ";" + color.r + ";" + color.g + ";" + color.b + ";" + color.a;
+			useAnimationLength = item.getType().useAnimationLength;
+		}
+		
+		//Use appropriate animations depending
+		if (item != null && item.getType().useThrust) {
+			if (isMoving())
+				stopMovement();
+			animationManager.change("thrust", animationMeta, useAnimationLength);
+		} else {
+			if (isMoving())
+				animationManager.change("usewalk", animationMeta, useAnimationLength);
+			else
+				animationManager.change("use", animationMeta, useAnimationLength);
 		}
 	}
 	
@@ -409,10 +429,6 @@ public class Player extends LivingEntity implements PacketHandler {
 	
 	public boolean isNewOnMap () {
 		return newOnMap;
-	}
-	
-	public boolean isRolling () {
-		return rollTimer > 0;
 	}
 	
 	public WebSocket getConnection () {
@@ -442,26 +458,30 @@ public class Player extends LivingEntity implements PacketHandler {
 		if (this.address.equals(address)) {
 			switch (packet.packetType) {
 			case PacketType.CONTROLS:
-				boolean[] newControls = ((ControlsPacket) packet).controls;
+				boolean[] newControls = ((ControlsPacket) packet).parse();
 				
-				if (newControls == null || newControls.length != Controls.TOTAL)
+				if (controls == null || controls.length != Controls.TOTAL)
 					return true;
+				
+				//duplicate controls since they will be replaced
+				boolean[] oldControls = new boolean[controls.length];
+				for (int i = 0; i < controls.length; i++)
+					oldControls[i] = controls[i];
+				this.controls = newControls;
 				
 				//Loops through all controls to handle them one by one.
 				for (int i = 0; i < Controls.TOTAL; i++) {
 					//Checks for control change and executes controlUp/Down if there is a one.
-					if (controls[i]) {
-						if (!newControls[i]) {
-							controls[i] = false;
+					if (oldControls[i]) {
+						if (!controls[i])
 							controlUp(i);
-						}
 					} else {
-						if (newControls[i]) {
-							controls[i] = true;
+						if (controls[i])
 							controlDown(i);
-						}
 					}
 				}
+				
+				updateControls(newControls);
 				return true;
 			case PacketType.CHAT_MESSAGE:
 				ChatMessagePacket messagePacket = (ChatMessagePacket) packet;
@@ -555,6 +575,18 @@ public class Player extends LivingEntity implements PacketHandler {
 		}
 		return false;
 	}
+
+	@Override
+	public EntityAnimationObject animationCompleted(String animationId) {
+		if (isMoving()) {
+			if (isSprinting()) {
+				return new EntityAnimationObject("sprint");
+			} else {//Walking
+				return new EntityAnimationObject("walk");
+			}
+		} else//Idle
+			return new EntityAnimationObject("default");
+	}
 	
 	public static PlayerData getNewPlayerData (String name, String hbUuid, Item hair, Item face, Item body) {
 		Configuration config = ArchipeloServer.getServer().getConfig();
@@ -568,12 +600,12 @@ public class Player extends LivingEntity implements PacketHandler {
 		playerData.map = config.spawnMap;
 		playerData.lastPlayed = DatabaseManager.getCurrentDate();
 		playerData.creationDate = DatabaseManager.getCurrentDate();
-		playerData.flags = new ArrayList<String>();
+		playerData.flags = new String[0];
 		
 		//Default inventory
 		playerData.inventory = new Item[PlayerInventory.INVENTORY_SIZE];
 		playerData.cosmeticInventory = new Item[EQUIP_SIZE];
-		playerData.bankInventory = new Item[1];
+		playerData.bankInventory = new Item[0];
 		playerData.weaponInventory = new Item[WEAPON_EQUIPPED_SIZE];
 		playerData.consumablesInventory = new Item[CONSUMABLES_EQUIPPED_SIZE];
 		playerData.buffsInventory = new Item[BUFFS_EQUIPPED_SIZE];

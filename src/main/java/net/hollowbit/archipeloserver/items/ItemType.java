@@ -16,10 +16,11 @@ public enum ItemType {
 	PANTS_BASIC("pants_basic"),
 	BOOTS_BASIC("boots_basic"),
 	SHIRT_BASIC("shirt_basic"),
-	GLOVES_BASIC("gloves_basic"),
-	SHOULDERPADS_BASIC("shoulderpads_basic"),
+	/*GLOVES_BASIC("gloves_basic"),
+	SHOULDERPADS_BASIC("shoulderpads_basic"),*/
 	HAIR1("hair1"),
-	FACE1("face1")/*,
+	FACE1("face1"),
+	BLOBBY_ASHES("blobby_ashes")/*,
 	SWORD("sword"),
 	POTION_SMALL("potion_small", new HealthPotionUseType())*/;
 	
@@ -35,9 +36,6 @@ public enum ItemType {
 	public static final int EQUIP_INDEX_HAT = 8;
 	public static final int EQUIP_INDEX_USABLE = 9;
 	
-	public static final float WALK_ANIMATION_LENGTH = 0.15f;
-	public static final float ROLL_ANIMATION_LENGTH = 0.08f;
-	public static final float SPRINT_ANIMATION_LENGTH = 0.11f;
 	public static final int WEARABLE_SIZE = 32;
 	
 	public String id;
@@ -52,6 +50,8 @@ public enum ItemType {
 	public int numOfStyles;
 	public int numOfUseAnimations;
 	public float useAnimationLength;
+	public boolean useThrust;
+	public boolean renderUsingColor;
 	
 	public int minDamage;
 	public int maxDamage;
@@ -108,6 +108,8 @@ public enum ItemType {
 		this.numOfStyles = data.numOfStyles;
 		this.numOfUseAnimations = data.numOfUseAnimations;
 		this.useAnimationLength = data.useAnimationLength;
+		this.useThrust = data.useThrust;
+		this.renderUsingColor = data.renderUsingColor;
 		
 		if (equipType == EQUIP_INDEX_USABLE)
 			this.useType = useType;

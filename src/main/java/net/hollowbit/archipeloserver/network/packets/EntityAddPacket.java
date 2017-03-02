@@ -9,18 +9,22 @@ import net.hollowbit.archipeloserver.network.PacketType;
 
 public class EntityAddPacket extends Packet {
 	
-	public String username;
+	public String name;
 	public String type;
-	public int style;
+	public String anim;
+	public String animMeta;
+	public float animTime;
 	public HashMap<String, String> properties;
 	
 	public EntityAddPacket (Entity entity) {
 		super(PacketType.ENTITY_ADD);
 		EntitySnapshot snapshot = entity.getFullSnapshot();
-		username = snapshot.name;
-		type = snapshot.entityType;
-		style = snapshot.style;
+		name = snapshot.name;
+		type = snapshot.type;
 		properties = snapshot.properties;
+		anim = snapshot.anim;
+		animMeta = snapshot.animMeta;
+		animTime = snapshot.animTime;
 	}
 	
 }
