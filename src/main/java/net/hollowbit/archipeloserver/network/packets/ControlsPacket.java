@@ -7,9 +7,6 @@ public class ControlsPacket extends Packet {
 	
 	public String c;
 	public int id;
-	
-	//Will only be used in client
-	public float deltaTime = 0;
 
 	public ControlsPacket () {
 		super(PacketType.CONTROLS);

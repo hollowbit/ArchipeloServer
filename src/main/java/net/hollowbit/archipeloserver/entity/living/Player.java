@@ -51,6 +51,8 @@ public class Player extends LivingEntity implements PacketHandler {
 	public static final float HIT_RANGE = 8;
 	public static final float EMPTY_HAND_USE_ANIMATION_LENTH = 0.5f;
 	
+	private static final float UPDATE_RATE = 1 / 30f;
+	
 	//Equipped Inventory Index
 	public static final int EQUIP_SIZE = 6;
 	public static final int EQUIP_INDEX_BOOTS = 0;
@@ -86,7 +88,6 @@ public class Player extends LivingEntity implements PacketHandler {
 	PlayerFlagsManager flagsManager;
 	PlayerInventory inventory;
 	PlayerStatsManager statsManager;
-	long lastControlsUpdate;
 	
 	public Player (String name, String address, boolean firstTimeLogin) {
 		this.create(name, 0, location, address, firstTimeLogin);
@@ -110,7 +111,6 @@ public class Player extends LivingEntity implements PacketHandler {
 		this.hbUser = hbUser;
 		this.flagsManager = new PlayerFlagsManager(playerData.flags, this);
 		this.statsManager = new PlayerStatsManager(this);
-		this.lastControlsUpdate = System.currentTimeMillis();
 		
 		PlayerJoinEvent event = new PlayerJoinEvent(this);//Triggers player join event
 		event.trigger();
@@ -129,37 +129,45 @@ public class Player extends LivingEntity implements PacketHandler {
 	}
 	
 	public void updateControls (boolean[] controls) {
-		float deltaTime = (System.currentTimeMillis() - lastControlsUpdate) / 1000f;
-		lastControlsUpdate = System.currentTimeMillis();
+		float deltaTime = UPDATE_RATE;
 		
 		if (isMoving()) {
-			Vector2 newPos = new Vector2(location.getX(), location.getY());
+			Vector2 newPos = new Vector2(location.pos);
+			double speedMoved = 0;
 			
 			Direction direction = getMovementDirection();
 			switch (direction) {
 			case UP:
-				newPos.add(0, (float) (deltaTime * getSpeed() / LivingEntity.DIAGONAL_FACTOR));
+				speedMoved = getSpeed();
+				newPos.add(0, (float) (deltaTime * speedMoved));
 				break;
 			case LEFT:
-				newPos.add((float) (-deltaTime * getSpeed() / LivingEntity.DIAGONAL_FACTOR), 0);
+				speedMoved = getSpeed();
+				newPos.add((float) (-deltaTime * speedMoved), 0);
 				break;
 			case DOWN:
-				newPos.add(0, (float) (-deltaTime * getSpeed() / LivingEntity.DIAGONAL_FACTOR));
+				speedMoved = getSpeed();
+				newPos.add(0, (float) (-deltaTime * speedMoved));
 				break;
 			case RIGHT:
-				newPos.add((float) (deltaTime * getSpeed() / LivingEntity.DIAGONAL_FACTOR), 0);
+				speedMoved = getSpeed();
+				newPos.add((float) (deltaTime * speedMoved), 0);
 				break;
 			case UP_LEFT:
-				newPos.add((float) (-deltaTime * getSpeed() / LivingEntity.DIAGONAL_FACTOR), (float) (deltaTime * getSpeed() / LivingEntity.DIAGONAL_FACTOR));
+				speedMoved = getSpeed() / LivingEntity.DIAGONAL_FACTOR;
+				newPos.add((float) (-deltaTime * speedMoved), (float) (deltaTime * speedMoved));
 				break;
 			case UP_RIGHT:
-				newPos.add((float) (deltaTime * getSpeed() / LivingEntity.DIAGONAL_FACTOR), (float) (deltaTime * getSpeed() / LivingEntity.DIAGONAL_FACTOR));
+				speedMoved = getSpeed() / LivingEntity.DIAGONAL_FACTOR;
+				newPos.add((float) (deltaTime * speedMoved), (float) (deltaTime * speedMoved));
 				break;
 			case DOWN_LEFT:
-				newPos.add((float) (-deltaTime * getSpeed() / LivingEntity.DIAGONAL_FACTOR), (float) (-deltaTime * getSpeed() / LivingEntity.DIAGONAL_FACTOR));
+				speedMoved = getSpeed() / LivingEntity.DIAGONAL_FACTOR;
+				newPos.add((float) (-deltaTime * speedMoved), (float) (-deltaTime * speedMoved));
 				break;
 			case DOWN_RIGHT:
-				newPos.add((float) (deltaTime * getSpeed() / LivingEntity.DIAGONAL_FACTOR), (float) (-deltaTime * getSpeed() / LivingEntity.DIAGONAL_FACTOR));
+				speedMoved = getSpeed() / LivingEntity.DIAGONAL_FACTOR;
+				newPos.add((float) (deltaTime * speedMoved), (float) (-deltaTime * speedMoved));
 				break;
 			}
 			
@@ -484,6 +492,7 @@ public class Player extends LivingEntity implements PacketHandler {
 				}
 				
 				updateControls(newControls);
+				System.out.println("CurrentPlayer.java    " + cPacket.id + "   " + location.pos);
 				this.sendPacket(new PositionCorrectionPacket(location.pos.x, location.pos.y, cPacket.id));
 				return true;
 			case PacketType.CHAT_MESSAGE:
