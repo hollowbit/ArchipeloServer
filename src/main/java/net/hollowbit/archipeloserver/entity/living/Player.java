@@ -78,7 +78,7 @@ public class Player extends LivingEntity implements PacketHandler {
 	
 	public static final int CONTROLS_UPDATE_RATE = 1000 / 30;
 	public static final float CONTROLS_DELTA_TIME = 1 / 30f;
-	public static final int CONTROLS_UPDATE_DELAY = 100;
+	public static final int CONTROLS_UPDATE_DELAY = 35;
 	
 	String id;
 	String address;
