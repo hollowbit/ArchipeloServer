@@ -207,7 +207,6 @@ public class NetworkManager extends WebSocketServer {
 			packetString = json.toJson(packet);
 		} catch (Exception e) {
 			ArchipeloServer.getServer().getLogger().caution("Could not serialize packet! Type: " + packet.packetType + " Error: " + e.getMessage());
-			e.printStackTrace();
 			return;
 		}
 		
@@ -224,7 +223,6 @@ public class NetworkManager extends WebSocketServer {
 			packetString = json.toJson(packet);
 		} catch (Exception e) {
 			ArchipeloServer.getServer().getLogger().caution("Could not serialize packet! Type: " + packet.packetType + " Error: " + e.getMessage());
-			e.printStackTrace();
 			return "";
 		}
 		
