@@ -3,7 +3,11 @@ package net.hollowbit.archipeloserver.entity.living;
 import java.sql.Date;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.UUID;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import org.java_websocket.WebSocket;
 
@@ -51,8 +55,6 @@ public class Player extends LivingEntity implements PacketHandler {
 	public static final float HIT_RANGE = 8;
 	public static final float EMPTY_HAND_USE_ANIMATION_LENTH = 0.5f;
 	
-	private static final float UPDATE_RATE = 1 / 30f;
-	
 	//Equipped Inventory Index
 	public static final int EQUIP_SIZE = 6;
 	public static final int EQUIP_INDEX_BOOTS = 0;
@@ -74,6 +76,10 @@ public class Player extends LivingEntity implements PacketHandler {
 	
 	public static final float PERMITTED_ERROR_MULTIPLIER = 20;
 	
+	public static final int CONTROLS_UPDATE_RATE = 1000 / 30;
+	public static final float CONTROLS_DELTA_TIME = 1 / 30f;
+	public static final int CONTROLS_UPDATE_DELAY = 100;
+	
 	String id;
 	String address;
 	boolean firstTimeLogin;
@@ -88,9 +94,51 @@ public class Player extends LivingEntity implements PacketHandler {
 	PlayerFlagsManager flagsManager;
 	PlayerInventory inventory;
 	PlayerStatsManager statsManager;
+	ScheduledExecutorService exec;
+	LinkedList<ControlsPacket> commandsToExecute;
 	
 	public Player (String name, String address, boolean firstTimeLogin) {
 		this.create(name, 0, location, address, firstTimeLogin);
+		commandsToExecute = new LinkedList<ControlsPacket>();
+		
+		exec = Executors.newSingleThreadScheduledExecutor();
+		exec.scheduleAtFixedRate(new Runnable() {
+			@Override
+			public void run() {
+				LinkedList<ControlsPacket> packetsToRemove = new LinkedList<ControlsPacket>();
+				for (ControlsPacket cPacket : getCommandsClone()) {
+					if (cPacket.time <= System.currentTimeMillis() - CONTROLS_UPDATE_DELAY) {
+						packetsToRemove.add(cPacket);
+						boolean[] newControls = cPacket.parse();
+						
+						if (newControls == null || newControls.length != Controls.TOTAL)
+							return;
+						
+						//duplicate controls since they will be replaced
+						boolean[] oldControls = new boolean[controls.length];
+						for (int i = 0; i < controls.length; i++)
+							oldControls[i] = controls[i];
+						controls = newControls;
+						
+						//Loops through all controls to handle them one by one.
+						for (int i = 0; i < Controls.TOTAL; i++) {
+							//Checks for control change and executes controlUp/Down if there is a one.
+							if (oldControls[i]) {
+								if (!controls[i])
+									controlUp(i);
+							} else {
+								if (controls[i])
+									controlDown(i);
+							}
+						}
+						
+						updateControls(newControls, CONTROLS_DELTA_TIME);
+						sendPacket(new PositionCorrectionPacket(location.pos.x, location.pos.y, cPacket.id));
+					}
+				}
+				removeAllCommands(packetsToRemove);
+			}
+		}, 0, CONTROLS_UPDATE_RATE, TimeUnit.MILLISECONDS);
 	}
 	
 	public void create (String name, int style, Location location, String address, boolean firstTimeLogin) {
@@ -128,9 +176,7 @@ public class Player extends LivingEntity implements PacketHandler {
 		super.tick60(deltaTime);
 	}
 	
-	public void updateControls (boolean[] controls) {
-		float deltaTime = UPDATE_RATE;
-		
+	public void updateControls (boolean[] controls, float deltaTime) {
 		if (isMoving()) {
 			Vector2 newPos = new Vector2(location.pos);
 			double speedMoved = 0;
@@ -444,6 +490,21 @@ public class Player extends LivingEntity implements PacketHandler {
 		return ArchipeloServer.getServer().getNetworkManager().getConnectionByAddress(address);
 	}
 	
+	private synchronized void addCommand (ControlsPacket packet) {
+		commandsToExecute.add(packet);
+	}
+	
+	private synchronized ArrayList<ControlsPacket> getCommandsClone () {
+		ArrayList<ControlsPacket> packets = new ArrayList<ControlsPacket>();
+		for (ControlsPacket command : commandsToExecute)
+			packets.add(command);
+		return packets;
+	}
+	
+	private synchronized void removeAllCommands (LinkedList<ControlsPacket> commandsToRemove) {
+		commandsToExecute.removeAll(commandsToRemove);
+	}
+	
 	@Override
 	public void move (Vector2 newPos) {
 		super.move(newPos);
@@ -468,32 +529,8 @@ public class Player extends LivingEntity implements PacketHandler {
 			switch (packet.packetType) {
 			case PacketType.CONTROLS:
 				ControlsPacket cPacket = (ControlsPacket) packet;
-				boolean[] newControls = cPacket.parse();
-				
-				if (controls == null || controls.length != Controls.TOTAL)
-					return true;
-				
-				//duplicate controls since they will be replaced
-				boolean[] oldControls = new boolean[controls.length];
-				for (int i = 0; i < controls.length; i++)
-					oldControls[i] = controls[i];
-				this.controls = newControls;
-				
-				//Loops through all controls to handle them one by one.
-				for (int i = 0; i < Controls.TOTAL; i++) {
-					//Checks for control change and executes controlUp/Down if there is a one.
-					if (oldControls[i]) {
-						if (!controls[i])
-							controlUp(i);
-					} else {
-						if (controls[i])
-							controlDown(i);
-					}
-				}
-				
-				updateControls(newControls);
-				System.out.println("CurrentPlayer.java    " + cPacket.id + "   " + location.pos);
-				this.sendPacket(new PositionCorrectionPacket(location.pos.x, location.pos.y, cPacket.id));
+				cPacket.time = System.currentTimeMillis();
+				addCommand(cPacket);
 				return true;
 			case PacketType.CHAT_MESSAGE:
 				ChatMessagePacket messagePacket = (ChatMessagePacket) packet;

@@ -7,6 +7,10 @@ public class ControlsPacket extends Packet {
 	
 	public String c;
 	public int id;
+	
+	//Only used in client
+	public float x = 0, y = 0;
+	public long time = 0;
 
 	public ControlsPacket () {
 		super(PacketType.CONTROLS);
