@@ -311,7 +311,11 @@ public class PlayerInventory {
 	}
 	
 	public String getDisplayInventoryJson () {
-		return StaticTools.getJson().toJson(getDisplayInventory(uneditableEquipped.getRawStorage(), equipped.getRawStorage(), cosmetic.getRawStorage(), weapon.getRawStorage()));
+		try {
+			return StaticTools.getJson().toJson(getDisplayInventory(uneditableEquipped.getRawStorage(), equipped.getRawStorage(), cosmetic.getRawStorage(), weapon.getRawStorage()));
+		} catch (Exception e) {
+			return "";
+		}
 	}
 	
 	public FixedInventory getMainInventory () {
