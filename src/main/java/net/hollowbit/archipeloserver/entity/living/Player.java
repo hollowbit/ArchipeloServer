@@ -176,6 +176,7 @@ public class Player extends LivingEntity implements PacketHandler {
 		super.tick60(deltaTime);
 	}
 	
+	@SuppressWarnings("incomplete-switch")
 	public void updateControls (boolean[] controls, float deltaTime) {
 		//OLD CODE
 		/*
