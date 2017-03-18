@@ -246,15 +246,22 @@ public class Player extends LivingEntity implements PacketHandler {
 			Direction direction = getMovementDirection();
 			switch (direction) {
 			case UP:
-			case UP_LEFT:
-			case UP_RIGHT:
 				speedMoved = getSpeed();
 				newPos.add(0, (float) (deltaTime * speedMoved));
 				break;
+			case UP_LEFT:
+			case UP_RIGHT:
+				speedMoved = getSpeed() / LivingEntity.DIAGONAL_FACTOR;
+				newPos.add(0, (float) (deltaTime * speedMoved));
+				break;
+				
 			case DOWN:
+				speedMoved = getSpeed();
+				newPos.add(0, (float) (-deltaTime * speedMoved));
+				break;
 			case DOWN_LEFT:
 			case DOWN_RIGHT:
-				speedMoved = getSpeed();
+				speedMoved = getSpeed() / LivingEntity.DIAGONAL_FACTOR;
 				newPos.add(0, (float) (-deltaTime * speedMoved));
 				break;
 			}
@@ -281,17 +288,25 @@ public class Player extends LivingEntity implements PacketHandler {
 			direction = getMovementDirection();
 			switch (direction) {
 			case LEFT:
-			case UP_LEFT:
-			case DOWN_LEFT:
 				speedMoved = getSpeed();
 				newPos.add((float) (-deltaTime * speedMoved), 0);
 				break;
+			case UP_LEFT:
+			case DOWN_LEFT:
+				speedMoved = getSpeed() / LivingEntity.DIAGONAL_FACTOR;
+				newPos.add((float) (-deltaTime * speedMoved), 0);
+				break;
+				
 			case RIGHT:
-			case UP_RIGHT:
-			case DOWN_RIGHT:
 				speedMoved = getSpeed();
 				newPos.add((float) (deltaTime * speedMoved), 0);
 				break;
+			case UP_RIGHT:
+			case DOWN_RIGHT:
+				speedMoved = getSpeed() / LivingEntity.DIAGONAL_FACTOR;
+				newPos.add((float) (deltaTime * speedMoved), 0);
+				break;
+				
 			}
 			if (location.direction != direction && !controls[Controls.LOCK]) { 	//TO DO: Understand this :scratchheademoji:
 				location.direction = direction;
