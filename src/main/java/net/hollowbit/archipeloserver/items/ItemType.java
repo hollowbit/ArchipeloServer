@@ -109,7 +109,6 @@ public enum ItemType {
 		this.numOfUseAnimations = data.numOfUseAnimations;
 		this.useAnimationLength = data.useAnimationLength;
 		this.useThrust = data.useThrust;
-		this.renderUsingColor = data.renderUsingColor;
 		
 		if (equipType == EQUIP_INDEX_USABLE)
 			this.useType = useType;
