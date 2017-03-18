@@ -25,16 +25,19 @@ import net.hollowbit.archipeloserver.network.packets.LoginPacket;
 public class NetworkManager extends WebSocketServer {
 	
 	private static final int PACKET_LIFESPAN = 5000;//ms
+	private static final int PING_SEND_INTERVAL = 500;//ms
 	
 	@SuppressWarnings("rawtypes")
 	private HashMap<Integer, Class> packetMap;
 	private ArrayList<PacketHandler> packetHandlers;
 	
 	private ArrayList<PacketWrapper> packets;
+	private Thread pingThread;
+	private boolean runPingThread = true;
 	
 	private HashMap<String, HollowBitUser> users;
 	
-	Json json;
+	private Json json;
 	
 	public NetworkManager (int port) {
 		super(new InetSocketAddress(port));
@@ -68,6 +71,36 @@ public class NetworkManager extends WebSocketServer {
 		users = new HashMap<String, HollowBitUser>();
 		json = new Json();
 		registerPackets();
+		
+		pingThread = new Thread(new Runnable() {
+			@Override
+			public void run() {
+				long startTime = System.currentTimeMillis();
+				while (runPingThread) {
+					long deltaTime = System.currentTimeMillis() - startTime;
+					if (deltaTime >= PING_SEND_INTERVAL) {
+						startTime = System.currentTimeMillis() - (deltaTime - PING_SEND_INTERVAL);
+						
+						//Send ping to all clients
+						for (HollowBitUser user : getUsersClone()) {
+							user.getConnection().send("ping");
+							user.timePingSent = System.currentTimeMillis();
+						}
+					}
+				}
+			}
+		});
+		pingThread.start();
+	}
+	
+	public void stop() {
+		runPingThread = false;
+		try {
+			super.stop();
+			pingThread.join();
+		} catch (Exception e) {
+			System.out.println("Could not stop network ping thread.");
+		}
 	}
 	
 	public void update () {
@@ -126,6 +159,12 @@ public class NetworkManager extends WebSocketServer {
 		return users.get(address);
 	}
 	
+	private synchronized ArrayList<HollowBitUser> getUsersClone () {
+		ArrayList<HollowBitUser> usersClone = new ArrayList<HollowBitUser>();
+		usersClone.addAll(users.values());
+		return usersClone;
+	}
+	
 	@Override
 	public void onClose (WebSocket conn, int code, String reason, boolean remote) {
 		logoutUser(getAddress(conn));
@@ -142,6 +181,13 @@ public class NetworkManager extends WebSocketServer {
 		//Used for ping getter
 		if (message.equals("ping")) {
 			conn.send("pong");
+			return;
+		}
+		
+		if (message.equals("pong") && containsUser(getAddress(conn))) {
+			conn.send("pang");
+			HollowBitUser user = getUser(getAddress(conn));
+			user.setPing((int) (System.currentTimeMillis() - user.timePingSent));
 			return;
 		}
 		

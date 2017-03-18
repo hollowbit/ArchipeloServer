@@ -661,7 +661,7 @@ public class Player extends LivingEntity implements PacketHandler {
 			}
 			ArchipeloServer.getServer().getLogger().broadcastAsServer("", this.getName() + text);
 		} else if (label.equalsIgnoreCase("ping")) {
-			this.sendPacket(new ChatMessagePacket("", "{pong}", "server"));
+			this.sendPacket(new ChatMessagePacket("", "{pong} " + hbUser.getPing() + "ms", "server"));
 		} else if (label.equalsIgnoreCase("logoff") || label.equalsIgnoreCase("exit") || label.equalsIgnoreCase("logout")) {
 			this.remove(LogoutReason.LEAVE, "");
 		}

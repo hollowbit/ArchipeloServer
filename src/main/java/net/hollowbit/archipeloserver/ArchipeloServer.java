@@ -166,6 +166,7 @@ public class ArchipeloServer {
 	}
 
 	public void stop () {
+		networkManager.stop();
 		databaseManager.stop();
 		hollowBitServerConnectivity.sendRemoveServerQuery();
 		hollowBitServerConnectivity.close();

@@ -16,6 +16,9 @@ public class HollowBitUser {
 	private boolean loggedIn = false;
 	private WebSocket conn;
 	private volatile boolean pointsUpToDate = true;
+	private int ping = 0;
+	
+	public long timePingSent = System.currentTimeMillis();
 	
 	public HollowBitUser (WebSocket conn) {
 		this.conn = conn;
@@ -73,6 +76,14 @@ public class HollowBitUser {
 		return email;
 	}
 	
+	public int getPing() {
+		return ping;
+	}
+
+	public void setPing(int ping) {
+		this.ping = ping;
+	}
+
 	/**
 	 * Asynchronously updates points for this user object.
 	 * Updates handler when the points are up to date.
