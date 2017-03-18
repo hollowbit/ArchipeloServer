@@ -350,4 +350,13 @@ public abstract class Entity {
 		return entityType.getSpeed();
 	}
 	
+	@Override
+	public boolean equals(Object obj) {
+		if (!(obj instanceof Entity))
+			return false;
+		
+		Entity entity = (Entity) obj;
+		return entity.name.equals(this.name);
+	}
+	
 }

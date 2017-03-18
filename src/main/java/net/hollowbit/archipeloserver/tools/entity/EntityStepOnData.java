@@ -12,13 +12,4 @@ public class EntityStepOnData {
 		this.entity = entity;
 	}
 	
-	@Override
-	public boolean equals(Object obj) {
-		if (!(obj instanceof EntityStepOnData))
-			return false;
-		
-		EntityStepOnData data = (EntityStepOnData) obj;
-		return data.entity.equals(entity) && data.collisionRectName.equals(collisionRectName);
-	}
-	
 }

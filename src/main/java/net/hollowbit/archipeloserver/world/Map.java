@@ -349,13 +349,4 @@ public class Map {
 		return getHeight() * ArchipeloServer.TILE_SIZE;
 	}
 	
-	@Override
-	public boolean equals(Object obj) {
-		if (!(obj instanceof Map))
-			return false;
-		
-		Map map = (Map) obj;
-		return island == map.getIsland() && map.getName().equals(name);
-	}
-	
 }
