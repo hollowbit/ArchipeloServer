@@ -129,13 +129,13 @@ public class Map {
 	}
 	
 	public boolean collidesWithMap (CollisionRect rect, Entity testEntity) {
+		int collisionBoxSize = (int) ArchipeloServer.TILE_SIZE / TileData.COLLISION_MAP_SCALE;
+		
 		//See if rect collides with map
-		if (rect.x < 0 || rect.y < 0 || rect.x + rect.width > getPixelWidth() || rect.y + rect.height > getPixelHeight())
+		if (rect.x < -collisionBoxSize || rect.y < 0 || rect.x + rect.width > getPixelWidth() - collisionBoxSize || rect.y + rect.height > getPixelHeight() - collisionBoxSize)
 			return true;
 		
 		//See if it collides with tiles and elements
-		int collisionBoxSize = (int) ArchipeloServer.TILE_SIZE / TileData.COLLISION_MAP_SCALE;
-		
 		for (int row = (int) (rect.y / collisionBoxSize); row < Math.ceil((rect.height + rect.y) / collisionBoxSize); row++) {
 			for (int col = (int) (rect.x / collisionBoxSize); col < Math.ceil((rect.width + rect.x) / collisionBoxSize); col++) {
 				if (row < 0 || row >= collisionMap.length || col < 0 || col >= collisionMap[0].length)//If out of bounds, continue to next
