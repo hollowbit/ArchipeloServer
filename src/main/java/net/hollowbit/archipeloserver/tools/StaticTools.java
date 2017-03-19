@@ -17,4 +17,12 @@ public class StaticTools {
 		return random;
 	}
 	
+	public static float singleDimentionLerpFraction (double valueBefore, double valueAfter, double intermediateValue) {
+		return (float) ((intermediateValue - valueBefore) / (valueAfter - valueBefore));
+	}
+	
+	public static float singleDimensionLerp (double value1, double value2, double fraction) {
+		return (float) (value1 + ((value2 - value1) * fraction));
+	}
+	
 }

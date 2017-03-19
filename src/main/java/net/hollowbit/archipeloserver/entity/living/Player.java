@@ -79,6 +79,7 @@ public class Player extends LivingEntity implements PacketHandler {
 	public static final int CONTROLS_UPDATE_RATE = 1000 / 30;
 	public static final float CONTROLS_DELTA_TIME = 1 / 30f;
 	public static final int CONTROLS_UPDATE_DELAY = 35;
+	public static final int WORLD_SNAPSHOT_DELAY = 100;
 	
 	String id;
 	String address;
@@ -510,7 +511,7 @@ public class Player extends LivingEntity implements PacketHandler {
 						continue;
 					
 					//Run hit event for every collision rect hit on entity
-					for (String rectHit : HitCalculator.getCollRectsHit(this.getCenterPoint().x, this.getCenterPoint().y, entity.getCollisionRects(), HIT_RANGE, location.getDirection())) {
+					for (String rectHit : HitCalculator.getCollRectsHit(this.getCenterPoint().x, this.getCenterPoint().y, entity.getCollisionRects(System.currentTimeMillis() - CONTROLS_UPDATE_DELAY - WORLD_SNAPSHOT_DELAY - hbUser.getPing()), HIT_RANGE, location.getDirection())) {
 						this.interactWith(entity, rectHit, EntityInteractionType.HIT);
 						
 						//If the entity is not hittable, don't use the animation

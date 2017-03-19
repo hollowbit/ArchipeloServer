@@ -338,6 +338,19 @@ public abstract class Entity {
 	}
 	
 	/**
+	 * Get entity collision rects at a certain point in time. Maximum 2 seconds ago.
+	 * @param time
+	 * @return
+	 */
+	public CollisionRect[] getCollisionRects (long time) {
+		Vector2 pos = log.getPositionAtTimestamp(time);
+		if (pos == null)
+			return getCollisionRects();
+		else
+			return getCollisionRects(pos);
+	}
+	
+	/**
 	 * Exact center point of the entities view rect.
 	 * @return
 	 */
