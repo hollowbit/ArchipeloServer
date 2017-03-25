@@ -1,5 +1,6 @@
 package net.hollowbit.archipeloserver.entity;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 
 public class EntitySnapshot {
@@ -9,6 +10,8 @@ public class EntitySnapshot {
 	public String anim;
 	public float animTime;
 	public String animMeta = "";
+	public String sound = "";
+	public ArrayList<String> sounds = new ArrayList<String>();
 	public HashMap<String, String> properties;
 	
 	public EntitySnapshot () {
@@ -77,12 +80,21 @@ public class EntitySnapshot {
 		}
 	}
 	
+	public void setSound(String sound) {
+		this.sound = sound;
+	}
+	
+	public void addSound(String sound) {
+		sounds.add(sound);
+	}
+	
 	public void clear () {
 		properties.clear();
+		sounds.clear();
 	}
 	
 	public boolean isEmpty () {
-		return properties.isEmpty();
+		return properties.isEmpty() && sounds.isEmpty();
 	}
 	
 }

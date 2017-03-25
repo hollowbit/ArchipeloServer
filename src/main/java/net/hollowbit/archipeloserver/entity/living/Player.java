@@ -179,67 +179,6 @@ public class Player extends LivingEntity implements PacketHandler {
 	
 	@SuppressWarnings("incomplete-switch")
 	public void updateControls (boolean[] controls, float deltaTime) {
-		//OLD CODE
-		/*
-		 * if (isMoving()) {
-			Vector2 newPos = new Vector2(location.pos);
-			double speedMoved = 0;
-			
-			Direction direction = getMovementDirection();
-			switch (direction) {
-			case UP:
-				speedMoved = getSpeed();
-				newPos.add(0, (float) (deltaTime * speedMoved) * 100);
-				break;
-			case LEFT:
-				speedMoved = getSpeed();
-				newPos.add((float) (-deltaTime * speedMoved), 0);
-				break;
-			case DOWN:
-				speedMoved = getSpeed();
-				newPos.add(0, (float) (-deltaTime * speedMoved));
-				break;
-			case RIGHT:
-				speedMoved = getSpeed();
-				newPos.add((float) (deltaTime * speedMoved), 0);
-				break;
-			case UP_LEFT:
-				speedMoved = getSpeed() / LivingEntity.DIAGONAL_FACTOR;
-				newPos.add((float) (-deltaTime * speedMoved), (float) (deltaTime * speedMoved));
-				break;
-			case UP_RIGHT:
-				speedMoved = getSpeed() / LivingEntity.DIAGONAL_FACTOR;
-				newPos.add((float) (deltaTime * speedMoved), (float) (deltaTime * speedMoved));
-				break;
-			case DOWN_LEFT:
-				speedMoved = getSpeed() / LivingEntity.DIAGONAL_FACTOR;
-				newPos.add((float) (-deltaTime * speedMoved), (float) (-deltaTime * speedMoved));
-				break;
-			case DOWN_RIGHT:
-				speedMoved = getSpeed() / LivingEntity.DIAGONAL_FACTOR;
-				newPos.add((float) (deltaTime * speedMoved), (float) (-deltaTime * speedMoved));
-				break;
-			}
-			
-			if (location.direction != direction && !controls[Controls.LOCK]) {
-				location.direction = direction;
-				changes.putInt("direction", location.direction.ordinal());
-			}
-			
-			boolean collidesWithMap = false;
-			for (CollisionRect rect : getCollisionRects(newPos)) {//Checks to make sure no collision rect is intersecting with map
-				if (location.getMap().collidesWithMap(rect, this)) {
-					collidesWithMap = true;
-					break;
-				}
-			}
-			
-			if (!collidesWithMap || doesCurrentPositionCollideWithMap()) {
-				if (isMoving())
-					move(newPos);
-			}
-		}
-		 */
 		if (isMoving()) {
 			Vector2 newPos = new Vector2(location.pos);
 			double speedMoved = 0;
@@ -326,7 +265,11 @@ public class Player extends LivingEntity implements PacketHandler {
 				if (isMoving())
 					move(newPos);
 			}
+			audioManager.setContinuousSound("walk-grass");
+		} else {
+			audioManager.setContinuousSound("");
 		}
+			
 	}
 	
 	public void stopMovement () {
@@ -527,6 +470,8 @@ public class Player extends LivingEntity implements PacketHandler {
 					if (item != null)
 						item.use(this);
 				}
+				
+				audioManager.playSound("hit");
 			}
 			break;
 		case Controls.UP:

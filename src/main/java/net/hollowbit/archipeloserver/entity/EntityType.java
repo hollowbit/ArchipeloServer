@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.HashMap;
+import java.util.HashSet;
 
 import com.badlogic.gdx.utils.Json;
 import com.badlogic.gdx.utils.reflect.ClassReflection;
@@ -21,6 +22,7 @@ import net.hollowbit.archipeloserver.entity.living.Player;
 import net.hollowbit.archipeloserver.world.Map;
 import net.hollowbit.archipeloshared.CollisionRect;
 import net.hollowbit.archipeloshared.EntityAnimationData;
+import net.hollowbit.archipeloshared.EntitySoundData;
 import net.hollowbit.archipeloshared.EntityTypeData;
 
 @SuppressWarnings("rawtypes")
@@ -45,6 +47,9 @@ public enum EntityType {
 	//Rects
 	private CollisionRect viewRect;
 	private CollisionRect collRects[];
+	
+	//Sounds
+	private HashSet<String> sounds;
 	
 	private EntityType (String id, Class entityClass) {
 		this.id = id;
@@ -87,6 +92,12 @@ public enum EntityType {
 				defaultAnimation = animationData.id;
 				first = false;
 			}
+		}
+		
+		sounds = new HashSet<String>();
+		if (data.sounds != null) {
+			for (EntitySoundData soundData : data.sounds)
+				sounds.add(soundData.id);
 		}
 	}
 
@@ -166,6 +177,10 @@ public enum EntityType {
 	
 	public EntityAnimationData getAnimationDataById (String animationId) {
 		return animations.get(animationId);
+	}
+	
+	public boolean hasSound (String sound) {
+		return sounds.contains(sound);
 	}
 	
 	//Static

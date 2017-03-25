@@ -28,6 +28,7 @@ public abstract class Entity {
 	protected EntityLog log;
 	protected EntityAnimationManager animationManager;
 	protected ArrayList<EntityComponent> components;
+	protected EntityAudioManager audioManager;
 	
 	public Entity () {
 		components = new ArrayList<EntityComponent>();
@@ -41,6 +42,7 @@ public abstract class Entity {
 		changes = new EntitySnapshot(this, true);
 		log = new EntityLog();
 		animationManager = new EntityAnimationManager(this, entityType.getDefaultAnimationId(), "", 0);
+		audioManager = new EntityAudioManager(this);
 	}
 	
 	public void create (EntitySnapshot fullSnapshot, Map map, EntityType entityType) {
@@ -58,6 +60,7 @@ public abstract class Entity {
 		changes = new EntitySnapshot(this, true);
 		log = new EntityLog();
 		animationManager = new EntityAnimationManager(this, fullSnapshot.anim, fullSnapshot.animMeta, fullSnapshot.animTime);
+		audioManager = new EntityAudioManager(this);
 	}
 	
 	/**
@@ -144,6 +147,7 @@ public abstract class Entity {
 	public EntitySnapshot getInterpSnapshot () {
 		EntitySnapshot snapshot = new EntitySnapshot(this, true);
 		animationManager.applyToEntitySnapshot(snapshot);
+		audioManager.applyToInterpSnapshot(snapshot);
 		
 		for (EntityComponent component : components)
 			component.editInterpSnapshot(snapshot);
