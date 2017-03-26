@@ -265,9 +265,9 @@ public class Player extends LivingEntity implements PacketHandler {
 				if (isMoving())
 					move(newPos);
 			}
-			audioManager.setContinuousSound("walk-grass");
+			audioManager.setFootstepSound("grass-walk");
 		} else {
-			audioManager.setContinuousSound("");
+			audioManager.setFootstepSound("");
 		}
 			
 	}

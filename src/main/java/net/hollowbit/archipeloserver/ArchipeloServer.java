@@ -5,6 +5,7 @@ import java.net.URISyntaxException;
 import net.hollowbit.archipeloserver.hollowbitserver.HollowBitServerConnectivity;
 import net.hollowbit.archipeloserver.network.NetworkManager;
 import net.hollowbit.archipeloserver.tools.Configuration;
+import net.hollowbit.archipeloserver.tools.SoundManager;
 import net.hollowbit.archipeloserver.tools.conditions.ConditionManager;
 import net.hollowbit.archipeloserver.tools.database.DatabaseManager;
 import net.hollowbit.archipeloserver.tools.event.EventManager;
@@ -37,6 +38,7 @@ public class ArchipeloServer {
 	private ConditionManager conditionManager;
 	private ExecutableManager executableManager;
 	private EventManager eventManager;
+	private SoundManager soundManager;
 	private Logger logger;
 	private World world;
 	private Thread tick20;
@@ -63,6 +65,7 @@ public class ArchipeloServer {
 		conditionManager = new ConditionManager();
 		executableManager = new ExecutableManager();
 		eventManager = new EventManager();
+		soundManager = new SoundManager();
 		
 		//Add test event handler to manager
 		//new EventHandler.DefaultEventHandler().addToEventManager();
@@ -163,6 +166,10 @@ public class ArchipeloServer {
 	
 	public EventManager getEventManager() {
 		return eventManager;
+	}
+	
+	public SoundManager getSoundManager() {
+		return soundManager;
 	}
 
 	public void stop () {

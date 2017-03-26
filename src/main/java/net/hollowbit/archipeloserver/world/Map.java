@@ -295,6 +295,29 @@ public class Map {
 		}
 	}
 	
+	/**
+	 * Play a sound at a position (pixel coordinate).
+	 * Does not play if sound path is incorrect.
+	 * @param path
+	 * @param tileX
+	 * @param tileY
+	 */
+	public void playSound (String path, float x, float y) {
+		this.playSound(path, (int) (x / ArchipeloServer.TILE_SIZE), (int) (y / ArchipeloServer.TILE_SIZE));
+	}
+	
+	/**
+	 * Play a sound at a tile coordinate.
+	 * Does not play if sound path is incorrect.
+	 * @param path
+	 * @param tileX
+	 * @param tileY
+	 */
+	private void playSound (String path, int tileX, int tileY) {
+		if (ArchipeloServer.getServer().getSoundManager().doesSoundExist(path))
+			changes.addSound(path, tileX, tileY);
+	}
+	
 	public Collection<Player> duplicatePlayerList () {
 		ArrayList<Player> players = new ArrayList<Player>();
 		players.addAll(getPlayers());

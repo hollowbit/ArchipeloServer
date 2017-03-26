@@ -2,20 +2,21 @@ package net.hollowbit.archipeloserver.entity;
 
 public class EntityAudioManager {
 	
-	private String continuousSound;
+	private String footstepSound;
 	private Entity entity;
 	
 	public EntityAudioManager(Entity entity) {
-		continuousSound = "";
+		footstepSound = "";
 		this.entity = entity;
 	}
 	
-	public void setContinuousSound (String sound) {
-		this.continuousSound = sound;
+	public void setFootstepSound (String sound) {
+		if (entity.getEntityType().hasFootstepSound())
+			this.footstepSound = sound;
 	}
 	
 	public void applyToInterpSnapshot (EntitySnapshot snapshot) {
-		snapshot.sound = continuousSound;
+		snapshot.footSound = footstepSound;
 	}
 	
 	public void playSound (String sound) {

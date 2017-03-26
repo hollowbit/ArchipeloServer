@@ -10,7 +10,7 @@ public class EntitySnapshot {
 	public String anim;
 	public float animTime;
 	public String animMeta = "";
-	public String sound = "";
+	public String footSound = "";
 	public ArrayList<String> sounds = new ArrayList<String>();
 	public HashMap<String, String> properties;
 	
@@ -81,7 +81,7 @@ public class EntitySnapshot {
 	}
 	
 	public void setSound(String sound) {
-		this.sound = sound;
+		this.footSound = sound;
 	}
 	
 	public void addSound(String sound) {

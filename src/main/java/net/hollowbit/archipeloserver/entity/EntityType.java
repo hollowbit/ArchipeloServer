@@ -43,7 +43,11 @@ public enum EntityType {
 	private boolean hittable;
 	private float speed;
 	private String defaultAnimation = "";
-
+	
+	private String footstepSound = "";
+	private int footstepOffsetX;
+	private int footstepOffsetY;
+	
 	//Rects
 	private CollisionRect viewRect;
 	private CollisionRect collRects[];
@@ -75,6 +79,10 @@ public enum EntityType {
 		this.numberOfStyles = data.numberOfStyles;
 		this.hittable = data.hittable;
 		this.speed = data.speed;
+		
+		this.footstepSound = data.footstepSound;
+		this.footstepOffsetX = data.footstepOffsetX;
+		this.footstepOffsetY = data.footstepOffsetY;
 		
 		this.viewRect = new CollisionRect(0, 0, data.viewRectOffsetX, data.viewRectOffsetY, data.viewRectWidth, data.viewRectHeight);
 		
@@ -183,6 +191,22 @@ public enum EntityType {
 		return sounds.contains(sound);
 	}
 	
+	public boolean hasFootstepSound() {
+		return !footstepSound.equals("");
+	}
+	
+	public String getFootstepSound () {
+		return footstepSound;
+	}
+	
+	public int getFootstepOffsetX() {
+		return footstepOffsetX;
+	}
+
+	public int getFootstepOffsetY() {
+		return footstepOffsetY;
+	}
+
 	//Static
 	private static HashMap<String, EntityType> entityTypeMap;
 	
