@@ -286,11 +286,12 @@ public abstract class Entity {
 		} else
 			map = location.getMap();
 		
+		newPos.add(-this.entityType.getFootstepOffsetX(), -this.entityType.getFootstepOffsetY());
 		location.set(newPos);
 		location.setDirection(direction);
 		
 		for (Player player : location.getMap().duplicatePlayerList()) {
-			player.sendPacket(new TeleportPacket(this.name, this.location.getX(), this.location.getY(), this.location.getDirectionInt(), mapChanged));
+			player.sendPacket(new TeleportPacket(this.name, newPos.x, newPos.y, this.location.getDirectionInt(), mapChanged));
 		}
 		
 		log.clearAll();
