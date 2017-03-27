@@ -115,7 +115,7 @@ public class PlayerStatsManager implements EventHandler {
 		event.trigger();
 		
 		//Update speed for players
-		player.getChangesSnapshot().putFloat("speed", this.speed * this.speedMultiplier);
+		player.getChangesSnapshot().putFloat("playerSpeed", this.speed * this.speedMultiplier);
 	}
 	
 	/**

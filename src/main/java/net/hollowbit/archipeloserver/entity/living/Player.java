@@ -555,7 +555,7 @@ public class Player extends LivingEntity implements PacketHandler, RollableEntit
 	public EntitySnapshot getFullSnapshot() {
 		EntitySnapshot snapshot = super.getFullSnapshot();
 		snapshot.putString("displayInventory", inventory.getDisplayInventoryJson());
-		snapshot.putFloat("speed", statsManager.getSpeed());
+		snapshot.putFloat("playerSpeed", statsManager.getSpeed());
 		return snapshot;
 	}
 	
