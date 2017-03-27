@@ -16,17 +16,20 @@ public abstract class LivingEntity extends Entity {
 	
 	private HashSet<EntityStepOnData> entitiesSteppedOn;
 	public static final double DIAGONAL_FACTOR = Math.sqrt(2);
+	private float lastSpeed;
 	
 	@Override
 	public void create(String name, int style, Location location, EntityType entityType) {
 		super.create(name, style, location, entityType);
 		entitiesSteppedOn = new HashSet<EntityStepOnData>();
+		lastSpeed = entityType.getSpeed();
 	}
 	
 	@Override
 	public void create(EntitySnapshot fullSnapshot, Map map, EntityType entityType) {
 		super.create(fullSnapshot, map, entityType);
 		entitiesSteppedOn = new HashSet<EntityStepOnData>();
+		lastSpeed = entityType.getSpeed();
 	}
 	
 	@Override
@@ -34,6 +37,12 @@ public abstract class LivingEntity extends Entity {
 		super.tick20(deltaTime);
 		for (EntityStepOnData entityStepOnData : duplicateEntitiesStepList()) {
 			this.interactWith(entityStepOnData.entity, entityStepOnData.collisionRectName, EntityInteractionType.STEP_CONTINUAL);
+		}
+		
+		//If the speed changes, update it on the clients
+		if (this.getSpeed() != lastSpeed) {
+			changes.putFloat("speed", this.getSpeed());
+			lastSpeed = this.getSpeed();
 		}
 	}
 	
