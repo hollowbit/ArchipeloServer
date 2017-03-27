@@ -134,7 +134,7 @@ public class PlayerStatsManager implements EventHandler {
 	
 	public float getSpeed (boolean isSprinting, boolean isRolling) {
 		if (isRolling)
-			return getSpeed() * ROLLING_SPEED_SCALE;
+			return getBaseSpeed() * ROLLING_SPEED_SCALE;
 		else if (isSprinting)
 			return getSpeed() * SPRINTING_SPEED_SCALE;
 		else

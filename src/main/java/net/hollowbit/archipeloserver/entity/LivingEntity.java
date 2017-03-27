@@ -132,5 +132,9 @@ public abstract class LivingEntity extends Entity {
 	public boolean isAlive() {
 		return true;
 	}
+	
+	public float getSpeed() {
+		return entityType.getSpeed();
+	}
 
 }
