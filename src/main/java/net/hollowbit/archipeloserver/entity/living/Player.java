@@ -21,6 +21,7 @@ import net.hollowbit.archipeloserver.entity.EntityInteractionType;
 import net.hollowbit.archipeloserver.entity.EntitySnapshot;
 import net.hollowbit.archipeloserver.entity.EntityType;
 import net.hollowbit.archipeloserver.entity.LivingEntity;
+import net.hollowbit.archipeloserver.entity.components.FootstepPlayerComponent;
 import net.hollowbit.archipeloserver.entity.living.player.PlayerData;
 import net.hollowbit.archipeloserver.entity.living.player.PlayerFlagsManager;
 import net.hollowbit.archipeloserver.entity.living.player.PlayerInventory;
@@ -48,8 +49,10 @@ import net.hollowbit.archipeloshared.CollisionRect;
 import net.hollowbit.archipeloshared.Controls;
 import net.hollowbit.archipeloshared.Direction;
 import net.hollowbit.archipeloshared.HitCalculator;
+import net.hollowbit.archipeloshared.RollableEntity;
+import net.hollowbit.archipeloshared.TileSoundType;
 
-public class Player extends LivingEntity implements PacketHandler {
+public class Player extends LivingEntity implements PacketHandler, RollableEntity {
 	
 	public static final float ROLL_DOUBLE_CLICK_DURATION = 0.3f;
 	public static final float HIT_RANGE = 8;
@@ -148,6 +151,7 @@ public class Player extends LivingEntity implements PacketHandler {
 		this.address = address;
 		this.firstTimeLogin = firstTimeLogin;
 		controls = new boolean[Controls.TOTAL];
+		this.components.add(new FootstepPlayerComponent(this, true, TileSoundType.GRASS));
 		ArchipeloServer.getServer().getNetworkManager().addPacketHandler(this);
 	}
 	
@@ -265,9 +269,6 @@ public class Player extends LivingEntity implements PacketHandler {
 				if (isMoving())
 					move(newPos);
 			}
-			audioManager.setFootstepSound("grass-walk");
-		} else {
-			audioManager.setFootstepSound("");
 		}
 			
 	}
@@ -303,6 +304,7 @@ public class Player extends LivingEntity implements PacketHandler {
 		return null;
 	}
 	
+	@Override
 	public boolean isMoving () {
 		return controls[Controls.UP] || controls[Controls.LEFT] || controls[Controls.DOWN] || controls[Controls.RIGHT];
 	}
@@ -315,6 +317,7 @@ public class Player extends LivingEntity implements PacketHandler {
 		return controls[Controls.LOCK];
 	}
 	
+	@Override
 	public boolean isRolling () {
 		return animationManager.getAnimationId().equals("roll");
 	}

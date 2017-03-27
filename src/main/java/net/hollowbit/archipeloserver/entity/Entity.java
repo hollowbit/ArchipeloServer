@@ -368,6 +368,26 @@ public abstract class Entity {
 		return entityType.getSpeed();
 	}
 	
+	public EntityAudioManager getAudioManager() {
+		return audioManager;
+	}
+	
+	public float getFootX () {
+		return location.getX() + entityType.getFootstepOffsetX();
+	}
+	
+	public float getFootY () {
+		return location.getY() + entityType.getFootstepOffsetY();
+	}
+	
+	/**
+	 * Returns the tile which this entities feet is stepping on
+	 * @return
+	 */
+	public Vector2 getFeetTile () {
+		return new Vector2(getFootX() / ArchipeloServer.TILE_SIZE, getFootY() / ArchipeloServer.TILE_SIZE);
+	}
+	
 	@Override
 	public boolean equals(Object obj) {
 		if (!(obj instanceof Entity))

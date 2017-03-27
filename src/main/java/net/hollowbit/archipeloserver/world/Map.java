@@ -372,4 +372,11 @@ public class Map {
 		return getHeight() * ArchipeloServer.TILE_SIZE;
 	}
 	
+	public Tile getTileTypeAtLocation (int x, int y) {
+		if (x < 0 || x >= tileData[0].length || y < 0 || y >= tileData.length)
+			return null;
+		
+		return ArchipeloServer.getServer().getMapElementManager().getTile(tileData[y][x]);
+	}
+	
 }

@@ -126,6 +126,8 @@ public abstract class LivingEntity extends Entity {
 		}
 	}
 	
+	public abstract boolean isMoving();
+	
 	@Override
 	public boolean isAlive() {
 		return true;
