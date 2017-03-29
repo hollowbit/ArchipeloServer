@@ -5,7 +5,7 @@ import java.net.URISyntaxException;
 import net.hollowbit.archipeloserver.hollowbitserver.HollowBitServerConnectivity;
 import net.hollowbit.archipeloserver.network.NetworkManager;
 import net.hollowbit.archipeloserver.tools.Configuration;
-import net.hollowbit.archipeloserver.tools.SoundManager;
+import net.hollowbit.archipeloserver.tools.audio.SoundManager;
 import net.hollowbit.archipeloserver.tools.conditions.ConditionManager;
 import net.hollowbit.archipeloserver.tools.database.DatabaseManager;
 import net.hollowbit.archipeloserver.tools.event.EventManager;

@@ -1,10 +1,12 @@
-package net.hollowbit.archipeloserver.tools;
+package net.hollowbit.archipeloserver.tools.audio;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.HashSet;
+
+import net.hollowbit.archipeloserver.tools.StaticTools;
 
 public class SoundManager {
 	
