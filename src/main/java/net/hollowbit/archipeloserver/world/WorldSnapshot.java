@@ -3,8 +3,8 @@ package net.hollowbit.archipeloserver.world;
 import java.util.HashMap;
 
 import net.hollowbit.archipeloserver.entity.Entity;
-import net.hollowbit.archipeloserver.entity.EntitySnapshot;
 import net.hollowbit.archipeloserver.network.packets.WorldSnapshotPacket;
+import net.hollowbit.archipeloshared.EntitySnapshot;
 
 public class WorldSnapshot {
 	

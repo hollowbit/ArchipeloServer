@@ -11,6 +11,7 @@ import net.hollowbit.archipeloserver.tools.entity.Location;
 import net.hollowbit.archipeloserver.tools.event.events.EntityMoveEvent;
 import net.hollowbit.archipeloserver.world.Map;
 import net.hollowbit.archipeloshared.CollisionRect;
+import net.hollowbit.archipeloshared.EntitySnapshot;
 
 public abstract class LivingEntity extends Entity {
 	

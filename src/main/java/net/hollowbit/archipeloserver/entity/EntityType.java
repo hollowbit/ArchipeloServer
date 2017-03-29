@@ -22,6 +22,7 @@ import net.hollowbit.archipeloserver.entity.living.Player;
 import net.hollowbit.archipeloserver.world.Map;
 import net.hollowbit.archipeloshared.CollisionRect;
 import net.hollowbit.archipeloshared.EntityAnimationData;
+import net.hollowbit.archipeloshared.EntitySnapshot;
 import net.hollowbit.archipeloshared.EntitySoundData;
 import net.hollowbit.archipeloshared.EntityTypeData;
 

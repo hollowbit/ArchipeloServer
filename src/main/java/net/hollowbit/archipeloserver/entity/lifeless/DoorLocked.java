@@ -2,11 +2,11 @@ package net.hollowbit.archipeloserver.entity.lifeless;
 
 import net.hollowbit.archipeloserver.entity.Entity;
 import net.hollowbit.archipeloserver.entity.EntityInteractionType;
-import net.hollowbit.archipeloserver.entity.EntitySnapshot;
 import net.hollowbit.archipeloserver.entity.EntityType;
 import net.hollowbit.archipeloserver.entity.EntityAnimationManager.EntityAnimationObject;
 import net.hollowbit.archipeloserver.entity.living.Player;
 import net.hollowbit.archipeloserver.world.Map;
+import net.hollowbit.archipeloshared.EntitySnapshot;
 
 public class DoorLocked extends Door {
 	

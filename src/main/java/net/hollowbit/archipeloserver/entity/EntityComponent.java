@@ -1,6 +1,7 @@
 package net.hollowbit.archipeloserver.entity;
 
 import net.hollowbit.archipeloserver.entity.living.Player;
+import net.hollowbit.archipeloshared.EntitySnapshot;
 
 public abstract class EntityComponent {
 	

@@ -5,10 +5,10 @@ import java.util.Map.Entry;
 
 import com.badlogic.gdx.utils.Json;
 
-import net.hollowbit.archipeloserver.entity.EntitySnapshot;
 import net.hollowbit.archipeloserver.network.Packet;
 import net.hollowbit.archipeloserver.network.PacketType;
 import net.hollowbit.archipeloserver.world.WorldSnapshot;
+import net.hollowbit.archipeloshared.EntitySnapshot;
 
 public class WorldSnapshotPacket extends Packet {
 	

@@ -17,6 +17,8 @@ import net.hollowbit.archipeloserver.world.Map;
 import net.hollowbit.archipeloserver.world.World;
 import net.hollowbit.archipeloshared.CollisionRect;
 import net.hollowbit.archipeloshared.Direction;
+import net.hollowbit.archipeloshared.EntitySnapshot;
+import net.hollowbit.archipeloshared.Point;
 
 public abstract class Entity {
 	
@@ -39,7 +41,7 @@ public abstract class Entity {
 		this.style = style;
 		this.entityType = entityType;
 		this.location = location;
-		changes = new EntitySnapshot(this, true);
+		changes = new EntitySnapshot(this.name, this.entityType.getId(), true);
 		log = new EntityLog();
 		animationManager = new EntityAnimationManager(this, entityType.getDefaultAnimationId(), "", 0);
 		audioManager = new EntityAudioManager(this);
@@ -48,7 +50,8 @@ public abstract class Entity {
 	public void create (EntitySnapshot fullSnapshot, Map map, EntityType entityType) {
 		this.name = fullSnapshot.name;
 		this.entityType = entityType;
-		this.location =  new Location(map, new Vector2(fullSnapshot.getFloat("x", 0), fullSnapshot.getFloat("y", 0)), fullSnapshot.getInt("direction", 0));
+		Point pos = fullSnapshot.getObject("pos", new Point(), Point.class);
+		this.location =  new Location(map, new Vector2(pos.x, pos.y), fullSnapshot.getInt("direction", 0));
 		
 		//Make sure style is valid
 		this.style = fullSnapshot.getInt("style", 0);
@@ -57,7 +60,7 @@ public abstract class Entity {
 			ArchipeloServer.getServer().getLogger().caution("Entity " + this.name + " on map " + this.getMap().getIsland().getName() + ":" + this.getMap().getName() + " has a bad style attribute.");
 		}
 		
-		changes = new EntitySnapshot(this, true);
+		changes = new EntitySnapshot(this.name, this.entityType.getId(), true);
 		log = new EntityLog();
 		animationManager = new EntityAnimationManager(this, fullSnapshot.anim, fullSnapshot.animMeta, fullSnapshot.animTime);
 		audioManager = new EntityAudioManager(this);
@@ -145,7 +148,7 @@ public abstract class Entity {
 	 * @return
 	 */
 	public EntitySnapshot getInterpSnapshot () {
-		EntitySnapshot snapshot = new EntitySnapshot(this, true);
+		EntitySnapshot snapshot = new EntitySnapshot(this.name, this.entityType.getId(), true);
 		animationManager.applyToEntitySnapshot(snapshot);
 		audioManager.applyToInterpSnapshot(snapshot);
 		
@@ -167,9 +170,8 @@ public abstract class Entity {
 	 * @return
 	 */
 	public EntitySnapshot getFullSnapshot () {
-		EntitySnapshot snapshot = new EntitySnapshot(this, false);
-		snapshot.putFloat("x", this.getX());
-		snapshot.putFloat("y", this.getY());
+		EntitySnapshot snapshot = new EntitySnapshot(this.name, this.entityType.getId(), false);
+		snapshot.putObject("pos", new Point(this.getX(), this.getY()));
 		snapshot.putInt("direction", this.getLocation().getDirectionInt());
 		snapshot.putInt("style", style);
 		animationManager.applyToEntitySnapshot(snapshot);
@@ -184,9 +186,8 @@ public abstract class Entity {
 	 * @return
 	 */
 	public EntitySnapshot getSaveSnapshot () {
-		EntitySnapshot snapshot = new EntitySnapshot(this, false);
-		snapshot.putFloat("x", this.getX());
-		snapshot.putFloat("y", this.getY());
+		EntitySnapshot snapshot = new EntitySnapshot(this.name, this.entityType.getId(), false);
+		snapshot.putObject("pos", new Point(this.getX(), this.getY()));
 		snapshot.putInt("direction", this.getLocation().getDirectionInt());
 		snapshot.putInt("style", style);
 		

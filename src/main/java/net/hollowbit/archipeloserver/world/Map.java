@@ -6,16 +6,16 @@ import java.util.Collection;
 import net.hollowbit.archipeloserver.ArchipeloServer;
 import net.hollowbit.archipeloserver.entity.Entity;
 import net.hollowbit.archipeloserver.entity.EntityManager;
-import net.hollowbit.archipeloserver.entity.EntitySnapshot;
 import net.hollowbit.archipeloserver.entity.EntityType;
 import net.hollowbit.archipeloserver.entity.living.Player;
 import net.hollowbit.archipeloserver.form.FormManager;
 import net.hollowbit.archipeloserver.network.packets.EntityAddPacket;
 import net.hollowbit.archipeloserver.network.packets.EntityRemovePacket;
 import net.hollowbit.archipeloserver.tools.npcdialogs.NpcDialogManager;
-import net.hollowbit.archipeloserver.world.map.MapData;
 import net.hollowbit.archipeloserver.world.map.MapLoader;
 import net.hollowbit.archipeloshared.CollisionRect;
+import net.hollowbit.archipeloshared.EntitySnapshot;
+import net.hollowbit.archipeloshared.MapData;
 import net.hollowbit.archipeloshared.TileData;
 
 public class Map {

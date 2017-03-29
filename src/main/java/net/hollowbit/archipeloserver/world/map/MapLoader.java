@@ -3,12 +3,16 @@ package net.hollowbit.archipeloserver.world.map;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Formatter;
 import java.util.Scanner;
 
 import com.badlogic.gdx.utils.Json;
 
+import net.hollowbit.archipeloserver.entity.Entity;
 import net.hollowbit.archipeloserver.world.Map;
+import net.hollowbit.archipeloshared.EntitySnapshot;
+import net.hollowbit.archipeloshared.MapData;
 
 public class MapLoader {
 	
@@ -65,9 +69,26 @@ public class MapLoader {
 			return;
 		}
 		Json json = new Json();
-		formatter.format("%s", json.toJson(new MapData(map)).replaceAll("],", "],\n").replaceAll("},",  "},\n"));
+		
+		formatter.format("%s", json.toJson(getMapDataFromMap(map)).replaceAll("],", "],\n").replaceAll("},",  "},\n"));
 		formatter.flush();
 		formatter.close();
+	}
+	
+	public static MapData getMapDataFromMap(Map map) {
+		MapData mapData = new MapData();
+		mapData.displayName = map.getDisplayName();
+		mapData.tileData = map.getTileData();
+		mapData.elementData = map.getElementData();
+		mapData.climat = map.getClimat();
+		mapData.type = map.getType();
+		mapData.naturalLighting = map.hasNaturalLighting();
+		mapData.music = map.getMusic();
+		mapData.entitySnapshots = new ArrayList<EntitySnapshot>();
+		for (Entity entity : map.getEntities())
+			mapData.entitySnapshots.add(entity.getSaveSnapshot());
+		
+		return mapData;
 	}
 	
 }

@@ -1,6 +1,7 @@
 package net.hollowbit.archipeloserver.entity;
 
 import net.hollowbit.archipeloshared.EntityAnimationData;
+import net.hollowbit.archipeloshared.EntitySnapshot;
 
 public class EntityAnimationManager {
 	

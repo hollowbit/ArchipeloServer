@@ -4,7 +4,6 @@ import net.hollowbit.archipeloserver.ArchipeloServer;
 import net.hollowbit.archipeloserver.entity.Entity;
 import net.hollowbit.archipeloserver.entity.EntityAnimationManager.EntityAnimationObject;
 import net.hollowbit.archipeloserver.entity.EntityInteractionType;
-import net.hollowbit.archipeloserver.entity.EntitySnapshot;
 import net.hollowbit.archipeloserver.entity.EntityType;
 import net.hollowbit.archipeloserver.entity.LifelessEntity;
 import net.hollowbit.archipeloserver.entity.living.Player;
@@ -12,6 +11,7 @@ import net.hollowbit.archipeloserver.tools.event.EventHandler;
 import net.hollowbit.archipeloserver.tools.event.events.EntityMoveEvent;
 import net.hollowbit.archipeloserver.tools.event.events.PlayerLeaveEvent;
 import net.hollowbit.archipeloserver.world.Map;
+import net.hollowbit.archipeloshared.EntitySnapshot;
 
 public class Computer extends LifelessEntity implements EventHandler {
 	

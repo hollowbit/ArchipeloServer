@@ -1,5 +1,7 @@
 package net.hollowbit.archipeloserver.entity;
 
+import net.hollowbit.archipeloshared.EntitySnapshot;
+
 public class EntityAudioManager {
 	
 	private String footstepSound;
