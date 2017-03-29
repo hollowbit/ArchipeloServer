@@ -16,4 +16,4 @@ elementData:[["null","null","null","null","null","null","null","null","null"],
 ["null","null","null","null","null","null","null","null","null"],
 ["null","null","null","null","null","null","null","null","null"],
 ["null","null","null","null","null","null","null","null","null"]],
-entitySnapshots:[{name:teleporter1,type:teleporter,properties:{teleportLocation:{map:island,direction:2,x:425.0,island:"",y:552.0},x:64.0,y:32.0,style:0,direction:0}}]}
+entitySnapshots:[{name:teleporter1,type:teleporter,properties:{pos:"{x:64,y:32}",style:0,teleportLocation:"{x:425,y:552,map:island,direction:2}",direction:0}}]}
