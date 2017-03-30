@@ -19,6 +19,7 @@ import net.hollowbit.archipeloserver.entity.lifeless.DoorLocked;
 import net.hollowbit.archipeloserver.entity.lifeless.Sign;
 import net.hollowbit.archipeloserver.entity.lifeless.Teleporter;
 import net.hollowbit.archipeloserver.entity.living.Player;
+import net.hollowbit.archipeloserver.entity.living.Wizard;
 import net.hollowbit.archipeloserver.world.Map;
 import net.hollowbit.archipeloshared.CollisionRect;
 import net.hollowbit.archipeloshared.EntityAnimationData;
@@ -35,7 +36,8 @@ public enum EntityType {
 	DOOR_LOCKED ("door-locked", DoorLocked.class),
 	SIGN ("sign", Sign.class),
 	BLOBBY_GRAVE ("blobby_grave", BlobbyGrave.class),
-	COMPUTER ("computer", Computer.class);
+	COMPUTER ("computer", Computer.class),
+	WIZARD ("wizard", Wizard.class);
 	
 	private String id;
 	private Class entityClass;
