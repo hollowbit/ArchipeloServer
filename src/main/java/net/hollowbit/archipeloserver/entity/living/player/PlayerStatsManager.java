@@ -1,5 +1,3 @@
-
-
 package net.hollowbit.archipeloserver.entity.living.player;
 
 import net.hollowbit.archipeloserver.entity.EntityType;
@@ -26,6 +24,7 @@ public class PlayerStatsManager implements EventHandler {
 	private float speedMultiplier;
 	private float critMultiplier;
 	private int critChance;
+	private int maxHealth;
 	
 	public PlayerStatsManager (Player player) {
 		this.player = player;
@@ -40,6 +39,7 @@ public class PlayerStatsManager implements EventHandler {
 
 		//Set speed to default player speed for now
 		speed = EntityType.PLAYER.getSpeed();
+		maxHealth = EntityType.PLAYER.getMaxHealth();
 		
 		//Calculate min/max damage
 		if (weapon != null) {
@@ -183,6 +183,14 @@ public class PlayerStatsManager implements EventHandler {
 
 	public int getCritChance() {
 		return critChance;
+	}
+	
+	public int getHealth() {
+		return player.getHealth();
+	}
+	
+	public int getMaxHealth() {
+		return maxHealth;
 	}
 	
 	@Override

@@ -19,6 +19,8 @@ public class BlobbyGrave extends LifelessEntity {
 				player.getFlagsManager().addFlag("blobbyGraveCrushed");
 			else if (interactionType == EntityInteractionType.HIT) {//Activate grave messages if hit
 				player.getNpcDialogManager().sendNpcDialog(this, "blobbyGraveStart", "blobby-grave");
+			} else if (interactionType == EntityInteractionType.STEP_CONTINUAL) {
+				player.heal(-1);
 			}
 		}
 	}

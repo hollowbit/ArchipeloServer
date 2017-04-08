@@ -31,6 +31,7 @@ public abstract class Entity {
 	protected EntityAnimationManager animationManager;
 	protected ArrayList<EntityComponent> components;
 	protected EntityAudioManager audioManager;
+	protected int health;
 	
 	public Entity () {
 		components = new ArrayList<EntityComponent>();
@@ -41,6 +42,9 @@ public abstract class Entity {
 		this.style = style;
 		this.entityType = entityType;
 		this.location = location;
+		
+		this.health = entityType.getMaxHealth();
+		
 		changes = new EntitySnapshot(this.name, this.entityType.getId(), true);
 		log = new EntityLog();
 		animationManager = new EntityAnimationManager(this, entityType.getDefaultAnimationId(), "", 0);
@@ -59,6 +63,8 @@ public abstract class Entity {
 			this.style = 0;
 			ArchipeloServer.getServer().getLogger().caution("Entity " + this.name + " on map " + this.getMap().getIsland().getName() + ":" + this.getMap().getName() + " has a bad style attribute.");
 		}
+		
+		this.health = fullSnapshot.getInt("health", entityType.getMaxHealth());
 		
 		changes = new EntitySnapshot(this.name, this.entityType.getId(), true);
 		log = new EntityLog();
@@ -174,6 +180,7 @@ public abstract class Entity {
 		snapshot.putObject("pos", new Point(this.getX(), this.getY()));
 		snapshot.putInt("direction", this.getLocation().getDirectionInt());
 		snapshot.putInt("style", style);
+		snapshot.putInt("health", health);
 		animationManager.applyToEntitySnapshot(snapshot);
 		
 		for (EntityComponent component : components)
@@ -190,6 +197,7 @@ public abstract class Entity {
 		snapshot.putObject("pos", new Point(this.getX(), this.getY()));
 		snapshot.putInt("direction", this.getLocation().getDirectionInt());
 		snapshot.putInt("style", style);
+		snapshot.putInt("health", health);
 		
 		for (EntityComponent component : components)
 			component.editSaveSnapshot(snapshot);
@@ -324,6 +332,25 @@ public abstract class Entity {
 	
 	public Map getMap () {
 		return location.getMap();
+	}
+	
+	public int getHealth () {
+		return health;
+	}
+	
+	public int getMaxHealth () {
+		return entityType.getMaxHealth();
+	}
+	
+	/**
+	 * Can be negative to damage this entity
+	 * @param amount
+	 */
+	public void heal (int amount) {
+		this.health += amount;
+		if (health < 0)
+			health = 0;
+		this.changes.putInt("health", health);
 	}
 	
 	/**

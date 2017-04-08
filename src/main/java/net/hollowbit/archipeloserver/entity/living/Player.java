@@ -164,6 +164,7 @@ public class Player extends LivingEntity implements PacketHandler, RollableEntit
 		this.hbUser = hbUser;
 		this.flagsManager = new PlayerFlagsManager(playerData.flags, this);
 		this.statsManager = new PlayerStatsManager(this);
+		this.health = getMaxHealth();//TODO load in health properly
 		
 		PlayerJoinEvent event = new PlayerJoinEvent(this);//Triggers player join event
 		event.trigger();
@@ -333,6 +334,11 @@ public class Player extends LivingEntity implements PacketHandler, RollableEntit
 	@Override
 	public float getSpeed () {
 		return statsManager.getSpeed(isSprinting(), isRolling());
+	}
+	
+	@Override
+	public int getMaxHealth () {
+		return statsManager.getMaxHealth();
 	}
 	
 	@Override

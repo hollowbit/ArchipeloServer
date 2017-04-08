@@ -98,10 +98,10 @@ elementData:[["null","null","null","null","null","null","null","null","null","nu
 ["null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null"],
 ["null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null"],
 ["null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null","null"]],
-entitySnapshots:[{name:teleporter1,type:teleporter,properties:{pos:"{x:300,y:414}",style:1,teleportLocation:"{x:360,y:384}",direction:0}},
-{name:smithyDoor,type:door-locked,properties:{unlockFlag:Archipelo-island-smithyDoorUnlock,pos:"{x:418,y:560}",teleports:"true",style:0,teleportLocation:"{x:72,y:50,map:smithy}",direction:0}},
-{name:hospitalDoor,type:door,properties:{pos:"{x:290,y:592}",teleports:"false",style:0,teleportLocation:"{}",direction:0}},
-{name:sign1,type:sign,properties:{pos:"{x:330,y:384}",style:0,startMessageId:sign1Start,direction:0}},
-{name:sign2,type:sign,properties:{pos:"{x:380,y:404}",style:0,startMessageId:sign2Start,direction:0}},
-{name:blobbyGrave,type:blobby-grave,properties:{pos:"{x:430,y:487}",style:0,direction:0}},
-{name:computer,type:computer,properties:{pos:"{x:300,y:544}",style:0,direction:0}}]}
+entitySnapshots:[{name:teleporter1,type:teleporter,properties:{pos:"{x:300,y:414}",health:1,style:1,teleportLocation:"{x:360,y:384}",direction:0}},
+{name:smithyDoor,type:door-locked,properties:{unlockFlag:Archipelo-island-smithyDoorUnlock,pos:"{x:418,y:560}",health:1,teleports:"true",style:0,teleportLocation:"{x:72,y:50,map:smithy}",direction:0}},
+{name:hospitalDoor,type:door,properties:{pos:"{x:290,y:592}",health:1,teleports:"false",style:0,teleportLocation:"{}",direction:0}},
+{name:sign1,type:sign,properties:{pos:"{x:330,y:384}",health:1,style:0,startMessageId:sign1Start,direction:0}},
+{name:sign2,type:sign,properties:{pos:"{x:380,y:404}",health:1,style:0,startMessageId:sign2Start,direction:0}},
+{name:blobbyGrave,type:blobby-grave,properties:{pos:"{x:430,y:487}",health:1,style:0,direction:0}},
+{name:computer,type:computer,properties:{pos:"{x:300,y:544}",health:1,style:0,direction:0}}]}
