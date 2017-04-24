@@ -6,7 +6,7 @@ hbServerAddress: loginserver.hollowbit.net:22123
 hbServerPassword: astrongpassword
 motd: Welcome to Archipelo!
 region: 0
-spawnIsland: Archipelo
+spawnIsland: TestIsland
 spawnMap: island
-spawnX: 360.0
-spawnY: 400.0
+spawnX: 720.0
+spawnY: 208.0
