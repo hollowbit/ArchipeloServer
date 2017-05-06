@@ -306,6 +306,14 @@ public abstract class Entity {
 		log.clearAll();
 	}
 	
+	/**
+	 * Plays the specified sound at this entity's location.
+	 * @param soundId
+	 */
+	public void playSoundAtLocation(String soundId) {
+		location.getMap().playSound(soundId, location.getX(), location.getY());
+	}
+	
 	public boolean isAlive () {
 		return false;
 	}

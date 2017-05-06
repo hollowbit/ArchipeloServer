@@ -49,8 +49,7 @@ public enum ItemType {
 	public boolean material;
 	public int numOfStyles;
 	public int numOfUseAnimations;
-	public float useAnimationLength;
-	public boolean useThrust;
+	public float[] useAnimationLengths;
 	public boolean renderUsingColor;
 	
 	public int minDamage;
@@ -107,13 +106,19 @@ public enum ItemType {
 		this.material = data.material;
 		this.numOfStyles = data.numOfStyles;
 		this.numOfUseAnimations = data.numOfUseAnimations;
-		this.useAnimationLength = data.useAnimationLength;
-		this.useThrust = data.useThrust;
+		this.useAnimationLengths = data.useAnimationLengths;
 		
 		if (equipType == EQUIP_INDEX_USABLE)
 			this.useType = useType;
 		else
 			useType = null;
+	}
+	
+	public float getAnimationLength(int animationType) {
+		if (animationType > 0 && animationType < useAnimationLengths.length)
+			return useAnimationLengths[animationType];
+		else
+			return 0;
 	}
 	
 	@Override

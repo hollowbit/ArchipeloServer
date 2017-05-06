@@ -4,6 +4,7 @@ import com.badlogic.gdx.graphics.Color;
 
 import net.hollowbit.archipeloserver.entity.living.Player;
 import net.hollowbit.archipeloserver.tools.StaticTools;
+import net.hollowbit.archipeloshared.UseTypeSettings;
 
 public class Item {
 	
@@ -48,8 +49,16 @@ public class Item {
 		return ItemType.getItemTypeByItem(this);
 	}
 	
-	public boolean use (Player user) {
-		return ItemType.getItemTypeByItem(this).getUseType().useItem(this, user);
+	public UseTypeSettings useTap (Player user) {
+		return ItemType.getItemTypeByItem(this).getUseType().useItemTap(this, user);
+	}
+	
+	public UseTypeSettings useDoubleTap (Player user, float delta) {
+		return ItemType.getItemTypeByItem(this).getUseType().useItemDoubleTap(this, user, delta);
+	}
+	
+	public UseTypeSettings useHold (Player user, float duration) {
+		return ItemType.getItemTypeByItem(this).getUseType().useItemHold(this, user, duration);
 	}
 	
 	/**

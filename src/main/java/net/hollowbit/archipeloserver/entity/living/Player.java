@@ -51,6 +51,7 @@ import net.hollowbit.archipeloshared.EntitySnapshot;
 import net.hollowbit.archipeloshared.HitCalculator;
 import net.hollowbit.archipeloshared.RollableEntity;
 import net.hollowbit.archipeloshared.TileSoundType;
+import net.hollowbit.archipeloshared.UseTypeSettings;
 
 public class Player extends LivingEntity implements PacketHandler, RollableEntity {
 	
@@ -473,11 +474,15 @@ public class Player extends LivingEntity implements PacketHandler, RollableEntit
 				}
 				
 				//Use item if no "non-hittable" entity hit
-				if(useHitAnimation) {
+				if (useHitAnimation) {
 					Item item = inventory.getWeaponInventory().getRawStorage()[0];
-					playUseAnimation(item);
-					if (item != null)
-						item.use(this);
+					
+					if (item != null) {
+						UseTypeSettings settings = item.useTap(this);
+						if (settings != null)
+							playUseAnimation(item, settings.animationType, settings.thrust, settings.soundType);
+					} else
+						playUseAnimation(null, 0, false, 0);
 				}
 				
 				audioManager.playSound("hit");
@@ -500,19 +505,26 @@ public class Player extends LivingEntity implements PacketHandler, RollableEntit
 	/**
 	 * Play use animation for current player with the specified item
 	 * @param item
+	 * @param animationType
+	 * @param thrust
+	 * @param soundType
 	 */
-	public void playUseAnimation (Item item) {
+	private void playUseAnimation (Item item, int animationType, boolean thrust, int soundType) {
 		String animationMeta = "";
 		float useAnimationLength = EMPTY_HAND_USE_ANIMATION_LENTH;
 		
 		if (item != null) {
+			//Build the animation meta data
 			Color color = new Color(item.color);
-			animationMeta = item.getType() + ";" + 0 + ";" + item.style + ";" + color.r + ";" + color.g + ";" + color.b + ";" + color.a;
-			useAnimationLength = item.getType().useAnimationLength;
+			animationMeta = item.getType() + ";" + animationType + ";" + item.style + ";" + color.r + ";" + color.g + ";" + color.b + ";" + color.a;
+			useAnimationLength = item.getType().getAnimationLength(animationType);
+			
+			//Play sound of the item
+			this.playSoundAtLocation("items/" + item.id + "/" + soundType);
 		}
 		
 		//Use appropriate animations depending
-		if (item != null && item.getType().useThrust) {
+		if (thrust) {
 			if (isMoving())
 				stopMovement();
 			animationManager.change("thrust", animationMeta, useAnimationLength);
