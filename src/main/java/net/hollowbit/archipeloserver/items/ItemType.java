@@ -8,6 +8,7 @@ import java.util.HashMap;
 
 import com.badlogic.gdx.utils.Json;
 
+import net.hollowbit.archipeloserver.ArchipeloServer;
 import net.hollowbit.archipeloserver.items.usetypes.*;
 import net.hollowbit.archipeloshared.ItemTypeData;
 
@@ -53,6 +54,7 @@ public enum ItemType {
 	public int numOfUseAnimations;
 	public float[] useAnimationLengths;
 	public boolean renderUsingColor;
+	public String[][] sounds;
 	
 	public int minDamage;
 	public int maxDamage;
@@ -109,11 +111,25 @@ public enum ItemType {
 		this.numOfStyles = data.numOfStyles;
 		this.numOfUseAnimations = data.numOfUseAnimations;
 		this.useAnimationLengths = data.useAnimationLengths;
+		this.sounds = data.sounds;
 		
 		if (equipType == EQUIP_INDEX_USABLE)
 			this.useType = useType;
 		else
 			useType = null;
+	}
+	
+	private void loadSounds() {
+		for (int i = 0; i < numOfStyles; i++) {
+			for (int u = 0; u < sounds[0].length; u++)
+				ArchipeloServer.getServer().getSoundManager().addSound(sounds[i][u]);
+		}
+	}
+	
+	public String getSoundById(int style, int id) {
+		if (style >= 0 && style < numOfStyles && id >= 0 && id < sounds[0].length)
+			return sounds[style][id];
+		return "";
 	}
 	
 	public float getAnimationLength(int animationType) {
@@ -142,6 +158,11 @@ public enum ItemType {
 	
 	public static ItemType getItemTypeByItem (Item item) {
 		return itemTypes.get(item.id);
+	}
+	
+	public static void loadAssets() {
+		for (ItemType type : ItemType.values())
+			type.loadSounds();
 	}
 	
 }

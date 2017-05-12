@@ -3,6 +3,7 @@ package net.hollowbit.archipeloserver;
 import java.net.URISyntaxException;
 
 import net.hollowbit.archipeloserver.hollowbitserver.HollowBitServerConnectivity;
+import net.hollowbit.archipeloserver.items.ItemType;
 import net.hollowbit.archipeloserver.network.NetworkManager;
 import net.hollowbit.archipeloserver.tools.Configuration;
 import net.hollowbit.archipeloserver.tools.audio.SoundManager;
@@ -66,6 +67,7 @@ public class ArchipeloServer {
 		executableManager = new ExecutableManager();
 		eventManager = new EventManager();
 		soundManager = new SoundManager();
+		ItemType.loadAssets();
 		
 		//Add test event handler to manager
 		//new EventHandler.DefaultEventHandler().addToEventManager();

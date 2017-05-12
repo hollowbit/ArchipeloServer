@@ -36,7 +36,14 @@ public class SoundManager {
 		}
 	}
 	
+	public void addSound(String path) {
+		if (!doesSoundExist(path))
+			sounds.add(path);
+	}
+	
 	public boolean doesSoundExist (String path) {
-		return sounds.contains(path);
+		if (path != null && !path.equals(""))
+			return sounds.contains(path);
+		return false;
 	}
 }

@@ -35,4 +35,13 @@ public class EntityAudioManager {
 			entity.changes.addSound(sound);
 	}
 	
+	/**
+	 * Plays a sound for this entity that is not necessarily for it.
+	 * You can use any sound path here. This is used to avoid sound sync issues with clients.
+	 * @param sound
+	 */
+	public void playUnsafeSound (String sound) {
+		entity.changes.addUnsafeSound(sound);
+	}
+	
 }

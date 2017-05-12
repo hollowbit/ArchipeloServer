@@ -512,8 +512,6 @@ public class Player extends LivingEntity implements PacketHandler, RollableEntit
 					} else
 						playUseAnimation(null, 0, false, 0);
 				}
-				
-				audioManager.playSound("hit");
 			}
 			break;
 		case Controls.UP:
@@ -548,7 +546,7 @@ public class Player extends LivingEntity implements PacketHandler, RollableEntit
 			useAnimationLength = item.getType().getAnimationLength(animationType);
 			
 			//Play sound of the item
-			this.playSoundAtLocation("items/" + item.id + "/" + soundType);
+			audioManager.playUnsafeSound(item.getType().getSoundById(item.style, soundType));
 		}
 		
 		//Use appropriate animations depending

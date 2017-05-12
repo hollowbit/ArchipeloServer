@@ -157,7 +157,6 @@ public abstract class Entity {
 		EntitySnapshot snapshot = new EntitySnapshot(this.name, this.entityType.getId(), true);
 		animationManager.applyToEntitySnapshot(snapshot);
 		audioManager.applyToInterpSnapshot(snapshot);
-		System.out.println("Entity.java  " + this.name + "  " + snapshot.anim + "  " + snapshot.animMeta);
 		
 		for (EntityComponent component : components)
 			component.editInterpSnapshot(snapshot);
