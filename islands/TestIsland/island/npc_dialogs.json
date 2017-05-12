@@ -1,0 +1,7 @@
+{dialogs:[
+
+{id:"swordSignGive", cond:{id:"hasFlag", args:{flag:"swordSignGaveItem"}}, change:"swordSignAlready", choices:["swordSignEnd"], exec:[{id:"addFlag", args:{flag:"swordSignGaveItem"}}, {id:"giveItems", args:{items:"[{id:test_sword}, {id:test_sword, style:1}]"}}]},
+{id:"swordSignAlready"},
+{id:"swordSignEnd"}
+
+]}

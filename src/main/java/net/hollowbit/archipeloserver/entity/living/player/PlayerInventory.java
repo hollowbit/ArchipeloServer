@@ -292,7 +292,7 @@ public class PlayerInventory {
 			inventoryUpdated(oldToInventory, toInventory);
 		}
 		
-		if (fromInventory == EQUIPPED_INVENTORY || fromInventory == COSMETIC_INVENTORY || toInventory == EQUIPPED_INVENTORY || toInventory == COSMETIC_INVENTORY)
+		if (fromInventory == EQUIPPED_INVENTORY || fromInventory == COSMETIC_INVENTORY || fromInventory == WEAPON_EQUIP_INVENTORY || toInventory == EQUIPPED_INVENTORY || toInventory == COSMETIC_INVENTORY || toInventory == WEAPON_EQUIP_INVENTORY)
 			player.updateDisplayInventory();
 		
 		return true;

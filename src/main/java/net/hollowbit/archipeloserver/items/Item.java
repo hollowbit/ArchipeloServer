@@ -50,15 +50,24 @@ public class Item {
 	}
 	
 	public UseTypeSettings useTap (Player user) {
-		return ItemType.getItemTypeByItem(this).getUseType().useItemTap(this, user);
+		if (ItemType.getItemTypeByItem(this).getUseType() != null)
+			return ItemType.getItemTypeByItem(this).getUseType().useItemTap(this, user);
+		else
+			return null;
 	}
 	
 	public UseTypeSettings useDoubleTap (Player user, float delta) {
-		return ItemType.getItemTypeByItem(this).getUseType().useItemDoubleTap(this, user, delta);
+		if (ItemType.getItemTypeByItem(this).getUseType() != null)
+			return ItemType.getItemTypeByItem(this).getUseType().useItemDoubleTap(this, user, delta);
+		else
+			return null;
 	}
 	
 	public UseTypeSettings useHold (Player user, float duration) {
-		return ItemType.getItemTypeByItem(this).getUseType().useItemHold(this, user, duration);
+		if (ItemType.getItemTypeByItem(this).getUseType() != null)
+			return ItemType.getItemTypeByItem(this).getUseType().useItemHold(this, user, duration);
+		else
+			return null;
 	}
 	
 	/**
@@ -108,6 +117,11 @@ public class Item {
 	 */
 	public static Item[] getManyFromString(String json) {
 		return StaticTools.getJson().fromJson(Item[].class, json);
+	}
+	
+	@Override
+	public String toString() {
+		return "Item: " + id + "  s: " + style + "  q: " + quantity;
 	}
 	
 }

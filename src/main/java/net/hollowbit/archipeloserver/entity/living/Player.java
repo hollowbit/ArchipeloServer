@@ -4,6 +4,7 @@ import java.sql.Date;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
+import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -39,6 +40,7 @@ import net.hollowbit.archipeloserver.network.packets.LogoutPacket;
 import net.hollowbit.archipeloserver.network.packets.PopupTextPacket;
 import net.hollowbit.archipeloserver.network.packets.PositionCorrectionPacket;
 import net.hollowbit.archipeloserver.tools.Configuration;
+import net.hollowbit.archipeloserver.tools.StaticTools;
 import net.hollowbit.archipeloserver.tools.database.DatabaseManager;
 import net.hollowbit.archipeloserver.tools.entity.Location;
 import net.hollowbit.archipeloserver.tools.event.events.PlayerJoinEvent;
@@ -101,6 +103,8 @@ public class Player extends LivingEntity implements PacketHandler, RollableEntit
 	PlayerStatsManager statsManager;
 	ScheduledExecutorService exec;
 	LinkedList<ControlsPacket> commandsToExecute;
+	Random random;
+	int seed;
 	
 	public Player (String name, String address, boolean firstTimeLogin) {
 		this.create(name, 0, location, address, firstTimeLogin);
@@ -123,6 +127,7 @@ public class Player extends LivingEntity implements PacketHandler, RollableEntit
 						boolean[] oldControls = new boolean[controls.length];
 						for (int i = 0; i < controls.length; i++)
 							oldControls[i] = controls[i];
+						applyControlExceptions(newControls);
 						controls = newControls;
 						
 						//Loops through all controls to handle them one by one.
@@ -146,6 +151,19 @@ public class Player extends LivingEntity implements PacketHandler, RollableEntit
 		}, 0, CONTROLS_UPDATE_RATE, TimeUnit.MILLISECONDS);
 	}
 	
+	/**
+	 * Cleans up controls when there are certain conditions.
+	 * @param controls
+	 */
+	private void applyControlExceptions (boolean[] controls) {
+		if (isThrusting()) {
+			controls[Controls.UP] = false;
+			controls[Controls.LEFT] = false;
+			controls[Controls.DOWN] = false;
+			controls[Controls.RIGHT] = false;
+		}
+	}
+	
 	public void create (String name, int style, Location location, String address, boolean firstTimeLogin) {
 		super.create(name, style, location, EntityType.PLAYER);
 		this.npcDialogManager = new PlayerNpcDialogManager(this);
@@ -166,6 +184,8 @@ public class Player extends LivingEntity implements PacketHandler, RollableEntit
 		this.flagsManager = new PlayerFlagsManager(playerData.flags, this);
 		this.statsManager = new PlayerStatsManager(this);
 		this.health = getMaxHealth();//TODO load in health properly
+		this.seed = StaticTools.getRandom().nextInt(1000000);
+		this.random = new Random(seed);
 		
 		PlayerJoinEvent event = new PlayerJoinEvent(this);//Triggers player join event
 		event.trigger();
@@ -308,7 +328,7 @@ public class Player extends LivingEntity implements PacketHandler, RollableEntit
 	
 	@Override
 	public boolean isMoving () {
-		return controls[Controls.UP] || controls[Controls.LEFT] || controls[Controls.DOWN] || controls[Controls.RIGHT];
+		return (controls[Controls.UP] || controls[Controls.LEFT] || controls[Controls.DOWN] || controls[Controls.RIGHT]) && !animationManager.getAnimationId().equals("thrust");
 	}
 	
 	public boolean isSprinting () {
@@ -330,6 +350,14 @@ public class Player extends LivingEntity implements PacketHandler, RollableEntit
 	 */
 	public boolean isUsing () {
 		return animationManager.getAnimationId().equals("use") || animationManager.getAnimationId().equals("usewalk");
+	}
+	
+	/**
+	 * Tells whether the player is currently in a thrust animation.
+	 * @return
+	 */
+	public boolean isThrusting () {
+		return animationManager.getAnimationId().equals("thrust");
 	}
 	
 	@Override
@@ -427,7 +455,7 @@ public class Player extends LivingEntity implements PacketHandler, RollableEntit
 		case Controls.LEFT:
 		case Controls.DOWN:
 		case Controls.RIGHT:
-			if (!isMoving() && !isRolling()) {
+			if (!isMoving() && !isRolling() && !isThrusting()) {
 				if (isUsing())
 					animationManager.change("use");
 				else
@@ -574,6 +602,7 @@ public class Player extends LivingEntity implements PacketHandler, RollableEntit
 		EntitySnapshot snapshot = super.getFullSnapshot();
 		snapshot.putString("displayInventory", inventory.getDisplayInventoryJson());
 		snapshot.putFloat("playerSpeed", statsManager.getSpeed());
+		snapshot.putInt("seed", seed);
 		return snapshot;
 	}
 	
@@ -672,6 +701,10 @@ public class Player extends LivingEntity implements PacketHandler, RollableEntit
 	
 	public PlayerStatsManager getStatsManager () {
 		return statsManager;
+	}
+	
+	public Random getRandom() {
+		return random;
 	}
 	
 	private boolean doesCurrentPositionCollideWithMap () {

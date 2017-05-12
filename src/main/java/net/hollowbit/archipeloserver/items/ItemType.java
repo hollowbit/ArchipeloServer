@@ -8,6 +8,7 @@ import java.util.HashMap;
 
 import com.badlogic.gdx.utils.Json;
 
+import net.hollowbit.archipeloserver.items.usetypes.*;
 import net.hollowbit.archipeloshared.ItemTypeData;
 
 public enum ItemType {
@@ -20,7 +21,8 @@ public enum ItemType {
 	SHOULDERPADS_BASIC("shoulderpads_basic"),*/
 	HAIR1("hair1"),
 	FACE1("face1"),
-	BLOBBY_ASHES("blobby_ashes")/*,
+	BLOBBY_ASHES("blobby_ashes"),
+	TEST_SWORD("test_sword", new TestSwordUseType())/*,
 	SWORD("sword"),
 	POTION_SMALL("potion_small", new HealthPotionUseType())*/;
 	
@@ -115,7 +117,7 @@ public enum ItemType {
 	}
 	
 	public float getAnimationLength(int animationType) {
-		if (animationType > 0 && animationType < useAnimationLengths.length)
+		if (animationType >= 0 && animationType < useAnimationLengths.length)
 			return useAnimationLengths[animationType];
 		else
 			return 0;

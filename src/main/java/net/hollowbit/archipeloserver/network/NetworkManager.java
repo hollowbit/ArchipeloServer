@@ -193,9 +193,16 @@ public class NetworkManager extends WebSocketServer {
 		
 		String[] packetWrapArray = message.split(";");
 		int type = Integer.parseInt(packetWrapArray[0]);
-		message = packetWrapArray[1];
+		
+		String packetMessage = "";
+		for (int i = 1; i < packetWrapArray.length; i++) {
+			packetMessage += packetWrapArray[i];
+			if (i < packetWrapArray.length - 1)
+				packetMessage += ";";
+		}
+		
 		@SuppressWarnings("unchecked")
-		Packet packet = (Packet) json.fromJson(packetMap.get(type), message);
+		Packet packet = (Packet) json.fromJson(packetMap.get(type), packetMessage);
 		
 		//Handle login/logoff packets
 		if (packet.packetType == PacketType.LOGIN) {
