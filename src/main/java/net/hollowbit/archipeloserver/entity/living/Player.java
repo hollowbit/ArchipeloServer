@@ -46,7 +46,6 @@ import net.hollowbit.archipeloserver.tools.entity.Location;
 import net.hollowbit.archipeloserver.tools.event.events.PlayerJoinEvent;
 import net.hollowbit.archipeloserver.tools.event.events.PlayerLeaveEvent;
 import net.hollowbit.archipeloserver.world.Map;
-import net.hollowbit.archipeloshared.CollisionRect;
 import net.hollowbit.archipeloshared.Controls;
 import net.hollowbit.archipeloshared.Direction;
 import net.hollowbit.archipeloshared.EntitySnapshot;
@@ -203,96 +202,15 @@ public class Player extends LivingEntity implements PacketHandler, RollableEntit
 		super.tick60(deltaTime);
 	}
 	
-	@SuppressWarnings("incomplete-switch")
 	public void updateControls (boolean[] controls, float deltaTime) {
 		if (isMoving()) {
-			Vector2 newPos = new Vector2(location.pos);
-			double speedMoved = 0;
-			
 			Direction direction = getMovementDirection();
-			switch (direction) {
-			case UP:
-				speedMoved = getSpeed();
-				newPos.add(0, (float) (deltaTime * speedMoved));
-				break;
-			case UP_LEFT:
-			case UP_RIGHT:
-				speedMoved = getSpeed() / LivingEntity.DIAGONAL_FACTOR;
-				newPos.add(0, (float) (deltaTime * speedMoved));
-				break;
-				
-			case DOWN:
-				speedMoved = getSpeed();
-				newPos.add(0, (float) (-deltaTime * speedMoved));
-				break;
-			case DOWN_LEFT:
-			case DOWN_RIGHT:
-				speedMoved = getSpeed() / LivingEntity.DIAGONAL_FACTOR;
-				newPos.add(0, (float) (-deltaTime * speedMoved));
-				break;
-			}
+			this.move(direction, deltaTime, true);
 			
-			if (location.direction != direction && !controls[Controls.LOCK]) { 	//TO DO: Understand this :scratchheademoji:
-				location.direction = direction;
-				changes.putInt("direction", location.direction.ordinal());
-			}
-			
-			boolean collidesWithMap = false;
-			for (CollisionRect rect : getCollisionRects(newPos)) {//Checks to make sure no collision rect is intersecting with map
-				if (location.getMap().collidesWithMap(rect, this)) {
-					collidesWithMap = true;
-					break;
-				}
-			}
-			
-			if (!collidesWithMap || doesCurrentPositionCollideWithMap()) {
-				if (isMoving())
-					move(newPos);
-			}
-			newPos = new Vector2(location.pos);
-			speedMoved = 0;
-			direction = getMovementDirection();
-			switch (direction) {
-			case LEFT:
-				speedMoved = getSpeed();
-				newPos.add((float) (-deltaTime * speedMoved), 0);
-				break;
-			case UP_LEFT:
-			case DOWN_LEFT:
-				speedMoved = getSpeed() / LivingEntity.DIAGONAL_FACTOR;
-				newPos.add((float) (-deltaTime * speedMoved), 0);
-				break;
-				
-			case RIGHT:
-				speedMoved = getSpeed();
-				newPos.add((float) (deltaTime * speedMoved), 0);
-				break;
-			case UP_RIGHT:
-			case DOWN_RIGHT:
-				speedMoved = getSpeed() / LivingEntity.DIAGONAL_FACTOR;
-				newPos.add((float) (deltaTime * speedMoved), 0);
-				break;
-				
-			}
-			if (location.direction != direction && !controls[Controls.LOCK]) { 	//TO DO: Understand this :scratchheademoji:
-				location.direction = direction;
-				changes.putInt("direction", location.direction.ordinal());
-			}
-			
-			collidesWithMap = false;
-			for (CollisionRect rect : getCollisionRects(newPos)) {//Checks to make sure no collision rect is intersecting with map
-				if (location.getMap().collidesWithMap(rect, this)) {
-					collidesWithMap = true;
-					break;
-				}
-			}
-			
-			if (!collidesWithMap || doesCurrentPositionCollideWithMap()) {
-				if (isMoving())
-					move(newPos);
-			}
+			//Changes direction if lock is off
+			if (!controls[Controls.LOCK])
+				this.setDirection(direction);
 		}
-			
 	}
 	
 	public void stopMovement () {
@@ -590,9 +508,12 @@ public class Player extends LivingEntity implements PacketHandler, RollableEntit
 	}
 	
 	@Override
-	public void move (Vector2 newPos) {
-		super.move(newPos);
-		npcDialogManager.playerMoved();
+	public boolean move (Direction direction, float deltaTime, boolean checkCollisions) {
+		if (super.move(direction, deltaTime, checkCollisions)) {
+			npcDialogManager.playerMoved();
+			return true;
+		} else
+			return false;
 	}
 	
 	@Override
@@ -703,15 +624,6 @@ public class Player extends LivingEntity implements PacketHandler, RollableEntit
 	
 	public Random getRandom() {
 		return random;
-	}
-	
-	private boolean doesCurrentPositionCollideWithMap () {
-		for (CollisionRect rect : getCollisionRects(location.pos)) {//Checks to make sure no collision rect is intersecting with map
-			if (location.getMap().collidesWithMap(rect, this)) {
-				return true;
-			}
-		}
-		return false;
 	}
 
 	@Override

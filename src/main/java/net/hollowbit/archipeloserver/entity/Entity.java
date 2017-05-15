@@ -408,12 +408,28 @@ public abstract class Entity {
 		return audioManager;
 	}
 	
+	public EntityAnimationManager getAnimationManager() {
+		return animationManager;
+	}
+	
 	public float getFootX () {
 		return location.getX() + entityType.getFootstepOffsetX();
 	}
 	
 	public float getFootY () {
 		return location.getY() + entityType.getFootstepOffsetY();
+	}
+	
+	/**
+	 * Proper way to change an entity's direction
+	 * @param newDirection
+	 */
+	public void setDirection(Direction newDirection) {
+		Direction oldDirection = location.direction;
+		if (newDirection != oldDirection) {
+			location.direction = newDirection;
+			changes.putInt("direction", location.getDirectionInt());
+		}
 	}
 	
 	/**

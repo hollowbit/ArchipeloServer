@@ -99,4 +99,5 @@ elementData:[[tree,tree,blank,tree,tree,tree,tree,tree,tree,tree,blank,tree,tree
 [tree,tree,tree,blank,tree,tree,tree,tree,tree,tree,tree,blank,blank,tree,tree,tree,blank,tree,tree,tree,tree,tree,tree,blank,tree,tree,blank,blank,blank,tree,tree,tree,tree,tree,blank,blank,tree,tree,tree,tree,tree,blank,blank,tree,blank,tree,tree,tree,tree,tree],
 [tree,tree,tree,blank,blank,blank,blank,blank,blank,tree,tree,tree,tree,blank,tree,tree,tree,tree,tree,tree,tree,tree,tree,blank,blank,tree,tree,tree,tree,tree,tree,tree,tree,tree,tree,tree,tree,tree,tree,tree,tree,tree,tree,tree,tree,tree,tree,tree,tree,tree]],
 entitySnapshots:[{name:teleporterArchipelo,type:teleporter,properties:{pos:"{x:432,y:576}",health:1,style:1,teleportLocation:"{x:360,y:400,map:island,island:Archipelo}",direction:0}},
-{name:swordSign,type:sign,properties:{pos:"{x:410,y:570}",health:1,style:0,startMessageId:swordSignGive,direction:0}}]}
+{name:swordSign,type:sign,properties:{pos:"{x:410,y:570}",health:1,style:0,startMessageId:swordSignGive,direction:0}},
+{name:slimeSpawner,type:spawner,properties:{pos:"{x:400,y:450}",spawnSnapshot:"{name:slipperySlime,type:slime,properties:{health:30}}"}}]}

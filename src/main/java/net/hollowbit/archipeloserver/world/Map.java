@@ -84,7 +84,7 @@ public class Map {
 	//If you wish to remove this map, unload it from its island, not here.
 	public void unload () {
 		ArchipeloServer.getServer().getLogger().info("Unloading map " + getIsland().getName() + ":" + getName() + ".");
-		MapLoader.saveMap(this);
+		//MapLoader.saveMap(this);
 		formManager.dispose();
 		loaded = false;
 	}
