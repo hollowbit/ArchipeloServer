@@ -16,14 +16,14 @@ public class PlayerStatsManager implements EventHandler {
 	private Player player;
 	
 	private float speed;
-	private int minDamage;
-	private int maxDamage;
+	//private int minDamage;
+	//private int maxDamage;
 	private int defense;
 	private float damageMultiplier;
 	private float defenseMultiplier;
 	private float speedMultiplier;
-	private float critMultiplier;
-	private int critChance;
+	//private float critMultiplier;
+	//private int critChance;
 	private int maxHealth;
 	
 	public PlayerStatsManager (Player player) {
@@ -40,15 +40,6 @@ public class PlayerStatsManager implements EventHandler {
 		//Set speed to default player speed for now
 		speed = EntityType.PLAYER.getSpeed();
 		maxHealth = EntityType.PLAYER.getMaxHealth();
-		
-		//Calculate min/max damage
-		if (weapon != null) {
-			minDamage = weapon.getType().minDamage;
-			maxDamage = weapon.getType().maxDamage;
-		} else {
-			minDamage = 0;
-			maxDamage = 0;
-		}
 		
 		//Calculate defense
 		this.defense = 0;
@@ -102,16 +93,7 @@ public class PlayerStatsManager implements EventHandler {
 		if (weapon != null)
 			speedMultiplier *= weapon.getType().speedMultiplier;
 		
-		//Calculate crit stuff
-		if (weapon != null) {
-			critMultiplier = weapon.getType().critMultiplier;
-			critChance = weapon.getType().critChance;
-		} else {
-			critMultiplier = 1f;
-			critChance = 0;
-		}
-		
-		PlayerStatsChangeEvent event = new PlayerStatsChangeEvent(player, speed, minDamage, maxDamage, defense, damageMultiplier, defenseMultiplier, speedMultiplier, critMultiplier, critChance);
+		PlayerStatsChangeEvent event = new PlayerStatsChangeEvent(player, speed, defense, damageMultiplier, defenseMultiplier, speedMultiplier);
 		event.trigger();
 		
 		//Update speed for players
@@ -121,13 +103,14 @@ public class PlayerStatsManager implements EventHandler {
 	/**
 	 * Returns a random hit value depending on min and max damage and damage multiplier also considering critical hits.
 	 * Use this when player attacks.
+	 * @param item
 	 * @return
 	 */
-	public float hit () {
-		float damage = StaticTools.getRandom().nextInt(maxDamage + 1 - minDamage) + minDamage;
+	public float hit (Item item) {
+		float damage = StaticTools.getRandom().nextInt(item.getType().maxDamage + 1 - item.getType().minDamage) + item.getType().minDamage;
 		
-		if (StaticTools.getRandom().nextInt(100) < critChance)//Checks for a crit hit
-			damage *= critMultiplier;
+		if (StaticTools.getRandom().nextInt(100) < item.getType().critChance)//Checks for a crit hit
+			damage *= item.getType().critMultiplier;
 		
 		return damage * damageMultiplier;
 	}
@@ -149,14 +132,6 @@ public class PlayerStatsManager implements EventHandler {
 		return speed;
 	}
 
-	public int getMinDamage() {
-		return minDamage;
-	}
-
-	public int getMaxDamage() {
-		return maxDamage;
-	}
-
 	public int getBaseDefense() {
 		return defense;
 	}
@@ -175,14 +150,6 @@ public class PlayerStatsManager implements EventHandler {
 
 	public float getSpeedMultiplier() {
 		return speedMultiplier;
-	}
-
-	public float getCritMultiplier() {
-		return critMultiplier;
-	}
-
-	public int getCritChance() {
-		return critChance;
 	}
 	
 	public int getHealth() {

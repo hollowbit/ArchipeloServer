@@ -149,7 +149,7 @@ public class Map {
 		boolean isPlayer = testEntity instanceof Player;
 		
 		//Check for collisions with entities
-		for (Entity entity : getEntities()) {
+		for (Entity entity : entityManager.duplicateEntityList()) {
 			if (entity == testEntity)
 				continue;
 			

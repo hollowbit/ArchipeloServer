@@ -19,6 +19,12 @@ public class Slime extends LivingEntity {
 	}
 	
 	@Override
+	public void tick20(float deltaTime) {
+		super.tick20(deltaTime);
+		this.heal(-1);
+	}
+	
+	@Override
 	public void tick60(float deltaTime) {
 		super.tick60(deltaTime);
 		if (isMoving())

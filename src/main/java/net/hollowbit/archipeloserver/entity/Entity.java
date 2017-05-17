@@ -65,6 +65,8 @@ public abstract class Entity {
 		}
 		
 		this.health = fullSnapshot.getInt("health", entityType.getMaxHealth());
+		if (health > this.getMaxHealth())
+			health = this.getMaxHealth();
 		
 		changes = new EntitySnapshot(this.name, this.entityType.getId(), true);
 		log = new EntityLog();
@@ -180,7 +182,8 @@ public abstract class Entity {
 		snapshot.putObject("pos", new Point(this.getX(), this.getY()));
 		snapshot.putInt("direction", this.getLocation().getDirectionInt());
 		snapshot.putInt("style", style);
-		snapshot.putInt("health", health);
+		if (this.getEntityType().showHealthBar())
+			snapshot.putInt("health", health);
 		animationManager.applyToEntitySnapshot(snapshot);
 		
 		for (EntityComponent component : components)
@@ -356,9 +359,16 @@ public abstract class Entity {
 	 */
 	public void heal (int amount) {
 		this.health += amount;
+		
+		//Clamp health to min and max
 		if (health < 0)
-			health = 0;
-		this.changes.putInt("health", health);
+			this.remove();
+		
+		if (health > this.getMaxHealth())
+			health = this.getMaxHealth();
+		
+		if (this.getEntityType().showHealthBar())
+			this.changes.putInt("health", health);
 	}
 	
 	/**

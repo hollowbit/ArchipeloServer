@@ -49,23 +49,23 @@ public class Item {
 		return ItemType.getItemTypeByItem(this);
 	}
 	
-	public UseTypeSettings useTap (Player user) {
+	public UseTypeSettings useTap (Player user, long time) {
 		if (ItemType.getItemTypeByItem(this).getUseType() != null)
-			return ItemType.getItemTypeByItem(this).getUseType().useItemTap(this, user);
+			return ItemType.getItemTypeByItem(this).getUseType().useItemTap(this, user, time);
 		else
 			return null;
 	}
 	
-	public UseTypeSettings useDoubleTap (Player user, float delta) {
+	public UseTypeSettings useDoubleTap (Player user, float delta, long time) {
 		if (ItemType.getItemTypeByItem(this).getUseType() != null)
-			return ItemType.getItemTypeByItem(this).getUseType().useItemDoubleTap(this, user, delta);
+			return ItemType.getItemTypeByItem(this).getUseType().useItemDoubleTap(this, user, delta, time);
 		else
 			return null;
 	}
 	
-	public UseTypeSettings useHold (Player user, float duration) {
+	public UseTypeSettings useHold (Player user, float duration, long time) {
 		if (ItemType.getItemTypeByItem(this).getUseType() != null)
-			return ItemType.getItemTypeByItem(this).getUseType().useItemHold(this, user, duration);
+			return ItemType.getItemTypeByItem(this).getUseType().useItemHold(this, user, duration, time);
 		else
 			return null;
 	}

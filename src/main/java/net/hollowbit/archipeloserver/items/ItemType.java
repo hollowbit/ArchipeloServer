@@ -64,6 +64,7 @@ public enum ItemType {
 	public float speedMultiplier = 1;
 	public float critMultiplier;
 	public int critChance;
+	public int hitRange;
 	
 	private UseType useType;
 	
@@ -112,6 +113,7 @@ public enum ItemType {
 		this.numOfUseAnimations = data.numOfUseAnimations;
 		this.useAnimationLengths = data.useAnimationLengths;
 		this.sounds = data.sounds;
+		this.hitRange = data.hitRange;
 		
 		if (equipType == EQUIP_INDEX_USABLE)
 			this.useType = useType;

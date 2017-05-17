@@ -30,6 +30,7 @@ public class PacketType {
 	public static final int FORM_REQUEST = 18;
 	public static final int FORM_DATA = 19;
 	public static final int POSITION_CORRECTION = 20;
+	public static final int PLAYER_STATS = 21;
 
 	private static HashMap<Integer, Class> registeredPackets;
 	
@@ -56,6 +57,7 @@ public class PacketType {
 			registeredPackets.put(FORM_REQUEST, ClassReflection.forName("net.hollowbit.archipeloserver.network.packets.FormRequestPacket"));
 			registeredPackets.put(FORM_DATA, ClassReflection.forName("net.hollowbit.archipeloserver.network.packets.FormDataPacket"));
 			registeredPackets.put(POSITION_CORRECTION, ClassReflection.forName("net.hollowbit.archipeloserver.network.packets.PositionCorrectionPacket"));
+			registeredPackets.put(PLAYER_STATS, ClassReflection.forName("net.hollowbit.archipeloserver.network.packets.PlayerStatsPacket"));
 		} catch (Exception e) {
 			ArchipeloServer.getServer().getLogger().error("Was unable to register all packet.");
 			ArchipeloServer.getServer().stop();

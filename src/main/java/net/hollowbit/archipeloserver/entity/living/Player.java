@@ -37,6 +37,7 @@ import net.hollowbit.archipeloserver.network.PacketType;
 import net.hollowbit.archipeloserver.network.packets.ChatMessagePacket;
 import net.hollowbit.archipeloserver.network.packets.ControlsPacket;
 import net.hollowbit.archipeloserver.network.packets.LogoutPacket;
+import net.hollowbit.archipeloserver.network.packets.PlayerStatsPacket;
 import net.hollowbit.archipeloserver.network.packets.PopupTextPacket;
 import net.hollowbit.archipeloserver.network.packets.PositionCorrectionPacket;
 import net.hollowbit.archipeloserver.tools.Configuration;
@@ -57,7 +58,7 @@ import net.hollowbit.archipeloshared.UseTypeSettings;
 public class Player extends LivingEntity implements PacketHandler, RollableEntity {
 	
 	public static final float ROLL_DOUBLE_CLICK_DURATION = 0.3f;
-	public static final float HIT_RANGE = 8;
+	public static final float DEFAULT_HIT_RANGE = 8;
 	public static final float EMPTY_HAND_USE_ANIMATION_LENTH = 0.5f;
 	
 	//Equipped Inventory Index
@@ -403,14 +404,16 @@ public class Player extends LivingEntity implements PacketHandler, RollableEntit
 			break;
 		case Controls.ATTACK:
 			if (!isRolling() && !isUsing()) {
+				long time = System.currentTimeMillis() - CONTROLS_UPDATE_DELAY - WORLD_SNAPSHOT_DELAY - hbUser.getPing();
 				ArrayList<Entity> entitiesOnMap = (ArrayList<Entity>) location.getMap().getEntities();
 				boolean useHitAnimation = true;
+				
 				for (Entity entity : entitiesOnMap) {
 					if (entity == this)
 						continue;
 					
 					//Run hit event for every collision rect hit on entity
-					for (String rectHit : HitCalculator.getCollRectsHit(this.getCenterPoint().x, this.getCenterPoint().y, entity.getCollisionRects(System.currentTimeMillis() - CONTROLS_UPDATE_DELAY - WORLD_SNAPSHOT_DELAY - hbUser.getPing()), HIT_RANGE, location.getDirection())) {
+					for (String rectHit : HitCalculator.getCollRectsHit(this.getCenterPoint().x, this.getCenterPoint().y, entity.getCollisionRects(time), DEFAULT_HIT_RANGE, location.getDirection())) {
 						this.interactWith(entity, rectHit, EntityInteractionType.HIT);
 						
 						//If the entity is not hittable, don't use the animation
@@ -424,7 +427,7 @@ public class Player extends LivingEntity implements PacketHandler, RollableEntit
 					Item item = inventory.getWeaponInventory().getRawStorage()[0];
 					
 					if (item != null) {
-						UseTypeSettings settings = item.useTap(this);
+						UseTypeSettings settings = item.useTap(this, time);
 						if (settings != null)
 							playUseAnimation(item, settings.animationType, settings.thrust, settings.soundType);
 					} else
@@ -620,6 +623,15 @@ public class Player extends LivingEntity implements PacketHandler, RollableEntit
 	
 	public PlayerStatsManager getStatsManager () {
 		return statsManager;
+	}
+	
+	@Override
+	public void heal(int amount) {
+		super.heal(amount);
+		
+		PlayerStatsPacket packet = new PlayerStatsPacket();
+		packet.health = this.health;
+		this.sendPacket(packet);
 	}
 	
 	public Random getRandom() {

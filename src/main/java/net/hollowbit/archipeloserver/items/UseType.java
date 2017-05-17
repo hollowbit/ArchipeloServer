@@ -10,9 +10,10 @@ public interface UseType {
 	 * Could return null if unsuccessful.
 	 * @param item
 	 * @param user
+	 * @param time
 	 * @return
 	 */
-	public abstract UseTypeSettings useItemTap (Item item, Player user);
+	public abstract UseTypeSettings useItemTap (Item item, Player user, long time);
 	
 	/**
 	 * Use item after action button held. Returns a UseTypeSettings object with information about animations and sounds.
@@ -20,9 +21,10 @@ public interface UseType {
 	 * @param item
 	 * @param user
 	 * @param duration
+	 * @param time
 	 * @return
 	 */
-	public abstract UseTypeSettings useItemHold (Item item, Player user, float duration);
+	public abstract UseTypeSettings useItemHold (Item item, Player user, float duration, long time);
 	
 	/**
 	 * Use an item on double tapping action button. Returns a UseTypeSettings object with information about animations and sounds.
@@ -30,8 +32,9 @@ public interface UseType {
 	 * @param item
 	 * @param user
 	 * @param delta Time between both presses.
+	 * @param time
 	 * @return
 	 */
-	public abstract UseTypeSettings useItemDoubleTap (Item item, Player user, float delta);
+	public abstract UseTypeSettings useItemDoubleTap (Item item, Player user, float delta, long time);
 	
 }

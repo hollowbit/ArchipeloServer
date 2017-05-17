@@ -41,6 +41,7 @@ public enum EntityType {
 	private int numberOfStyles;
 	private boolean hittable;
 	
+	private boolean showHealthBar;
 	private int maxHealth;
 	private float speed;
 	
@@ -81,6 +82,7 @@ public enum EntityType {
 		this.numberOfStyles = data.numberOfStyles;
 		this.hittable = data.hittable;
 		
+		this.showHealthBar = data.showHealthBar;
 		this.maxHealth = data.maxHealth;
 		this.speed = data.speed;
 		
@@ -166,6 +168,10 @@ public enum EntityType {
 	
 	public float getSpeed () {
 		return speed;
+	}
+	
+	public boolean showHealthBar() {
+		return showHealthBar;
 	}
 	
 	public int getMaxHealth () {

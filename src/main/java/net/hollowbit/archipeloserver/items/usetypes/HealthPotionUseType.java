@@ -10,7 +10,7 @@ public class HealthPotionUseType implements UseType {
 	//Example of item use code
 	
 	@Override
-	public UseTypeSettings useItemTap(Item item, Player user) {
+	public UseTypeSettings useItemTap(Item item, Player user, long time) {
 		/*if (user.isFullHealth())
 			return false;
 		else {
@@ -21,12 +21,12 @@ public class HealthPotionUseType implements UseType {
 	}
 
 	@Override
-	public UseTypeSettings useItemHold(Item item, Player user, float duration) {
+	public UseTypeSettings useItemHold(Item item, Player user, float duration, long time) {
 		return null;
 	}
 
 	@Override
-	public UseTypeSettings useItemDoubleTap(Item item, Player user, float delta) {
+	public UseTypeSettings useItemDoubleTap(Item item, Player user, float delta, long time) {
 		return null;
 	}
 
