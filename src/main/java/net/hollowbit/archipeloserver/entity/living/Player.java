@@ -42,8 +42,11 @@ import net.hollowbit.archipeloserver.network.packets.PopupTextPacket;
 import net.hollowbit.archipeloserver.network.packets.PositionCorrectionPacket;
 import net.hollowbit.archipeloserver.tools.Configuration;
 import net.hollowbit.archipeloserver.tools.StaticTools;
+import net.hollowbit.archipeloserver.tools.UnloadedLocation;
 import net.hollowbit.archipeloserver.tools.database.DatabaseManager;
 import net.hollowbit.archipeloserver.tools.entity.Location;
+import net.hollowbit.archipeloserver.tools.event.EventHandler;
+import net.hollowbit.archipeloserver.tools.event.events.EntityDeathEvent;
 import net.hollowbit.archipeloserver.tools.event.events.PlayerJoinEvent;
 import net.hollowbit.archipeloserver.tools.event.events.PlayerLeaveEvent;
 import net.hollowbit.archipeloserver.world.Map;
@@ -105,6 +108,8 @@ public class Player extends LivingEntity implements PacketHandler, RollableEntit
 	LinkedList<ControlsPacket> commandsToExecute;
 	Random random;
 	int seed;
+	UnloadedLocation respawnLocation;
+	EventHandler respawner;
 	
 	public Player (String name, String address, boolean firstTimeLogin) {
 		this.create(name, 0, location, address, firstTimeLogin);
@@ -149,6 +154,27 @@ public class Player extends LivingEntity implements PacketHandler, RollableEntit
 				removeAllCommands(packetsToRemove);
 			}
 		}, 0, CONTROLS_UPDATE_RATE, TimeUnit.MILLISECONDS);
+		
+		final Player player = this;
+		//Prevents the player from being removed when dead. Simply teleports them.
+		respawner = new EventHandler() {
+			@Override
+			public boolean onEntityDeath(EntityDeathEvent event) {
+				if (event.getEntity() == player) {
+					event.cancel();
+					event.setNewHealth(EntityType.PLAYER.getMaxHealth());
+					if (event.hasKiller())
+						sendPacket(new PopupTextPacket("{youWereKilledBy} " + event.getKiller().getName(), PopupTextPacket.Type.NORMAL));
+					else
+						sendPacket(new PopupTextPacket("{youDied}", PopupTextPacket.Type.NORMAL));
+						
+					player.teleport(respawnLocation.getX(), respawnLocation.getY(), Direction.DOWN, respawnLocation.getMap(), respawnLocation.getIsland());
+					return true;
+				}
+				return false;
+			}
+		};
+		respawner.addToEventManager();
 	}
 	
 	/**
@@ -183,9 +209,15 @@ public class Player extends LivingEntity implements PacketHandler, RollableEntit
 		this.hbUser = hbUser;
 		this.flagsManager = new PlayerFlagsManager(playerData.flags, this);
 		this.statsManager = new PlayerStatsManager(this);
-		this.health = getMaxHealth();//TODO load in health properly
+		this.health = playerData.health;
 		this.seed = StaticTools.getRandom().nextInt(1000000);
 		this.random = new Random(seed);
+		this.respawnLocation = new UnloadedLocation(playerData.respawnX, playerData.respawnY, playerData.respawnIsland, playerData.respawnMap);
+		
+		//Send player stats to itself
+		PlayerStatsPacket packet = new PlayerStatsPacket();
+		packet.health = this.health;
+		this.sendPacket(packet);
 		
 		PlayerJoinEvent event = new PlayerJoinEvent(this);//Triggers player join event
 		event.trigger();
@@ -340,6 +372,7 @@ public class Player extends LivingEntity implements PacketHandler, RollableEntit
 	public void remove (LogoutReason reason, String alt) {
 		super.remove();
 		statsManager.dispose();
+		respawner.removeFromEventManager();
 		ArchipeloServer.getServer().getNetworkManager().removePacketHandler(this);
 		ArchipeloServer.getServer().getDatabaseManager().updatePlayer(this);
 		
@@ -625,9 +658,13 @@ public class Player extends LivingEntity implements PacketHandler, RollableEntit
 		return statsManager;
 	}
 	
+	public UnloadedLocation getRespawnLocation() {
+		return respawnLocation;
+	}
+	
 	@Override
-	public void heal(int amount) {
-		super.heal(amount);
+	public void heal(float amount, Entity healer) {
+		super.heal(amount, healer);
 		
 		PlayerStatsPacket packet = new PlayerStatsPacket();
 		packet.health = this.health;
@@ -660,6 +697,11 @@ public class Player extends LivingEntity implements PacketHandler, RollableEntit
 		playerData.y = config.spawnY;
 		playerData.island = config.spawnIsland;
 		playerData.map = config.spawnMap;
+		playerData.respawnX = config.spawnX;
+		playerData.respawnY = config.spawnY;
+		playerData.respawnIsland = config.spawnIsland;
+		playerData.respawnMap = config.spawnMap;
+		playerData.health = EntityType.PLAYER.getMaxHealth();
 		playerData.lastPlayed = DatabaseManager.getCurrentDate();
 		playerData.creationDate = DatabaseManager.getCurrentDate();
 		playerData.flags = new String[0];

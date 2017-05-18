@@ -152,8 +152,7 @@ public enum EntityType {
 		CollisionRect[] rects = new CollisionRect[collRects.length];
 		for (int i = 0; i < rects.length; i++) {
 			CollisionRect rect = new CollisionRect(collRects[i]);
-			rect.move(x, y);
-			rects[i] = rect;
+			rects[i] = rect.move(x, y);
 		}
 		return rects;
 	}

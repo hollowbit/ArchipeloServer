@@ -5,7 +5,7 @@ import net.hollowbit.archipeloserver.items.Item;
 import net.hollowbit.archipeloserver.items.UseType;
 import net.hollowbit.archipeloshared.UseTypeSettings;
 
-public class HealthPotionUseType implements UseType {
+public class HealthPotionUseType extends UseType {
 	
 	//Example of item use code
 	

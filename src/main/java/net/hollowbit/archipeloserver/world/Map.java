@@ -128,6 +128,14 @@ public class Map {
 		}
 	}
 	
+	public boolean collidesWithMap (CollisionRect[] rects, Entity testEntity) {
+		for (CollisionRect rect : rects) {
+			if (collidesWithMap(rect, testEntity))
+				return true;
+		}
+		return false;
+	}
+	
 	public boolean collidesWithMap (CollisionRect rect, Entity testEntity) {
 		int collisionBoxSize = (int) ArchipeloServer.TILE_SIZE / TileData.COLLISION_MAP_SCALE;
 		
@@ -154,6 +162,12 @@ public class Map {
 				continue;
 			
 			for (CollisionRect entityRect : entity.getCollisionRects()) {
+				//Handles the case where this entity runs into a player that is cannot collide with
+				if (entity.isPlayer()) {
+					if (rect.hard && !testEntity.ignoreHardnessOfCollisionRects((Player) entity, rect.name) && entityRect.collidesWith(rect))
+						return true;
+				}
+				
 				if (!entityRect.hard)
 					continue;
 				

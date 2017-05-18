@@ -221,11 +221,11 @@ public abstract class LivingEntity extends Entity {
 	}
 	
 	protected boolean doesCurrentPositionCollideWithMap () {
-		for (CollisionRect rect : getCollisionRects(location.pos)) {//Checks to make sure no collision rect is intersecting with map
+		/*for (CollisionRect rect : getCollisionRects(location.pos)) {//Checks to make sure no collision rect is intersecting with map
 			if (location.getMap().collidesWithMap(rect, this)) {
 				return true;
 			}
-		}
+		}*/
 		return false;
 	}
 	

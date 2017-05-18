@@ -152,7 +152,7 @@ public class PlayerStatsManager implements EventHandler {
 		return speedMultiplier;
 	}
 	
-	public int getHealth() {
+	public float getHealth() {
 		return player.getHealth();
 	}
 	

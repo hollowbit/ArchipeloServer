@@ -26,6 +26,7 @@ public class MonsterFollowComponent extends EntityComponent implements EventHand
 		this.target = null;
 		this.moving = false;
 		this.addToEventManager();
+		this.scanForTarget();
 	}
 	
 	@Override
@@ -100,6 +101,43 @@ public class MonsterFollowComponent extends EntityComponent implements EventHand
 			}
 		}
 		return false;
+	}
+	
+	/**
+	 * Returns true if the target is within a distance.
+	 * Returns false it not within distance of there is no target.
+	 * @param distance
+	 * @return
+	 */
+	public boolean isTargetWithinDistance(int distance) {
+		if (target == null)
+			return false;
+		
+		float dX = (entity.getFootX() - target.getFootX());
+		float dY = (entity.getFootY() - target.getFootY());
+		return (dX * dX + dY * dY < distance * distance);
+	}
+	
+	/**
+	 * Will heal the target.
+	 * @param distance
+	 * @param amount
+	 */
+	public void healTarget(float amount) {
+		if (target != null)
+			target.heal(amount, entity);
+	}
+	
+	/**
+	 * Scans for a player to follow
+	 */
+	protected void scanForTarget() {
+		for (Player player : entity.getMap().getPlayers()) {
+			float dX = (entity.getFootX() - player.getFootX());
+			float dY = (entity.getFootY() - player.getFootY());
+			if (dX * dX + dY * dY < this.activationZoneDist * this.activationZoneDist)//If within, set as target
+				this.target = player;
+		}
 	}
 
 }

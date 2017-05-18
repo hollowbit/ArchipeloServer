@@ -10,6 +10,7 @@ import net.hollowbit.archipeloserver.entity.living.Player;
 import net.hollowbit.archipeloserver.network.packets.PopupTextPacket;
 import net.hollowbit.archipeloserver.network.packets.TeleportPacket;
 import net.hollowbit.archipeloserver.tools.entity.Location;
+import net.hollowbit.archipeloserver.tools.event.events.EntityDeathEvent;
 import net.hollowbit.archipeloserver.tools.event.events.EntityInteractionEvent;
 import net.hollowbit.archipeloserver.tools.event.events.EntityTeleportEvent;
 import net.hollowbit.archipeloserver.world.Island;
@@ -31,7 +32,7 @@ public abstract class Entity {
 	protected EntityAnimationManager animationManager;
 	protected ArrayList<EntityComponent> components;
 	protected EntityAudioManager audioManager;
-	protected int health;
+	protected float health;
 	
 	public Entity () {
 		components = new ArrayList<EntityComponent>();
@@ -64,7 +65,7 @@ public abstract class Entity {
 			ArchipeloServer.getServer().getLogger().caution("Entity " + this.name + " on map " + this.getMap().getIsland().getName() + ":" + this.getMap().getName() + " has a bad style attribute.");
 		}
 		
-		this.health = fullSnapshot.getInt("health", entityType.getMaxHealth());
+		this.health = fullSnapshot.getFloat("health", entityType.getMaxHealth());
 		if (health > this.getMaxHealth())
 			health = this.getMaxHealth();
 		
@@ -183,7 +184,7 @@ public abstract class Entity {
 		snapshot.putInt("direction", this.getLocation().getDirectionInt());
 		snapshot.putInt("style", style);
 		if (this.getEntityType().showHealthBar())
-			snapshot.putInt("health", health);
+			snapshot.putFloat("health", health);
 		animationManager.applyToEntitySnapshot(snapshot);
 		
 		for (EntityComponent component : components)
@@ -200,7 +201,7 @@ public abstract class Entity {
 		snapshot.putObject("pos", new Point(this.getX(), this.getY()));
 		snapshot.putInt("direction", this.getLocation().getDirectionInt());
 		snapshot.putInt("style", style);
-		snapshot.putInt("health", health);
+		snapshot.putFloat("health", health);
 		
 		for (EntityComponent component : components)
 			component.editSaveSnapshot(snapshot);
@@ -345,7 +346,7 @@ public abstract class Entity {
 		return location.getMap();
 	}
 	
-	public int getHealth () {
+	public float getHealth () {
 		return health;
 	}
 	
@@ -354,21 +355,44 @@ public abstract class Entity {
 	}
 	
 	/**
-	 * Can be negative to damage this entity
+	 * Can be negative to damage this entity.
+	 * May trigger an entity death event.
 	 * @param amount
 	 */
-	public void heal (int amount) {
+	public void heal(float amount) {
+		this.heal(amount, null);
+	}
+	
+	/**
+	 * Can be negative to damage this entity.
+	 * May trigger an entity death event.
+	 * @param amount
+	 * @param healer
+	 */
+	public void heal (float amount, Entity healer) {
+		float oldHealth = this.health;
 		this.health += amount;
 		
-		//Clamp health to min and max
-		if (health < 0)
-			this.remove();
-		
-		if (health > this.getMaxHealth())
-			health = this.getMaxHealth();
-		
-		if (this.getEntityType().showHealthBar())
-			this.changes.putInt("health", health);
+		if (health <= 0) {
+			//Trigger death event
+			EntityDeathEvent event = new EntityDeathEvent(this, healer, oldHealth, this.health);
+			event.trigger();
+			
+			if (event.wasCanceled()) {//Canceled, reset health or set it to new value
+				if (event.isNewHealthSet())
+					this.health = event.getNewHealth();
+				else
+					this.health = oldHealth;
+			} else//Event not canceled, remove entity
+				this.remove();
+		} else {
+			//Entity not dead. Just clamp health and update health bars
+			if (health > this.getMaxHealth())
+				health = this.getMaxHealth();
+			
+			if (this.getEntityType().showHealthBar())
+				this.changes.putFloat("health", health);
+		}
 	}
 	
 	/**

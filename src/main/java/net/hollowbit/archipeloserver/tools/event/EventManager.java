@@ -2,17 +2,7 @@ package net.hollowbit.archipeloserver.tools.event;
 
 import java.util.LinkedList;
 
-import net.hollowbit.archipeloserver.tools.event.events.EntityInteractionEvent;
-import net.hollowbit.archipeloserver.tools.event.events.EntityMoveEvent;
-import net.hollowbit.archipeloserver.tools.event.events.EntityTeleportEvent;
-import net.hollowbit.archipeloserver.tools.event.events.PlayerBankAddEvent;
-import net.hollowbit.archipeloserver.tools.event.events.PlayerInventoryAddEvent;
-import net.hollowbit.archipeloserver.tools.event.events.PlayerInventoryChangeEvent;
-import net.hollowbit.archipeloserver.tools.event.events.PlayerInventoryMoveEvent;
-import net.hollowbit.archipeloserver.tools.event.events.PlayerInventoryRemoveEvent;
-import net.hollowbit.archipeloserver.tools.event.events.PlayerJoinEvent;
-import net.hollowbit.archipeloserver.tools.event.events.PlayerLeaveEvent;
-import net.hollowbit.archipeloserver.tools.event.events.PlayerStatsChangeEvent;
+import net.hollowbit.archipeloserver.tools.event.events.*;
 
 public class EventManager {
 	
@@ -90,6 +80,10 @@ public class EventManager {
 				break;
 			case EntityInteraction:
 				if (eventHandler.onEntityInteraction((EntityInteractionEvent) event))
+					handled = true;
+				break;
+			case EntityDeath:
+				if (eventHandler.onEntityDeath((EntityDeathEvent) event))
 					handled = true;
 				break;
 			}

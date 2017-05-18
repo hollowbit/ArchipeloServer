@@ -66,6 +66,7 @@ public class ArchipeloServer {
 		conditionManager = new ConditionManager();
 		executableManager = new ExecutableManager();
 		eventManager = new EventManager();
+		
 		soundManager = new SoundManager();
 		ItemType.loadAssets();
 		

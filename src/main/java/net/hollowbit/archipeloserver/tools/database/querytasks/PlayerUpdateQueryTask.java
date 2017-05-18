@@ -22,7 +22,7 @@ public class PlayerUpdateQueryTask extends QueryTask {
 	@Override
 	public void execute(Connection conn) {
 		try {
-			PreparedStatement statement = conn.prepareStatement("update players set `name`=?, `x`=?, `y`=?, `island`=?, `map`=?, `weaponInventory`=?, `consumablesInventory`=?, `buffsInventory`=?, `ammoInventory`=?, `uneditableEquippedInventory`=?, `equippedInventory`=?, `cosmeticInventory`=?, `bankInventory`=?, `inventory`=?, `lastPlayed`=?, `flags`=? where uuid = ?");
+			PreparedStatement statement = conn.prepareStatement("update players set `name`=?, `x`=?, `y`=?, `island`=?, `map`=?, `weaponInventory`=?, `consumablesInventory`=?, `buffsInventory`=?, `ammoInventory`=?, `uneditableEquippedInventory`=?, `equippedInventory`=?, `cosmeticInventory`=?, `bankInventory`=?, `inventory`=?, `lastPlayed`=?, `flags`=?, `health`=?, `respawnX`=?, `respawnY`=?, `respawnIsland`=?, `respawnMap`=? where uuid = ?");
 			statement.setString(1, player.getName());
 			statement.setFloat(2, player.getLocation().getX());
 			statement.setFloat(3, player.getLocation().getY());
@@ -43,7 +43,13 @@ public class PlayerUpdateQueryTask extends QueryTask {
 			statement.setDate(15, DatabaseManager.getCurrentDate());
 			statement.setString(16, player.getFlagsManager().getFlagsJson());
 			
-			statement.setString(17, player.getId());//Update where uuid is the same
+			statement.setFloat(17, player.getHealth());
+			statement.setFloat(18, player.getRespawnLocation().getX());
+			statement.setFloat(19, player.getRespawnLocation().getY());
+			statement.setString(20, player.getRespawnLocation().getIsland());
+			statement.setString(21, player.getRespawnLocation().getMap());
+			
+			statement.setString(22, player.getId());//Update where uuid is the same
 			
 			statement.executeUpdate();
 		} catch (SQLException e) {

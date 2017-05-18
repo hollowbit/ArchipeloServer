@@ -65,17 +65,17 @@ public class EntityAnimationManager {
 	 * @param animationMeta
 	 */
 	public void change (String animationId, String animationMeta) {
-		if (entity.getEntityType().hasAnimation(animationId))
-			this.change(animationId, animationMeta, entity.getEntityType().getAnimationDataById(animationId).totalRuntime);
+		this.change(animationId, animationMeta, entity.getEntityType().getAnimationDataById(animationId).totalRuntime);
 	}
 	
 	public void change (String animationId, String animationMeta, float customAnimationLength) {
 		//Make sure this entity has this animation
 		if (entity.getEntityType().hasAnimation(animationId)) {
+			if (!animationId.equals(id))
+				this.stateTime = 0;
 			this.id = animationId;
 			this.data = entity.getEntityType().getAnimationDataById(animationId);
 			this.meta = animationMeta;
-			this.stateTime = 0;
 			this.animationLength = customAnimationLength;
 		}
 	}

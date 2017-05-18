@@ -1,6 +1,7 @@
 package net.hollowbit.archipeloserver.tools.event;
 
 import net.hollowbit.archipeloserver.ArchipeloServer;
+import net.hollowbit.archipeloserver.tools.event.events.EntityDeathEvent;
 import net.hollowbit.archipeloserver.tools.event.events.EntityInteractionEvent;
 import net.hollowbit.archipeloserver.tools.event.events.EntityMoveEvent;
 import net.hollowbit.archipeloserver.tools.event.events.EntityTeleportEvent;
@@ -26,6 +27,7 @@ public interface EventHandler {
 	public default boolean onPlayerInventoryMove (PlayerInventoryMoveEvent event) {return false;}
 	public default boolean onPlayerStatsChange (PlayerStatsChangeEvent event) {return false;}
 	public default boolean onEntityInteraction (EntityInteractionEvent event) {return false;}
+	public default boolean onEntityDeath (EntityDeathEvent event) {return false;}
 	
 	public default void addToEventManager() {
 		ArchipeloServer.getServer().getEventManager().add(this);
@@ -48,6 +50,7 @@ public interface EventHandler {
 		public boolean onPlayerInventoryMove (PlayerInventoryMoveEvent event) {System.out.println("EventHandler.java Event Triggered: Player Inventory Move"); return false;}
 		public boolean onPlayerStatsChange (PlayerStatsChangeEvent event) {System.out.println("EventHandler.java Event Triggered: Player Stats Change"); return false;}
 		public boolean onEntityInteraction (EntityInteractionEvent event) {System.out.println("EventHandler.java Event Triggered: Entity Interaction Occured"); return false;}
+		public boolean onEntityDeath (EntityDeathEvent event) {System.out.println("EventHandler.java Event Triggered: Entity Death Occured"); return false;}
 		
 	}
 	

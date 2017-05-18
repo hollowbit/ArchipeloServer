@@ -21,7 +21,7 @@ public class PlayerCreateQueryTask extends QueryTask {
 	@Override
 	public void execute(Connection conn) {
 		try {
-			PreparedStatement statement = conn.prepareStatement("insert into players (`uuid`, `hbUuid`, `name`, `x`, `y`, `island`, `map`, `weaponInventory`, `consumablesInventory`, `buffsInventory`, `ammoInventory`, `uneditableEquippedInventory`, `equippedInventory`, `cosmeticInventory`, `bankInventory`, `inventory`, `lastPlayed`, `creationDate`, `flags`) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
+			PreparedStatement statement = conn.prepareStatement("insert into players (`uuid`, `hbUuid`, `name`, `x`, `y`, `island`, `map`, `weaponInventory`, `consumablesInventory`, `buffsInventory`, `ammoInventory`, `uneditableEquippedInventory`, `equippedInventory`, `cosmeticInventory`, `bankInventory`, `inventory`, `lastPlayed`, `creationDate`, `flags`, `health`, `respawnX`, `respawnY`, `respawnIsland`, `respawnMap`) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
 			statement.setString(1, player.getId());
 			statement.setString(2, player.getHollowBitUser().getUUID());
 			statement.setString(3, player.getName());
@@ -44,6 +44,12 @@ public class PlayerCreateQueryTask extends QueryTask {
 			statement.setDate(17, player.getLastPlayedDate());
 			statement.setDate(18, player.getCreationDate());
 			statement.setString(19, player.getFlagsManager().getFlagsJson());
+			
+			statement.setFloat(20, player.getHealth());
+			statement.setFloat(21, player.getRespawnLocation().getX());
+			statement.setFloat(22, player.getRespawnLocation().getY());
+			statement.setString(23, player.getRespawnLocation().getIsland());
+			statement.setString(24, player.getRespawnLocation().getMap());
 			
 			statement.executeUpdate();
 		} catch (SQLException e) {

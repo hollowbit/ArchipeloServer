@@ -10,6 +10,7 @@ import net.hollowbit.archipeloshared.EntitySnapshot;
 public class Slime extends LivingEntity {
 	
 	protected MonsterFollowComponent followComponent;
+	protected float timer = 2;
 	
 	@Override
 	public void create(EntitySnapshot fullSnapshot, Map map, EntityType entityType) {
@@ -21,7 +22,15 @@ public class Slime extends LivingEntity {
 	@Override
 	public void tick20(float deltaTime) {
 		super.tick20(deltaTime);
-		this.heal(-1);
+		
+		if (followComponent.isTargetWithinDistance(24)) {
+			timer += deltaTime;
+			if (timer >= 2) {
+				followComponent.healTarget(-10);
+				timer -= 2;
+			}
+		} else
+			timer = 2;
 	}
 	
 	@Override
@@ -41,6 +50,11 @@ public class Slime extends LivingEntity {
 	@Override
 	public EntityAnimationObject animationCompleted(String animationId) {
 		return null;
+	}
+	
+	@Override
+	public boolean ignoreHardnessOfCollisionRects(Player player, String rectName) {
+		return false;
 	}
 
 }

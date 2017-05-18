@@ -1,9 +1,13 @@
 package net.hollowbit.archipeloserver.items;
 
+import java.util.ArrayList;
+
+import net.hollowbit.archipeloserver.entity.Entity;
 import net.hollowbit.archipeloserver.entity.living.Player;
+import net.hollowbit.archipeloshared.HitCalculator;
 import net.hollowbit.archipeloshared.UseTypeSettings;
 
-public interface UseType {
+public abstract class UseType {
 	
 	/**
 	 * Uses an item on tapping action button. Returns a UseTypeSettings object with information about animations and sounds.
@@ -36,5 +40,24 @@ public interface UseType {
 	 * @return
 	 */
 	public abstract UseTypeSettings useItemDoubleTap (Item item, Player user, float delta, long time);
+	
+	/**
+	 * Re-usable method to deal damage (or heal) with a specified item
+	 * @param item
+	 * @param user
+	 * @param time
+	 */
+	protected void damageWithItem (Item item, Player user, long time) {
+		ArrayList<Entity> entitiesOnMap = (ArrayList<Entity>) user.getMap().getEntities();
+		for (Entity entity : entitiesOnMap) {
+			if (entity == user || !entity.getEntityType().isHittable())
+				continue;
+			
+			//Check for entity hits
+			if (HitCalculator.didEntityHitEntityRects(user.getCenterPoint().x, user.getCenterPoint().y, entity.getCollisionRects(time), item.getType().hitRange, user.getLocation().getDirection())) {
+				entity.heal(-((int) user.getStatsManager().hit(item)));
+			}
+		}
+	}
 	
 }

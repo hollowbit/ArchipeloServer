@@ -11,6 +11,9 @@ public class PlayerData {
 	public String bhUuid;
 	public float x, y;
 	public String island, map;
+	public float health;
+	public float respawnX, respawnY;
+	public String respawnIsland, respawnMap;
 	public Item[] uneditableEquippedInventory;
 	public Item[] equippedInventory;
 	public Item[] cosmeticInventory;

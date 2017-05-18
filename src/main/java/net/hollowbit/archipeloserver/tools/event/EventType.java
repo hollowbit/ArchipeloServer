@@ -4,6 +4,7 @@ public enum EventType {
 	EntityMove,
 	EntityTeleport,
 	EntityInteraction,
+	EntityDeath,
 	PlayerJoin,
 	PlayerLeave,
 	PlayerInventoryAdd,
