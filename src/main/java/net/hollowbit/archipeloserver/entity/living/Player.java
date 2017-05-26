@@ -43,9 +43,11 @@ import net.hollowbit.archipeloserver.tools.UnloadedLocation;
 import net.hollowbit.archipeloserver.tools.database.DatabaseManager;
 import net.hollowbit.archipeloserver.tools.entity.Location;
 import net.hollowbit.archipeloserver.tools.event.EventHandler;
-import net.hollowbit.archipeloserver.tools.event.events.EntityDeathEvent;
-import net.hollowbit.archipeloserver.tools.event.events.PlayerJoinEvent;
-import net.hollowbit.archipeloserver.tools.event.events.PlayerLeaveEvent;
+import net.hollowbit.archipeloserver.tools.event.EventHandlerPriority;
+import net.hollowbit.archipeloserver.tools.event.EventType;
+import net.hollowbit.archipeloserver.tools.event.events.editable.EntityDeathEvent;
+import net.hollowbit.archipeloserver.tools.event.events.readonly.PlayerJoinEvent;
+import net.hollowbit.archipeloserver.tools.event.events.readonly.PlayerLeaveEvent;
 import net.hollowbit.archipeloserver.world.Map;
 import net.hollowbit.archipeloshared.Controls;
 import net.hollowbit.archipeloshared.Direction;
@@ -187,6 +189,7 @@ public class Player extends LivingEntity implements PacketHandler, RollableEntit
 			}
 		};
 		respawner.addToEventManager();
+		respawner.registerEventPriority(EventType.EntityDeath, EventHandlerPriority.HIGHEST_EDITABLE);
 	}
 	
 	/**
@@ -306,11 +309,20 @@ public class Player extends LivingEntity implements PacketHandler, RollableEntit
 	}
 	
 	/**
-	 * Tells whether the player is currently in a use animation
+	 * Tells whether the player is currently in a use animation.
+	 * Will return false even if in thrust animation. This is only for use and usewalk.
 	 * @return
 	 */
-	public boolean isUsing () {
+	private boolean isUsing () {
 		return animationManager.getAnimationId().equals("use") || animationManager.getAnimationId().equals("usewalk");
+	}
+	
+	/**
+	 * Returns whether the player is currently using an item, whether in thrust, use or usewalk.
+	 * @return
+	 */
+	public boolean isCurrentlyUsingAnItem () {
+		return isUsing() || isThrusting();
 	}
 	
 	/**
@@ -456,7 +468,7 @@ public class Player extends LivingEntity implements PacketHandler, RollableEntit
 			
 			break;
 		case Controls.ATTACK:
-			if (!isRolling() && !isUsing()) {
+			if (!isRolling() && !isCurrentlyUsingAnItem()) {
 				long time = System.currentTimeMillis() - CONTROLS_UPDATE_DELAY - WORLD_SNAPSHOT_DELAY - hbUser.getPing();
 				ArrayList<Entity> entitiesOnMap = (ArrayList<Entity>) location.getMap().getEntities();
 				boolean useHitAnimation = true;

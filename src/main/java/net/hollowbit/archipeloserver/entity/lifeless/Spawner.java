@@ -10,7 +10,8 @@ import net.hollowbit.archipeloserver.entity.EntityType;
 import net.hollowbit.archipeloserver.entity.LifelessEntity;
 import net.hollowbit.archipeloserver.tools.StaticTools;
 import net.hollowbit.archipeloserver.tools.event.EventHandler;
-import net.hollowbit.archipeloserver.tools.event.events.EntityDeathEvent;
+import net.hollowbit.archipeloserver.tools.event.EventType;
+import net.hollowbit.archipeloserver.tools.event.events.editable.EntityDeathEvent;
 import net.hollowbit.archipeloserver.world.Map;
 import net.hollowbit.archipeloshared.EntitySnapshot;
 import net.hollowbit.archipeloshared.Point;
@@ -38,7 +39,7 @@ public class Spawner extends LifelessEntity implements EventHandler {
 		this.spawnRate = fullSnapshot.getFloat("spawnRate", 3f);
 		this.timer = 0;
 		this.spawnType = EntityType.getEntityTypeById(spawnSnapshot.type);
-		this.addToEventManager();
+		this.addToEventManager(EventType.EntityDeath);
 	}
 	
 	@Override

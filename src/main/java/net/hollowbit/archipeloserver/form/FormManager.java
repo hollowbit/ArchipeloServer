@@ -13,7 +13,8 @@ import net.hollowbit.archipeloserver.network.packets.FormDataPacket;
 import net.hollowbit.archipeloserver.network.packets.FormInteractPacket;
 import net.hollowbit.archipeloserver.network.packets.FormRequestPacket;
 import net.hollowbit.archipeloserver.tools.event.EventHandler;
-import net.hollowbit.archipeloserver.tools.event.events.PlayerLeaveEvent;
+import net.hollowbit.archipeloserver.tools.event.EventType;
+import net.hollowbit.archipeloserver.tools.event.events.readonly.PlayerLeaveEvent;
 import net.hollowbit.archipeloserver.world.Map;
 import net.hollowbit.archipeloshared.FormData;
 
@@ -28,7 +29,7 @@ public class FormManager implements PacketHandler, EventHandler {
 		forms = new HashMap<String, Form>();
 		formsList = new LinkedList<Form>();
 		ArchipeloServer.getServer().getNetworkManager().addPacketHandler(this);
-		this.addToEventManager();
+		this.addToEventManager(EventType.PlayerLeave);
 	}
 	
 	/**

@@ -6,7 +6,8 @@ import net.hollowbit.archipeloserver.form.FormManager;
 import net.hollowbit.archipeloserver.form.FormType;
 import net.hollowbit.archipeloserver.form.RequestableForm;
 import net.hollowbit.archipeloserver.tools.event.EventHandler;
-import net.hollowbit.archipeloserver.tools.event.events.PlayerStatsChangeEvent;
+import net.hollowbit.archipeloserver.tools.event.EventType;
+import net.hollowbit.archipeloserver.tools.event.events.readonly.PlayerStatsChangeEvent;
 import net.hollowbit.archipeloshared.FormData;
 
 public class PlayerStatsForm extends RequestableForm implements EventHandler {
@@ -18,7 +19,7 @@ public class PlayerStatsForm extends RequestableForm implements EventHandler {
 	
 	@Override
 	public void create(FormData formData, FormType formType, FormManager formManager) {
-		this.addToEventManager();
+		this.addToEventManager(EventType.PlayerStatsChange);
 		super.create(formData, formType, formManager);
 	}
 	
@@ -44,7 +45,6 @@ public class PlayerStatsForm extends RequestableForm implements EventHandler {
 			this.updateClient();
 			return true;
 		}
-		
 		return false;
 	}
 

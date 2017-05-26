@@ -6,11 +6,11 @@ import net.hollowbit.archipeloserver.entity.living.Player;
 import net.hollowbit.archipeloserver.items.Item;
 import net.hollowbit.archipeloserver.items.ItemType;
 import net.hollowbit.archipeloserver.tools.StaticTools;
-import net.hollowbit.archipeloserver.tools.event.events.PlayerBankAddEvent;
-import net.hollowbit.archipeloserver.tools.event.events.PlayerInventoryAddEvent;
-import net.hollowbit.archipeloserver.tools.event.events.PlayerInventoryChangeEvent;
-import net.hollowbit.archipeloserver.tools.event.events.PlayerInventoryMoveEvent;
-import net.hollowbit.archipeloserver.tools.event.events.PlayerInventoryRemoveEvent;
+import net.hollowbit.archipeloserver.tools.event.events.editable.PlayerBankAddEvent;
+import net.hollowbit.archipeloserver.tools.event.events.editable.PlayerInventoryAddEvent;
+import net.hollowbit.archipeloserver.tools.event.events.editable.PlayerInventoryMoveEvent;
+import net.hollowbit.archipeloserver.tools.event.events.editable.PlayerInventoryRemoveEvent;
+import net.hollowbit.archipeloserver.tools.event.events.readonly.PlayerInventoryChangeEvent;
 import net.hollowbit.archipeloserver.tools.inventory.FixedInventory;
 import net.hollowbit.archipeloserver.tools.inventory.InfiniteInventory;
 import net.hollowbit.archipeloserver.tools.inventory.Inventory;
@@ -121,12 +121,15 @@ public class PlayerInventory {
 		PlayerInventoryAddEvent event = new PlayerInventoryAddEvent(player, item);
 		event.trigger();
 		
-		if (event.wasCanceled())
+		if (event.wasCanceled()) {
+			event.close();
 			return null;
+		}
 		
 		item = event.getItem();
-		
-		return main.add(item);
+		Item returnItem = main.add(item);
+		event.close();
+		return returnItem;
 	}
 	
 	/**
@@ -155,12 +158,15 @@ public class PlayerInventory {
 		PlayerBankAddEvent event = new PlayerBankAddEvent(player, item);
 		event.trigger();
 		
-		if (event.wasCanceled())
+		if (event.wasCanceled()) {
+			event.close();
 			return;
+		}
 		
 		item = event.getItem();
 		
 		bank.add(item);
+		event.close();
 	}
 	
 	/**
@@ -172,8 +178,10 @@ public class PlayerInventory {
 		PlayerInventoryRemoveEvent event = new PlayerInventoryRemoveEvent(player, item);
 		event.trigger();
 		
-		if (event.wasCanceled())
+		if (event.wasCanceled()) {
+			event.close();
 			return false;
+		}
 		
 		item = event.getItem();
 		
@@ -181,6 +189,7 @@ public class PlayerInventory {
 		boolean successful = main.remove(item);
 		if (successful)
 			inventoryUpdated(oldInventory, MAIN_INVENTORY);
+		event.close();
 		return successful;
 	}
 	
@@ -227,8 +236,10 @@ public class PlayerInventory {
 		PlayerInventoryMoveEvent event = new PlayerInventoryMoveEvent(player, toSlot, fromSlot, toInventory, fromInventory);
 		event.trigger();
 		
-		if (event.wasCanceled())
+		if (event.wasCanceled()) {
+			event.close();
 			return false;
+		}
 		
 		toInventory = event.getToInventoryId();
 		fromInventory = event.getFromInventoryId();
@@ -238,8 +249,11 @@ public class PlayerInventory {
 		if (fromInventory == toInventory) {
 			Inventory oldInventory = inventoriesInArray[fromInventory].duplicate();
 			if (toInventory == EQUIPPED_INVENTORY || toInventory == COSMETIC_INVENTORY) {
-				if (fromItem.getType().equipType != toSlot)
+				if (fromItem.getType().equipType != toSlot) {
+					event.cancel();
+					event.close();
 					return false;
+				}
 			}
 			inventoriesInArray[fromInventory].move(fromSlot, toSlot);
 			inventoryUpdated(oldInventory, fromInventory);
@@ -253,26 +267,36 @@ public class PlayerInventory {
 			if (toInventory == WEAPON_EQUIP_INVENTORY) {
 				if (fromItem.getType().equipType != ItemType.EQUIP_INDEX_USABLE) {
 					inventoriesInArray[fromInventory].setSlot(fromSlot, fromItem);
+					event.cancel();
+					event.close();
 					return false;
 				}
 			} else if (toInventory == AMMO_EQUIP_INVENTORY) {
 				if (!fromItem.getType().ammo) {
 					inventoriesInArray[fromInventory].setSlot(fromSlot, fromItem);
+					event.cancel();
+					event.close();
 					return false;
 				}
 			} else if (toInventory == BUFFS_EQUIP_INVENTORY) {
 				if (!fromItem.getType().buff) {
 					inventoriesInArray[fromInventory].setSlot(fromSlot, fromItem);
+					event.cancel();
+					event.close();
 					return false;
 				}
 			} else if (toInventory == CONSUMABLES_EQUIP_INVENTORY) {
 				if (!fromItem.getType().consumable) {
 					inventoriesInArray[fromInventory].setSlot(fromSlot, fromItem);
+					event.cancel();
+					event.close();
 					return false;
 				}
 			} else if (toInventory == EQUIPPED_INVENTORY || toInventory == COSMETIC_INVENTORY) {
 				if (fromItem.getType().equipType != toSlot) {
 					inventoriesInArray[fromInventory].setSlot(fromSlot, fromItem);
+					event.cancel();
+					event.close();
 					return false;
 				}
 			}
@@ -295,6 +319,7 @@ public class PlayerInventory {
 		if (fromInventory == EQUIPPED_INVENTORY || fromInventory == COSMETIC_INVENTORY || fromInventory == WEAPON_EQUIP_INVENTORY || toInventory == EQUIPPED_INVENTORY || toInventory == COSMETIC_INVENTORY || toInventory == WEAPON_EQUIP_INVENTORY)
 			player.updateDisplayInventory();
 		
+		event.close();
 		return true;
 	}
 	

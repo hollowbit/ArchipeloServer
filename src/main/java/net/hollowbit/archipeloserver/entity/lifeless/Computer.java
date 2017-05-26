@@ -1,6 +1,5 @@
 package net.hollowbit.archipeloserver.entity.lifeless;
 
-import net.hollowbit.archipeloserver.ArchipeloServer;
 import net.hollowbit.archipeloserver.entity.Entity;
 import net.hollowbit.archipeloserver.entity.EntityAnimationManager.EntityAnimationObject;
 import net.hollowbit.archipeloserver.entity.EntityInteractionType;
@@ -8,8 +7,9 @@ import net.hollowbit.archipeloserver.entity.EntityType;
 import net.hollowbit.archipeloserver.entity.LifelessEntity;
 import net.hollowbit.archipeloserver.entity.living.Player;
 import net.hollowbit.archipeloserver.tools.event.EventHandler;
-import net.hollowbit.archipeloserver.tools.event.events.EntityMoveEvent;
-import net.hollowbit.archipeloserver.tools.event.events.PlayerLeaveEvent;
+import net.hollowbit.archipeloserver.tools.event.EventType;
+import net.hollowbit.archipeloserver.tools.event.events.editable.EntityMoveEvent;
+import net.hollowbit.archipeloserver.tools.event.events.readonly.PlayerLeaveEvent;
 import net.hollowbit.archipeloserver.world.Map;
 import net.hollowbit.archipeloshared.EntitySnapshot;
 
@@ -23,7 +23,7 @@ public class Computer extends LifelessEntity implements EventHandler {
 		super.create(fullSnapshot, map, entityType);
 		this.on = false;
 		this.user = null;
-		ArchipeloServer.getServer().getEventManager().add(this);
+		this.addToEventManager(EventType.PlayerLeave);
 	}
 	
 	@Override
@@ -43,7 +43,7 @@ public class Computer extends LifelessEntity implements EventHandler {
 	@Override
 	public void remove(){
 		super.remove();
-		ArchipeloServer.getServer().getEventManager().remove(this);
+		this.removeFromEventManager();
 	}
 	
 	@Override

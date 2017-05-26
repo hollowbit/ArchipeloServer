@@ -1,9 +1,9 @@
-package net.hollowbit.archipeloserver.tools.event.events;
+package net.hollowbit.archipeloserver.tools.event.events.editable;
 
 import com.badlogic.gdx.math.Vector2;
 
 import net.hollowbit.archipeloserver.entity.LivingEntity;
-import net.hollowbit.archipeloserver.tools.event.CancelableEvent;
+import net.hollowbit.archipeloserver.tools.event.EditableEvent;
 import net.hollowbit.archipeloserver.tools.event.EventType;
 
 /**
@@ -11,7 +11,7 @@ import net.hollowbit.archipeloserver.tools.event.EventType;
  * @author Nathanael
  *
  */
-public class EntityMoveEvent extends CancelableEvent {
+public class EntityMoveEvent extends EditableEvent {
 	
 	private LivingEntity entity;
 	private Vector2 oldPos, newPos;
@@ -36,6 +36,9 @@ public class EntityMoveEvent extends CancelableEvent {
 	}
 
 	public void setNewPos(Vector2 newPos) {
+		if (editingPrevented)
+			return;
+		
 		this.newPos = newPos;
 	}
 	

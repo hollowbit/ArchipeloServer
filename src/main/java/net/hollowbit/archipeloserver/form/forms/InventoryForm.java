@@ -6,9 +6,12 @@ import net.hollowbit.archipeloserver.entity.living.Player;
 import net.hollowbit.archipeloserver.form.FormManager;
 import net.hollowbit.archipeloserver.form.FormType;
 import net.hollowbit.archipeloserver.form.RequestableForm;
+import net.hollowbit.archipeloserver.tools.event.EventHandler;
+import net.hollowbit.archipeloserver.tools.event.EventType;
+import net.hollowbit.archipeloserver.tools.event.events.readonly.PlayerInventoryChangeEvent;
 import net.hollowbit.archipeloshared.FormData;
 
-public class InventoryForm extends RequestableForm {
+public class InventoryForm extends RequestableForm implements EventHandler {
 	
 	private static final String KEY_MAIN_INVENTORY = "mainInventory";
 	private static final String KEY_EQUIPPED_INVENTORY = "equippedInventory";
@@ -26,6 +29,7 @@ public class InventoryForm extends RequestableForm {
 	@Override
 	public void create (FormData formData, FormType formType, FormManager formManager) {
 		super.create(formData, formType, formManager);
+		this.addToEventManager(EventType.PlayerInventoryChange);
 	}
 
 	@Override
@@ -45,7 +49,19 @@ public class InventoryForm extends RequestableForm {
 	}
 
 	@Override
-	public void close () {}
+	public void close () {
+		this.removeFromEventManager();
+	}
+	
+	@Override
+	public boolean onPlayerInventoryChanged(PlayerInventoryChangeEvent event) {
+		if (event.getPlayer() == player) {
+			this.updateClient();
+			return true;
+		}
+		
+		return EventHandler.super.onPlayerInventoryChanged(event);
+	}
 
 	@Override
 	public boolean canInteractWith (Player player) {

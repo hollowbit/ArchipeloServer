@@ -9,8 +9,9 @@ import com.badlogic.gdx.math.Vector2;
 import net.hollowbit.archipeloserver.tools.entity.EntityStepOnData;
 import net.hollowbit.archipeloserver.tools.entity.Location;
 import net.hollowbit.archipeloserver.tools.event.EventHandler;
-import net.hollowbit.archipeloserver.tools.event.events.EntityMoveEvent;
-import net.hollowbit.archipeloserver.tools.event.events.EntityTeleportEvent;
+import net.hollowbit.archipeloserver.tools.event.EventType;
+import net.hollowbit.archipeloserver.tools.event.events.editable.EntityMoveEvent;
+import net.hollowbit.archipeloserver.tools.event.events.editable.EntityTeleportEvent;
 import net.hollowbit.archipeloserver.world.Map;
 import net.hollowbit.archipeloshared.CollisionRect;
 import net.hollowbit.archipeloshared.Direction;
@@ -27,7 +28,7 @@ public abstract class LivingEntity extends Entity implements EventHandler {
 		super.create(name, style, location, entityType);
 		entitiesSteppedOn = new HashSet<EntityStepOnData>();
 		lastSpeed = entityType.getSpeed();
-		this.addToEventManager();
+		this.addToEventManager(EventType.EntityTeleport, EventType.EntityMove);
 	}
 	
 	@Override
@@ -35,7 +36,7 @@ public abstract class LivingEntity extends Entity implements EventHandler {
 		super.create(fullSnapshot, map, entityType);
 		entitiesSteppedOn = new HashSet<EntityStepOnData>();
 		lastSpeed = entityType.getSpeed();
-		this.addToEventManager();
+		this.addToEventManager(EventType.EntityTeleport, EventType.EntityMove);
 	}
 	
 	@Override
@@ -167,72 +168,89 @@ public abstract class LivingEntity extends Entity implements EventHandler {
 		}
 		
 		//Create event and check
-		EntityMoveEvent event = (EntityMoveEvent) new EntityMoveEvent(this, location.pos, newPos).trigger();//trigger move event
-		
-		if (event.wasCanceled())
+		EntityMoveEvent event = new EntityMoveEvent(this, location.pos, newPos);//trigger move event
+		event.trigger();
+		if (event.wasCanceled()) {
+			event.close();
 			return false;
-		
-		newPos = event.getNewPos();//Set new pos with new one from event
-		location.set(newPos);
-		
-		ArrayList<Entity> entitiesOnMap = (ArrayList<Entity>) location.getMap().getEntityManager().duplicateEntityList();
-		for (Entity entity : entitiesOnMap) {
-			if (entity == this)
-				continue;
-			
-			//Check which rects are being stepped on currently
-			ArrayList<EntityStepOnData> rectsSteppedOn = new ArrayList<EntityStepOnData>();
-			for (CollisionRect entityRect : entity.getCollisionRects()) {
-				for (CollisionRect thisRect : this.getCollisionRects()) {
-					if (thisRect.collidesWith(entityRect)) {
-						rectsSteppedOn.add(new EntityStepOnData(entityRect.name, entity));
-					}
-				}
-			}
-			
-			//See which step on data is new to initiate a STEP_ON event
-			for (EntityStepOnData data : rectsSteppedOn) {
-				boolean contains = false;
-				for (EntityStepOnData data2 : entitiesSteppedOn) {
-					if (data.entity == data2.entity && data.collisionRectName.equals(data2.collisionRectName)) {
-						contains = true;
-						break;
-					}
-				}
-				
-				if (!contains) {
-					addEntityToStepList(data);
-					this.interactWith(data.entity, data.collisionRectName, EntityInteractionType.STEP_ON);
-				}
-			}
-			
-			//See which step on data is new to initiate a STEP_OFF event
-			LinkedList<EntityStepOnData> entitiesStepOnToRemove = new LinkedList<EntityStepOnData>();
-			for (EntityStepOnData data : entitiesSteppedOn) {
-				if (data.entity != entity)
+		} else {
+			newPos = event.getNewPos();//Set new pos with new one from event
+			location.set(newPos);
+			event.close();
+			return true;
+		}
+	}
+	
+	@Override
+	public boolean onEntityMove(EntityMoveEvent event) {
+		if (event.getEntity() == this && !event.wasCanceled()) {
+			//Update step on list of entity
+			ArrayList<Entity> entitiesOnMap = (ArrayList<Entity>) location.getMap().getEntityManager().duplicateEntityList();
+			for (Entity entity : entitiesOnMap) {
+				if (entity == this)
 					continue;
 				
-				boolean contains = false;
-				for (EntityStepOnData data2 : rectsSteppedOn) {
-					if (data.entity == data2.entity && data.collisionRectName.equals(data2.collisionRectName)) {
-						contains = true;
-						break;
+				//Check which rects are being stepped on currently
+				ArrayList<EntityStepOnData> rectsSteppedOn = new ArrayList<EntityStepOnData>();
+				for (CollisionRect entityRect : entity.getCollisionRects()) {
+					for (CollisionRect thisRect : this.getCollisionRects(event.getNewPos())) {
+						if (thisRect.collidesWith(entityRect)) {
+							rectsSteppedOn.add(new EntityStepOnData(entityRect.name, entity));
+						}
 					}
 				}
 				
-				if (!contains || entity.getMap() != this.getMap()) {//If there is an entry for the same entity that is not in rectsSteppedOn, remove it and do a step off event
-					entitiesStepOnToRemove.add(data);
-					this.interactWith(data.entity, data.collisionRectName, EntityInteractionType.STEP_OFF);
+				
+				//See which step on data is new to initiate a STEP_ON event
+				for (EntityStepOnData data : rectsSteppedOn) {
+					boolean contains = false;
+					for (EntityStepOnData data2 : entitiesSteppedOn) {
+						if (data.entity == data2.entity && data.collisionRectName.equals(data2.collisionRectName)) {
+							contains = true;
+							break;
+						}
+					}
+					
+					if (!contains) {
+						addEntityToStepList(data);
+						this.interactWith(data.entity, data.collisionRectName, EntityInteractionType.STEP_ON);
+					}
 				}
+				
+				//See which step on data is not there to initiate a STEP_OFF event
+				LinkedList<EntityStepOnData> entitiesStepOnToRemove = new LinkedList<EntityStepOnData>();
+				for (EntityStepOnData data : entitiesSteppedOn) {
+					if (data.entity != entity)
+						continue;
+					
+					boolean contains = false;
+					for (EntityStepOnData data2 : rectsSteppedOn) {
+						if (data.entity == data2.entity && data.collisionRectName.equals(data2.collisionRectName)) {
+							contains = true;
+							break;
+						}
+					}
+					
+					if (!contains || entity.getMap() != this.getMap()) {//If there is an entry for the same entity that is not in rectsSteppedOn, remove it and do a step off event
+						entitiesStepOnToRemove.add(data);
+						this.interactWith(data.entity, data.collisionRectName, EntityInteractionType.STEP_OFF);
+					}
+				}
+				removeAllEntityFromStepList(entitiesStepOnToRemove);
 			}
-			removeAllEntityFromStepList(entitiesStepOnToRemove);
+			return true;
 		}
-		return true;
+		return EventHandler.super.onEntityMove(event);
 	}
 	
 	@Override
 	public boolean onEntityTeleport(EntityTeleportEvent event) {
-		// TODO Auto-generated method stub
+		if (event.getEntity() == this) {
+			//If changing map, clear all entities from step on list
+			if (!event.wasCanceled() && event.isNewMap())
+				entitiesSteppedOn.clear();
+			return true;
+		}
 		return EventHandler.super.onEntityTeleport(event);
 	}
 	

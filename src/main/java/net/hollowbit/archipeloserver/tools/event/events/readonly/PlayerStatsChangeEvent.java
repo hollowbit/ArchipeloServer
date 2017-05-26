@@ -1,4 +1,4 @@
-package net.hollowbit.archipeloserver.tools.event.events;
+package net.hollowbit.archipeloserver.tools.event.events.readonly;
 
 import net.hollowbit.archipeloserver.entity.living.Player;
 import net.hollowbit.archipeloserver.tools.event.EventType;

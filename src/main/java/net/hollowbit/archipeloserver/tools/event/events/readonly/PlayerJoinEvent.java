@@ -1,4 +1,4 @@
-package net.hollowbit.archipeloserver.tools.event.events;
+package net.hollowbit.archipeloserver.tools.event.events.readonly;
 
 import java.sql.Date;
 

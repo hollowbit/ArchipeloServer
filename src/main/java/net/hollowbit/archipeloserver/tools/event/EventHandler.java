@@ -1,18 +1,18 @@
 package net.hollowbit.archipeloserver.tools.event;
 
 import net.hollowbit.archipeloserver.ArchipeloServer;
-import net.hollowbit.archipeloserver.tools.event.events.EntityDeathEvent;
-import net.hollowbit.archipeloserver.tools.event.events.EntityInteractionEvent;
-import net.hollowbit.archipeloserver.tools.event.events.EntityMoveEvent;
-import net.hollowbit.archipeloserver.tools.event.events.EntityTeleportEvent;
-import net.hollowbit.archipeloserver.tools.event.events.PlayerBankAddEvent;
-import net.hollowbit.archipeloserver.tools.event.events.PlayerInventoryAddEvent;
-import net.hollowbit.archipeloserver.tools.event.events.PlayerInventoryChangeEvent;
-import net.hollowbit.archipeloserver.tools.event.events.PlayerInventoryMoveEvent;
-import net.hollowbit.archipeloserver.tools.event.events.PlayerInventoryRemoveEvent;
-import net.hollowbit.archipeloserver.tools.event.events.PlayerJoinEvent;
-import net.hollowbit.archipeloserver.tools.event.events.PlayerLeaveEvent;
-import net.hollowbit.archipeloserver.tools.event.events.PlayerStatsChangeEvent;
+import net.hollowbit.archipeloserver.tools.event.events.editable.EntityDeathEvent;
+import net.hollowbit.archipeloserver.tools.event.events.editable.EntityInteractionEvent;
+import net.hollowbit.archipeloserver.tools.event.events.editable.EntityMoveEvent;
+import net.hollowbit.archipeloserver.tools.event.events.editable.EntityTeleportEvent;
+import net.hollowbit.archipeloserver.tools.event.events.editable.PlayerBankAddEvent;
+import net.hollowbit.archipeloserver.tools.event.events.editable.PlayerInventoryAddEvent;
+import net.hollowbit.archipeloserver.tools.event.events.editable.PlayerInventoryMoveEvent;
+import net.hollowbit.archipeloserver.tools.event.events.editable.PlayerInventoryRemoveEvent;
+import net.hollowbit.archipeloserver.tools.event.events.readonly.PlayerInventoryChangeEvent;
+import net.hollowbit.archipeloserver.tools.event.events.readonly.PlayerJoinEvent;
+import net.hollowbit.archipeloserver.tools.event.events.readonly.PlayerLeaveEvent;
+import net.hollowbit.archipeloserver.tools.event.events.readonly.PlayerStatsChangeEvent;
 
 public interface EventHandler {
 	
@@ -29,15 +29,28 @@ public interface EventHandler {
 	public default boolean onEntityInteraction (EntityInteractionEvent event) {return false;}
 	public default boolean onEntityDeath (EntityDeathEvent event) {return false;}
 	
-	public default void addToEventManager() {
+	public default void addToEventManager(EventType... typesToRegister) {
 		ArchipeloServer.getServer().getEventManager().add(this);
+		
+		//Register event handler to event types with default priority
+		for (EventType type : typesToRegister)
+			this.registerEventPriority(type, EventHandlerPriority.DEFAULT);
 	}
 	
 	public default void removeFromEventManager() {
 		ArchipeloServer.getServer().getEventManager().remove(this);
 	}
 	
+	public default void registerEventPriority(EventType type, EventHandlerPriority priority) {
+		ArchipeloServer.getServer().getEventManager().registerPriority(this, type, priority);
+	}
+	
 	public class DefaultEventHandler implements EventHandler {
+		
+		public DefaultEventHandler() {
+			//Add all event types to be handled
+			this.addToEventManager(EventType.values());
+		}
 		
 		public boolean onEntityMove (EntityMoveEvent event) {System.out.println("EventHandler.java Event Triggered: Entity Move"); return false;}
 		public boolean onEntityTeleport (EntityTeleportEvent event) {System.out.println("EventHandler.java Event Triggered: Entity Teleport"); return false;}

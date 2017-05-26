@@ -10,9 +10,9 @@ import net.hollowbit.archipeloserver.entity.living.Player;
 import net.hollowbit.archipeloserver.network.packets.PopupTextPacket;
 import net.hollowbit.archipeloserver.network.packets.TeleportPacket;
 import net.hollowbit.archipeloserver.tools.entity.Location;
-import net.hollowbit.archipeloserver.tools.event.events.EntityDeathEvent;
-import net.hollowbit.archipeloserver.tools.event.events.EntityInteractionEvent;
-import net.hollowbit.archipeloserver.tools.event.events.EntityTeleportEvent;
+import net.hollowbit.archipeloserver.tools.event.events.editable.EntityDeathEvent;
+import net.hollowbit.archipeloserver.tools.event.events.editable.EntityInteractionEvent;
+import net.hollowbit.archipeloserver.tools.event.events.editable.EntityTeleportEvent;
 import net.hollowbit.archipeloserver.world.Island;
 import net.hollowbit.archipeloserver.world.Map;
 import net.hollowbit.archipeloserver.world.World;
@@ -102,10 +102,9 @@ public abstract class Entity {
 		EntityInteractionEvent event = new EntityInteractionEvent(this, target, collisionRectName, interactionType);
 		event.trigger();
 		
-		if (event.wasCanceled())
-			return;
-		
-		target.interactFrom(this, collisionRectName, interactionType);
+		if (!event.wasCanceled())
+			target.interactFrom(this, collisionRectName, interactionType);
+		event.close();
 	}
 	
 	protected void interactFrom (Entity entity, String collisionRectName, EntityInteractionType interactionType) {}
@@ -249,8 +248,10 @@ public abstract class Entity {
 		
 		EntityTeleportEvent event = new EntityTeleportEvent(this, newPos, location.pos, location.map, mapName, islandName, location.getDirection(), direction);
 		event.trigger();
-		if (event.wasCanceled())
+		if (event.wasCanceled()) {
+			event.close();
 			return;
+		}
 		
 		newPos.x = event.getNewPos().x;
 		newPos.y = event.getNewPos().y;
@@ -272,6 +273,8 @@ public abstract class Entity {
 					if (isPlayer()) {
 						Player p = (Player) this;
 						p.sendPacket(new PopupTextPacket("Unable to teleport.", PopupTextPacket.Type.NORMAL));
+						event.cancel();
+						event.close();
 						return;
 					}
 				}
@@ -286,6 +289,8 @@ public abstract class Entity {
 					if (isPlayer()) {
 						Player p = (Player) this;
 						p.sendPacket(new PopupTextPacket("Unable to teleport.", PopupTextPacket.Type.NORMAL));
+						event.cancel();
+						event.close();
 						return;
 					}
 				}
@@ -308,6 +313,7 @@ public abstract class Entity {
 		}
 		
 		log.clearAll();
+		event.close();
 	}
 	
 	/**
@@ -390,6 +396,7 @@ public abstract class Entity {
 					this.health = oldHealth;
 			} else//Event not canceled, remove entity
 				this.remove();
+			event.close();
 		} else {
 			//Entity not dead. Just clamp health and update health bars
 			if (health > this.getMaxHealth())

@@ -1,12 +1,12 @@
-package net.hollowbit.archipeloserver.tools.event.events;
+package net.hollowbit.archipeloserver.tools.event.events.editable;
 
 import net.hollowbit.archipeloserver.entity.living.Player;
 import net.hollowbit.archipeloserver.items.Item;
-import net.hollowbit.archipeloserver.tools.event.CancelableEvent;
+import net.hollowbit.archipeloserver.tools.event.EditableEvent;
 import net.hollowbit.archipeloserver.tools.event.EventType;
 import net.hollowbit.archipeloserver.tools.inventory.InfiniteInventory;
 
-public class PlayerBankAddEvent extends CancelableEvent {
+public class PlayerBankAddEvent extends EditableEvent {
 	
 	private Player player;
 	private Item item;
@@ -22,6 +22,9 @@ public class PlayerBankAddEvent extends CancelableEvent {
 	}
 
 	public void setItem (Item item) {
+		if (editingPrevented)
+			return;
+		
 		this.item = item;
 	}
 

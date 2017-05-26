@@ -5,8 +5,9 @@ import net.hollowbit.archipeloserver.entity.living.Player;
 import net.hollowbit.archipeloserver.items.Item;
 import net.hollowbit.archipeloserver.tools.StaticTools;
 import net.hollowbit.archipeloserver.tools.event.EventHandler;
-import net.hollowbit.archipeloserver.tools.event.events.PlayerInventoryChangeEvent;
-import net.hollowbit.archipeloserver.tools.event.events.PlayerStatsChangeEvent;
+import net.hollowbit.archipeloserver.tools.event.EventType;
+import net.hollowbit.archipeloserver.tools.event.events.readonly.PlayerInventoryChangeEvent;
+import net.hollowbit.archipeloserver.tools.event.events.readonly.PlayerStatsChangeEvent;
 
 public class PlayerStatsManager implements EventHandler {
 
@@ -28,7 +29,7 @@ public class PlayerStatsManager implements EventHandler {
 	
 	public PlayerStatsManager (Player player) {
 		this.player = player;
-		this.addToEventManager();
+		this.addToEventManager(EventType.PlayerInventoryChange);
 		this.update();
 	}
 	
@@ -162,6 +163,7 @@ public class PlayerStatsManager implements EventHandler {
 	
 	@Override
 	public boolean onPlayerInventoryChanged (PlayerInventoryChangeEvent event) {
+		System.out.println("PlayerStatsManager.java  test!");
 		if (event.getPlayer() == player) {
 			if (event.getInventoryId() == PlayerInventory.BUFFS_EQUIP_INVENTORY || event.getInventoryId() == PlayerInventory.EQUIPPED_INVENTORY || event.getInventoryId() == PlayerInventory.WEAPON_EQUIP_INVENTORY) {
 				update();

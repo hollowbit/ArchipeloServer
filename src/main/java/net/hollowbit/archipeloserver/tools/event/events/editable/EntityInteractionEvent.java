@@ -1,11 +1,11 @@
-package net.hollowbit.archipeloserver.tools.event.events;
+package net.hollowbit.archipeloserver.tools.event.events.editable;
 
 import net.hollowbit.archipeloserver.entity.Entity;
 import net.hollowbit.archipeloserver.entity.EntityInteractionType;
-import net.hollowbit.archipeloserver.tools.event.CancelableEvent;
+import net.hollowbit.archipeloserver.tools.event.EditableEvent;
 import net.hollowbit.archipeloserver.tools.event.EventType;
 
-public class EntityInteractionEvent extends CancelableEvent {
+public class EntityInteractionEvent extends EditableEvent {
 
 	private Entity executor;
 	private Entity target;

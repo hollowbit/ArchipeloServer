@@ -15,7 +15,7 @@ public abstract class Event {
 	 * Trigger this event
 	 */
 	public Event trigger () {
-		return ArchipeloServer.getServer().getEventManager().triggerEvent(this);
+		return ArchipeloServer.getServer().getEventManager().triggerEvent(this, true);
 	}
 
 	public EventType getType() {
@@ -31,6 +31,10 @@ public abstract class Event {
 	}
 	
 	public boolean wasCanceled () {
+		return false;
+	}
+	
+	public boolean editable () {
 		return false;
 	}
 	

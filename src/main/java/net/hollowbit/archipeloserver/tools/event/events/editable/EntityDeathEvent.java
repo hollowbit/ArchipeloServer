@@ -1,10 +1,10 @@
-package net.hollowbit.archipeloserver.tools.event.events;
+package net.hollowbit.archipeloserver.tools.event.events.editable;
 
 import net.hollowbit.archipeloserver.entity.Entity;
-import net.hollowbit.archipeloserver.tools.event.CancelableEvent;
+import net.hollowbit.archipeloserver.tools.event.EditableEvent;
 import net.hollowbit.archipeloserver.tools.event.EventType;
 
-public class EntityDeathEvent extends CancelableEvent {
+public class EntityDeathEvent extends EditableEvent {
 	
 	private Entity entity;
 	private Entity killer;
@@ -31,6 +31,9 @@ public class EntityDeathEvent extends CancelableEvent {
 	 * @param newHealth
 	 */
 	public void setNewHealth(float newHealth) {
+		if (editingPrevented)
+			return;
+		
 		if (newHealth > 0) {
 			this.newHealthSet = true;
 			this.newHealth = newHealth;

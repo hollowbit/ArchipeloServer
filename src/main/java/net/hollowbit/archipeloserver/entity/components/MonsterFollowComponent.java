@@ -4,8 +4,9 @@ import net.hollowbit.archipeloserver.entity.EntityComponent;
 import net.hollowbit.archipeloserver.entity.LivingEntity;
 import net.hollowbit.archipeloserver.entity.living.Player;
 import net.hollowbit.archipeloserver.tools.event.EventHandler;
-import net.hollowbit.archipeloserver.tools.event.events.EntityDeathEvent;
-import net.hollowbit.archipeloserver.tools.event.events.EntityMoveEvent;
+import net.hollowbit.archipeloserver.tools.event.EventType;
+import net.hollowbit.archipeloserver.tools.event.events.editable.EntityDeathEvent;
+import net.hollowbit.archipeloserver.tools.event.events.editable.EntityMoveEvent;
 import net.hollowbit.archipeloshared.Direction;
 
 public class MonsterFollowComponent extends EntityComponent implements EventHandler {
@@ -26,7 +27,7 @@ public class MonsterFollowComponent extends EntityComponent implements EventHand
 		this.deactivationZoneDist = deactivationZoneDistance;
 		this.target = null;
 		this.moving = false;
-		this.addToEventManager();
+		this.addToEventManager(EventType.EntityDeath, EventType.EntityMove);
 		this.scanForTarget();
 	}
 	
