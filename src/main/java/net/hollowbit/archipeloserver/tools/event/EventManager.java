@@ -30,13 +30,19 @@ public class EventManager {
 		eventHandlers.remove(eventHandler);
 	}
 	
+	private LinkedList<EventHandler> cloneHandlerList() {
+		LinkedList<EventHandler> handlersClone = new LinkedList<EventHandler>();
+		handlersClone.addAll(eventHandlers);
+		return handlersClone;
+	}
+	
 	/**
 	 * Trigger an event to be handled by the handlers.
 	 * @param event
 	 */
 	public Event triggerEvent (Event event) {
 		boolean handled = false;
-		for (EventHandler eventHandler : eventHandlers) {
+		for (EventHandler eventHandler : cloneHandlerList()) {
 			switch (event.getType()) {
 			case EntityMove:
 				if (eventHandler.onEntityMove((EntityMoveEvent) event))

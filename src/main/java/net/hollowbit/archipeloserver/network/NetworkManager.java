@@ -3,6 +3,7 @@ package net.hollowbit.archipeloserver.network;
 import java.io.File;
 import java.io.FileInputStream;
 import java.net.InetSocketAddress;
+import java.nio.ByteBuffer;
 import java.security.KeyStore;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -16,19 +17,18 @@ import org.java_websocket.handshake.ClientHandshake;
 import org.java_websocket.server.DefaultSSLWebSocketServerFactory;
 import org.java_websocket.server.WebSocketServer;
 
-import com.badlogic.gdx.utils.Json;
-
 import net.hollowbit.archipeloserver.ArchipeloServer;
 import net.hollowbit.archipeloserver.hollowbitserver.HollowBitUser;
+import net.hollowbit.archipeloserver.items.PacketWrapper;
 import net.hollowbit.archipeloserver.network.packets.LoginPacket;
+import net.hollowbit.archipeloserver.network.serialization.JsonSerializer;
+import net.hollowbit.archipeloserver.network.serialization.Serializer;
 
 public class NetworkManager extends WebSocketServer {
 	
 	private static final int PACKET_LIFESPAN = 5000;//ms
 	private static final int PING_SEND_INTERVAL = 500;//ms
 	
-	@SuppressWarnings("rawtypes")
-	private HashMap<Integer, Class> packetMap;
 	private ArrayList<PacketHandler> packetHandlers;
 	
 	private ArrayList<PacketWrapper> packets;
@@ -37,7 +37,7 @@ public class NetworkManager extends WebSocketServer {
 	
 	private HashMap<String, HollowBitUser> users;
 	
-	private Json json;
+	private Serializer serializer;
 	
 	public NetworkManager (int port) {
 		super(new InetSocketAddress(port));
@@ -69,8 +69,9 @@ public class NetworkManager extends WebSocketServer {
 		packetHandlers = new ArrayList<PacketHandler>();
 		packets = new ArrayList<PacketWrapper>();
 		users = new HashMap<String, HollowBitUser>();
-		json = new Json();
-		registerPackets();
+		
+		//Initialize serializer to Json
+		serializer = new JsonSerializer();
 		
 		pingThread = new Thread(new Runnable() {
 			@Override
@@ -175,7 +176,7 @@ public class NetworkManager extends WebSocketServer {
 		//error.printStackTrace();
 		//ArchipeloServer.getServer().getLogger().error(error.getMessage());
 	}
-
+	
 	@Override
 	public void onMessage(WebSocket conn, String message) {
 		//Used for ping getter
@@ -190,19 +191,11 @@ public class NetworkManager extends WebSocketServer {
 			user.setPing((int) (System.currentTimeMillis() - user.timePingSent));
 			return;
 		}
-		
-		String[] packetWrapArray = message.split(";");
-		int type = Integer.parseInt(packetWrapArray[0]);
-		
-		String packetMessage = "";
-		for (int i = 1; i < packetWrapArray.length; i++) {
-			packetMessage += packetWrapArray[i];
-			if (i < packetWrapArray.length - 1)
-				packetMessage += ";";
-		}
-		
-		@SuppressWarnings("unchecked")
-		Packet packet = (Packet) json.fromJson(packetMap.get(type), packetMessage);
+	}
+	
+	@Override
+	public void onMessage(WebSocket conn, ByteBuffer message) {
+		Packet packet = (Packet) serializer.deserialize(message.array());
 		
 		//Handle login/logoff packets
 		if (packet.packetType == PacketType.LOGIN) {
@@ -255,43 +248,31 @@ public class NetworkManager extends WebSocketServer {
 	}
 	
 	public void sendPacket (Packet packet, WebSocket conn) {
-		String packetString = null;
-		try {
-			packetString = json.toJson(packet);
-		} catch (Exception e) {
-			ArchipeloServer.getServer().getLogger().caution("Could not serialize packet! Type: " + packet.packetType + " Error: " + e.getMessage());
+		byte[] packetData = getPacketData(packet);
+		if (packetData.length == 0)//Serialization failed
 			return;
-		}
 		
-		try {
-			conn.send(packet.packetType + ";" + packetString);
-		} catch (Exception e) {
-			removeConnection(conn);
-		}
+		sendPacketData(packetData, conn);
 	}
 	
-	public String getPacketString (Packet packet) {
-		String packetString = null;
+	public synchronized byte[] getPacketData (Packet packet) {
+		byte[] packetData = null;
 		try {
-			packetString = json.toJson(packet);
+			packetData = serializer.serialize(packet);
 		} catch (Exception e) {
 			ArchipeloServer.getServer().getLogger().caution("Could not serialize packet! Type: " + packet.packetType + " Error: " + e.getMessage());
-			return "";
+			return new byte[0];
 		}
 		
-		return packet.packetType + ";" + packetString;
+		return packetData;
 	}
 	
-	public void sendPacketString (String packet, WebSocket conn) {
+	public void sendPacketData(byte[] packet, WebSocket conn) {
 		try {
 			conn.send(packet);
 		} catch (Exception e) {
 			removeConnection(conn);
 		}
-	}
-	
-	private void registerPackets () {
-		packetMap = PacketType.registerPackets();
 	}
 	
 	public synchronized void addPacketHandler (PacketHandler packetHandler) {

@@ -30,6 +30,7 @@ dependencies {
 	compile group: 'mysql', name: 'mysql-connector-java', version: '5.1.6'
 	compile group: 'org.bouncycastle', name: 'bcprov-jdk15on', version: '1.46'
     compile 'org.mongodb:mongodb-driver:3.4.0'
+	compile group: 'com.esotericsoftware.kryo', name: 'kryo', version: '2.10'
 }
 
 test {

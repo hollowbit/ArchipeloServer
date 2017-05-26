@@ -51,8 +51,9 @@ public enum EntityType {
 	private int footstepOffsetX;
 	private int footstepOffsetY;
 	
+	private int imgWidth, imgHeight;
+	
 	//Rects
-	private CollisionRect viewRect;
 	private CollisionRect collRects[];
 	
 	//Sounds
@@ -90,7 +91,8 @@ public enum EntityType {
 		this.footstepOffsetX = data.footstepOffsetX;
 		this.footstepOffsetY = data.footstepOffsetY;
 		
-		this.viewRect = new CollisionRect(0, 0, data.viewRectOffsetX, data.viewRectOffsetY, data.viewRectWidth, data.viewRectHeight);
+		this.imgWidth = data.imgWidth;
+		this.imgHeight = data.imgHeight;
 		
 		this.collRects = new CollisionRect[data.collisionRects.length];
 		for (int i = 0; i < collRects.length; i++) {
@@ -138,7 +140,7 @@ public enum EntityType {
 	 * @return
 	 */
 	public CollisionRect getViewRect (float x, float y) {
-		CollisionRect newViewRect = new CollisionRect(viewRect);
+		CollisionRect newViewRect = new CollisionRect(x, y, 0, 0, imgWidth, imgHeight);
 		return newViewRect.move(x, y);
 	}
 	
@@ -178,11 +180,11 @@ public enum EntityType {
 	}
 	
 	public float getViewWidth () {
-		return viewRect.width;
+		return imgWidth;
 	}
 	
 	public float getViewHeight () {
-		return viewRect.height;
+		return imgHeight;
 	}
 	
 	/**

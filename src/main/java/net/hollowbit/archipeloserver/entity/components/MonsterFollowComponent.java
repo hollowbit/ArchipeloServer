@@ -4,6 +4,7 @@ import net.hollowbit.archipeloserver.entity.EntityComponent;
 import net.hollowbit.archipeloserver.entity.LivingEntity;
 import net.hollowbit.archipeloserver.entity.living.Player;
 import net.hollowbit.archipeloserver.tools.event.EventHandler;
+import net.hollowbit.archipeloserver.tools.event.events.EntityDeathEvent;
 import net.hollowbit.archipeloserver.tools.event.events.EntityMoveEvent;
 import net.hollowbit.archipeloshared.Direction;
 
@@ -67,6 +68,8 @@ public class MonsterFollowComponent extends EntityComponent implements EventHand
 				livingEntity.move(deltaTime, true);//Move the entity in that direction
 				moving = true;
 			}
+		} else {
+			moving = false;
 		}
 		super.tick60(deltaTime);
 	}
@@ -103,6 +106,15 @@ public class MonsterFollowComponent extends EntityComponent implements EventHand
 		return false;
 	}
 	
+	@Override
+	public boolean onEntityDeath(EntityDeathEvent event) {
+		if (event.getEntity() == target) {
+			target = null;
+			return true;
+		}
+		return false;
+	}
+	
 	/**
 	 * Returns true if the target is within a distance.
 	 * Returns false it not within distance of there is no target.
@@ -129,7 +141,7 @@ public class MonsterFollowComponent extends EntityComponent implements EventHand
 	}
 	
 	/**
-	 * Scans for a player to follow
+	 * Scans for a new player to follow.
 	 */
 	protected void scanForTarget() {
 		for (Player player : entity.getMap().getPlayers()) {

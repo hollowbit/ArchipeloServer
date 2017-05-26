@@ -1,4 +1,6 @@
-package net.hollowbit.archipeloserver.network;
+package net.hollowbit.archipeloserver.items;
+
+import net.hollowbit.archipeloserver.network.Packet;
 
 public class PacketWrapper {
 	

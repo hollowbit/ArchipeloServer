@@ -373,6 +373,11 @@ public abstract class Entity {
 		float oldHealth = this.health;
 		this.health += amount;
 		
+		if (amount < 0)//Play flash animation depending if this was a heal or damage
+			this.changes.putBoolean("flash", true);
+		else
+			this.changes.putBoolean("flash", false);
+		
 		if (health <= 0) {
 			//Trigger death event
 			EntityDeathEvent event = new EntityDeathEvent(this, healer, oldHealth, this.health);

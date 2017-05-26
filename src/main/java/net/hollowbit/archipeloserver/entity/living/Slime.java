@@ -11,11 +11,13 @@ public class Slime extends LivingEntity {
 	
 	protected MonsterFollowComponent followComponent;
 	protected float timer = 2;
+	protected float damage = -10;
 	
 	@Override
 	public void create(EntitySnapshot fullSnapshot, Map map, EntityType entityType) {
 		super.create(fullSnapshot, map, entityType);
 		followComponent = new MonsterFollowComponent(this, fullSnapshot.getInt("activationZoneDistance", MonsterFollowComponent.DEFAULT_ACTIVATION_DISTANCE), fullSnapshot.getInt("deactivationZoneDistance", MonsterFollowComponent.DEFAULT_DEACTIVATION_DISTANCE));
+		this.damage = -Math.abs(fullSnapshot.getFloat("damage", damage));
 		components.add(followComponent);
 	}
 	

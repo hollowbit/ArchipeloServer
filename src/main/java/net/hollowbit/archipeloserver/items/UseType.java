@@ -54,7 +54,7 @@ public abstract class UseType {
 				continue;
 			
 			//Check for entity hits
-			if (HitCalculator.didEntityHitEntityRects(user.getCenterPoint().x, user.getCenterPoint().y, entity.getCollisionRects(time), item.getType().hitRange, user.getLocation().getDirection())) {
+			if (HitCalculator.didEntityHitEntityRects(user.getFootX(), user.getFootY(), entity.getCollisionRects(time), item.getType().hitRange, user.getLocation().getDirection())) {
 				entity.heal(-((int) user.getStatsManager().hit(item)));
 			}
 		}

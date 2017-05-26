@@ -75,5 +75,13 @@ public class EntityTeleportEvent extends CancelableEvent {
 	public Map getOldMap() {
 		return oldMap;
 	}
+	
+	public boolean isNewIsland() {
+		return !oldMap.getIsland().getName().equals(newIsland);
+	}
+	
+	public boolean isNewMap() {
+		return !oldMap.getName().equals(newMap) || isNewIsland();
+	}
 
 }

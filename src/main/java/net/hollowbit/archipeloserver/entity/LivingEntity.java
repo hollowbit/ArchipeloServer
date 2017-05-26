@@ -8,13 +8,15 @@ import com.badlogic.gdx.math.Vector2;
 
 import net.hollowbit.archipeloserver.tools.entity.EntityStepOnData;
 import net.hollowbit.archipeloserver.tools.entity.Location;
+import net.hollowbit.archipeloserver.tools.event.EventHandler;
 import net.hollowbit.archipeloserver.tools.event.events.EntityMoveEvent;
+import net.hollowbit.archipeloserver.tools.event.events.EntityTeleportEvent;
 import net.hollowbit.archipeloserver.world.Map;
 import net.hollowbit.archipeloshared.CollisionRect;
 import net.hollowbit.archipeloshared.Direction;
 import net.hollowbit.archipeloshared.EntitySnapshot;
 
-public abstract class LivingEntity extends Entity {
+public abstract class LivingEntity extends Entity implements EventHandler {
 	
 	private HashSet<EntityStepOnData> entitiesSteppedOn;
 	public static final double DIAGONAL_FACTOR = Math.sqrt(2);
@@ -25,6 +27,7 @@ public abstract class LivingEntity extends Entity {
 		super.create(name, style, location, entityType);
 		entitiesSteppedOn = new HashSet<EntityStepOnData>();
 		lastSpeed = entityType.getSpeed();
+		this.addToEventManager();
 	}
 	
 	@Override
@@ -32,6 +35,7 @@ public abstract class LivingEntity extends Entity {
 		super.create(fullSnapshot, map, entityType);
 		entitiesSteppedOn = new HashSet<EntityStepOnData>();
 		lastSpeed = entityType.getSpeed();
+		this.addToEventManager();
 	}
 	
 	@Override
@@ -60,6 +64,12 @@ public abstract class LivingEntity extends Entity {
 		ArrayList<EntityStepOnData> entitiesStepList = new ArrayList<EntityStepOnData>();
 		entitiesStepList.addAll(entitiesSteppedOn);
 		return entitiesStepList;
+	}
+	
+	@Override
+	public void remove() {
+		this.removeFromEventManager();
+		super.remove();
 	}
 	
 	@Override
@@ -218,6 +228,12 @@ public abstract class LivingEntity extends Entity {
 			removeAllEntityFromStepList(entitiesStepOnToRemove);
 		}
 		return true;
+	}
+	
+	@Override
+	public boolean onEntityTeleport(EntityTeleportEvent event) {
+		// TODO Auto-generated method stub
+		return EventHandler.super.onEntityTeleport(event);
 	}
 	
 	protected boolean doesCurrentPositionCollideWithMap () {

@@ -6,9 +6,6 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.Random;
 import java.util.UUID;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 import org.java_websocket.WebSocket;
 
@@ -104,56 +101,71 @@ public class Player extends LivingEntity implements PacketHandler, RollableEntit
 	PlayerFlagsManager flagsManager;
 	PlayerInventory inventory;
 	PlayerStatsManager statsManager;
-	ScheduledExecutorService exec;
 	LinkedList<ControlsPacket> commandsToExecute;
 	Random random;
 	int seed;
 	UnloadedLocation respawnLocation;
 	EventHandler respawner;
 	
+	Thread controlsUpdater;
+	boolean running = true;
+	
 	public Player (String name, String address, boolean firstTimeLogin) {
 		this.create(name, 0, location, address, firstTimeLogin);
 		commandsToExecute = new LinkedList<ControlsPacket>();
 		
-		exec = Executors.newSingleThreadScheduledExecutor();
-		exec.scheduleAtFixedRate(new Runnable() {
+		controlsUpdater = new Thread(new Runnable() {
 			@Override
 			public void run() {
-				LinkedList<ControlsPacket> packetsToRemove = new LinkedList<ControlsPacket>();
-				for (ControlsPacket cPacket : getCommandsClone()) {
-					if (cPacket.time <= System.currentTimeMillis() - CONTROLS_UPDATE_DELAY) {
-						packetsToRemove.add(cPacket);
-						boolean[] newControls = cPacket.parse();
-						
-						if (newControls == null || newControls.length != Controls.TOTAL)
-							return;
-						
-						//duplicate controls since they will be replaced
-						boolean[] oldControls = new boolean[controls.length];
-						for (int i = 0; i < controls.length; i++)
-							oldControls[i] = controls[i];
-						applyControlExceptions(newControls);
-						controls = newControls;
-						
-						//Loops through all controls to handle them one by one.
-						for (int i = 0; i < Controls.TOTAL; i++) {
-							//Checks for control change and executes controlUp/Down if there is a one.
-							if (oldControls[i]) {
-								if (!controls[i])
-									controlUp(i);
-							} else {
-								if (controls[i])
-									controlDown(i);
+				while (running) {
+					long startTime = System.currentTimeMillis();
+					LinkedList<ControlsPacket> packetsToRemove = new LinkedList<ControlsPacket>();
+					for (ControlsPacket cPacket : getCommandsClone()) {
+						if (cPacket.time <= System.currentTimeMillis() - CONTROLS_UPDATE_DELAY) {
+							packetsToRemove.add(cPacket);
+							boolean[] newControls = cPacket.parse();
+							
+							if (newControls == null || newControls.length != Controls.TOTAL)//Prevent invalid controls packets
+								return;
+							
+							//duplicate controls since they will be replaced
+							boolean[] oldControls = new boolean[controls.length];
+							for (int i = 0; i < controls.length; i++)
+								oldControls[i] = controls[i];
+							applyControlExceptions(newControls);
+							controls = newControls;
+							
+							//Loops through all controls to handle them one by one.
+							for (int i = 0; i < Controls.TOTAL; i++) {
+								//Checks for control change and executes controlUp/Down if there is a one.
+								if (oldControls[i]) {
+									if (!controls[i])
+										controlUp(i);
+								} else {
+									if (controls[i])
+										controlDown(i);
+								}
 							}
+							
+							updateControls(newControls, CONTROLS_DELTA_TIME);
+							sendPacket(new PositionCorrectionPacket(location.pos.x, location.pos.y, cPacket.id));
 						}
-						
-						updateControls(newControls, CONTROLS_DELTA_TIME);
-						sendPacket(new PositionCorrectionPacket(location.pos.x, location.pos.y, cPacket.id));
+					}
+					removeAllCommands(packetsToRemove);
+					
+					//Sleep thread to make up for update rate
+					long delta = System.currentTimeMillis() - startTime;
+					if (delta < CONTROLS_UPDATE_RATE) {
+						try {
+							Thread.sleep(CONTROLS_UPDATE_RATE - delta);
+						} catch (InterruptedException e) {
+							
+						}
 					}
 				}
-				removeAllCommands(packetsToRemove);
 			}
-		}, 0, CONTROLS_UPDATE_RATE, TimeUnit.MILLISECONDS);
+		});
+		controlsUpdater.start();
 		
 		final Player player = this;
 		//Prevents the player from being removed when dead. Simply teleports them.
@@ -215,9 +227,7 @@ public class Player extends LivingEntity implements PacketHandler, RollableEntit
 		this.respawnLocation = new UnloadedLocation(playerData.respawnX, playerData.respawnY, playerData.respawnIsland, playerData.respawnMap);
 		
 		//Send player stats to itself
-		PlayerStatsPacket packet = new PlayerStatsPacket();
-		packet.health = this.health;
-		this.sendPacket(packet);
+		this.sendPacket(new PlayerStatsPacket(health));
 		
 		PlayerJoinEvent event = new PlayerJoinEvent(this);//Triggers player join event
 		event.trigger();
@@ -371,6 +381,16 @@ public class Player extends LivingEntity implements PacketHandler, RollableEntit
 	 */
 	public void remove (LogoutReason reason, String alt) {
 		super.remove();
+		
+		//Close controls thread
+		try {
+			running = false;
+			controlsUpdater.join();
+		} catch (InterruptedException e) {
+			ArchipeloServer.getServer().getLogger().caution("Was unable to join controls thread for player: " + name);
+		}
+		
+		//Remove other resources
 		statsManager.dispose();
 		respawner.removeFromEventManager();
 		ArchipeloServer.getServer().getNetworkManager().removePacketHandler(this);
@@ -561,6 +581,12 @@ public class Player extends LivingEntity implements PacketHandler, RollableEntit
 		return snapshot;
 	}
 	
+	public EntitySnapshot getFullPrivateSnapshot() {
+		EntitySnapshot snapshot = this.getFullSnapshot();
+		snapshot.putFloat("health", health);
+		return snapshot;
+	}
+	
 	public void updateDisplayInventory () {
 		changes.putString("displayInventory", inventory.getDisplayInventoryJson());
 	}
@@ -665,10 +691,7 @@ public class Player extends LivingEntity implements PacketHandler, RollableEntit
 	@Override
 	public void heal(float amount, Entity healer) {
 		super.heal(amount, healer);
-		
-		PlayerStatsPacket packet = new PlayerStatsPacket();
-		packet.health = this.health;
-		this.sendPacket(packet);
+		this.sendPacket(new PlayerStatsPacket(health));//Update health on client
 	}
 	
 	public Random getRandom() {
@@ -683,8 +706,9 @@ public class Player extends LivingEntity implements PacketHandler, RollableEntit
 			} else {//Walking
 				return new EntityAnimationObject("walk");
 			}
-		} else//Idle
+		} else {//Idle
 			return new EntityAnimationObject("default");
+		}
 	}
 	
 	public static PlayerData getNewPlayerData (String name, String hbUuid, Item hair, Item face, Item body) {

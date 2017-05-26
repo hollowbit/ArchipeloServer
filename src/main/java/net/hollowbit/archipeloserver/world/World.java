@@ -91,27 +91,27 @@ public class World implements PacketHandler {
 					continue;
 				
 				WorldSnapshot snapshot = new WorldSnapshot(this, map, WorldSnapshot.TYPE_INTERP);
-				String snapshotPacketString = ArchipeloServer.getServer().getNetworkManager().getPacketString(snapshot.getPacket());
+				byte[] snapshotPacketData = ArchipeloServer.getServer().getNetworkManager().getPacketData(snapshot.getPacket());
 				
 				WorldSnapshot changesSnapshot = new WorldSnapshot(this, map, WorldSnapshot.TYPE_CHANGES);
-				String changesSnapshotPacketString = ArchipeloServer.getServer().getNetworkManager().getPacketString(changesSnapshot.getPacket());
+				byte[] changesSnapshotPacketData = ArchipeloServer.getServer().getNetworkManager().getPacketData(changesSnapshot.getPacket());
 				
 				WorldSnapshot fullSnapshot = null;
-				String fullSnapshotPacketString = null;
+				byte[] fullSnapshotPacketData = null;
 				
 				//Check if there are any new players on map, if so, create a full snapshot for them, otherwise don't even bother making it.
 				if (map.isThereNewPlayerOnMap()) {
 					fullSnapshot = new WorldSnapshot(this, map, WorldSnapshot.TYPE_FULL);
-					fullSnapshotPacketString = ArchipeloServer.getServer().getNetworkManager().getPacketString(fullSnapshot.getPacket());
+					fullSnapshotPacketData = ArchipeloServer.getServer().getNetworkManager().getPacketData(fullSnapshot.getPacket());
 				}
 				
 				for (Player player : map.getPlayers()) {
 					if (player.isNewOnMap()) {
-						ArchipeloServer.getServer().getNetworkManager().sendPacketString(fullSnapshotPacketString, player.getConnection());
+						ArchipeloServer.getServer().getNetworkManager().sendPacketData(fullSnapshotPacketData, player.getConnection());
 						player.setNewOnMap(false);
 					} else {
-						ArchipeloServer.getServer().getNetworkManager().sendPacketString(snapshotPacketString, player.getConnection());
-						ArchipeloServer.getServer().getNetworkManager().sendPacketString(changesSnapshotPacketString, player.getConnection());
+						ArchipeloServer.getServer().getNetworkManager().sendPacketData(snapshotPacketData, player.getConnection());
+						ArchipeloServer.getServer().getNetworkManager().sendPacketData(changesSnapshotPacketData, player.getConnection());
 					}
 				}
 				

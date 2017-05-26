@@ -226,7 +226,20 @@ public class Map {
 		return snapshot;
 	}
 	
+	/**
+	 * Safer way to loop through entities
+	 * Exceptions
+	 * @return
+	 */
 	public Collection<Entity> getEntities () {
+		return entityManager.duplicateEntityList();
+	}
+	
+	/**
+	 * Not recommended in most cases. May cause ConcurrentModification
+	 * @return
+	 */
+	public Collection<Entity> getEntitiesOriginal () {
 		return entityManager.getEntities();
 	}
 	

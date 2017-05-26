@@ -7,8 +7,13 @@ public class PlayerStatsPacket extends Packet {
 	
 	public float health = 0;
 	
-	public PlayerStatsPacket() {
+	private PlayerStatsPacket() {
 		super(PacketType.PLAYER_STATS);
 	}
 
+	public PlayerStatsPacket(float health) {
+		this();
+		this.health = health;
+	}
+	
 }

@@ -9,7 +9,7 @@ public class TestSwordUseType extends UseType {
 
 	@Override
 	public UseTypeSettings useItemTap(Item item, Player user, long time) {
-		
+		this.damageWithItem(item, user, time);
 		int useAnimation = user.getRandom().nextInt(item.getType().numOfUseAnimations);
 		return new UseTypeSettings(useAnimation, 0, true);
 	}
