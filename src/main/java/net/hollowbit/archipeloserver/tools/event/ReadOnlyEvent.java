@@ -10,6 +10,7 @@ public class ReadOnlyEvent extends Event {
 	
 	@Override
 	public Event trigger() {
+		ArchipeloServer.getServer().getEventManager().triggerEvent(this, true);
 		return ArchipeloServer.getServer().getEventManager().triggerEvent(this, false);
 	}
 
