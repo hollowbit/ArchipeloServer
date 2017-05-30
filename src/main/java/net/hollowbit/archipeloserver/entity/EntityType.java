@@ -50,6 +50,7 @@ public enum EntityType {
 	private String footstepSound = "";
 	private int footstepOffsetX;
 	private int footstepOffsetY;
+	private int headOffsetFromTop;
 	
 	private int imgWidth, imgHeight;
 	
@@ -90,6 +91,7 @@ public enum EntityType {
 		this.footstepSound = data.footstepSound;
 		this.footstepOffsetX = data.footstepOffsetX;
 		this.footstepOffsetY = data.footstepOffsetY;
+		this.headOffsetFromTop = data.headOffsetFromTop;
 		
 		this.imgWidth = data.imgWidth;
 		this.imgHeight = data.imgHeight;
@@ -185,6 +187,10 @@ public enum EntityType {
 	
 	public float getViewHeight () {
 		return imgHeight;
+	}
+	
+	public int getHeadOffsetFromTop() {
+		return headOffsetFromTop;
 	}
 	
 	/**

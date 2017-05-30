@@ -9,6 +9,7 @@ import net.hollowbit.archipeloserver.entity.EntityAnimationManager.EntityAnimati
 import net.hollowbit.archipeloserver.entity.living.Player;
 import net.hollowbit.archipeloserver.network.packets.PopupTextPacket;
 import net.hollowbit.archipeloserver.network.packets.TeleportPacket;
+import net.hollowbit.archipeloserver.particles.HealthParticles;
 import net.hollowbit.archipeloserver.tools.entity.Location;
 import net.hollowbit.archipeloserver.tools.event.events.editable.EntityDeathEvent;
 import net.hollowbit.archipeloserver.tools.event.events.editable.EntityInteractionEvent;
@@ -386,6 +387,8 @@ public abstract class Entity {
 		else
 			this.changes.putBoolean("flash", false);
 		
+		location.map.spawnParticles(new HealthParticles(this, (int) amount));
+		
 		if (health <= 0) {
 			//Trigger death event
 			EntityDeathEvent event = new EntityDeathEvent(this, healer, oldHealth, this.health);
@@ -486,6 +489,10 @@ public abstract class Entity {
 	 */
 	public Vector2 getFeetTile () {
 		return new Vector2(getFootX() / ArchipeloServer.TILE_SIZE, getFootY() / ArchipeloServer.TILE_SIZE);
+	}
+	
+	public float getTopOfHead() {
+		return location.getY() + entityType.getViewHeight() - entityType.getHeadOffsetFromTop();
 	}
 	
 	@Override

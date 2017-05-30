@@ -11,11 +11,13 @@ import net.hollowbit.archipeloserver.entity.living.Player;
 import net.hollowbit.archipeloserver.form.FormManager;
 import net.hollowbit.archipeloserver.network.packets.EntityAddPacket;
 import net.hollowbit.archipeloserver.network.packets.EntityRemovePacket;
+import net.hollowbit.archipeloserver.particles.Particles;
 import net.hollowbit.archipeloserver.tools.npcdialogs.NpcDialogManager;
 import net.hollowbit.archipeloserver.world.map.MapLoader;
 import net.hollowbit.archipeloshared.CollisionRect;
 import net.hollowbit.archipeloshared.EntitySnapshot;
 import net.hollowbit.archipeloshared.MapData;
+import net.hollowbit.archipeloshared.MapSnapshot;
 import net.hollowbit.archipeloshared.TileData;
 
 public class Map {
@@ -350,7 +352,15 @@ public class Map {
 		players.addAll(getPlayers());
 		return players;
 	}
-
+	
+	/**
+	 * Spawn particles on the map.
+	 * @param particles
+	 */
+	public void spawnParticles(Particles particles) {
+		changes.particles.add(particles.getData());
+	}
+	
 	public int getClimat() {
 		return climat;
 	}

@@ -5,6 +5,7 @@ import java.util.HashMap;
 import net.hollowbit.archipeloserver.entity.Entity;
 import net.hollowbit.archipeloserver.network.packets.WorldSnapshotPacket;
 import net.hollowbit.archipeloshared.EntitySnapshot;
+import net.hollowbit.archipeloshared.MapSnapshot;
 
 public class WorldSnapshot {
 	
