@@ -22,6 +22,8 @@ import net.hollowbit.archipeloshared.EntitySnapshot;
 import net.hollowbit.archipeloshared.Point;
 
 public abstract class Entity {
+
+	public static final float DAMAGE_FLASH_DURATION = 0.2f;
 	
 	protected String name;
 	protected EntityType entityType;

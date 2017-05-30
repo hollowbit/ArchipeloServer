@@ -3,7 +3,9 @@ package net.hollowbit.archipeloserver.items;
 import java.util.ArrayList;
 
 import net.hollowbit.archipeloserver.entity.Entity;
+import net.hollowbit.archipeloserver.entity.LivingEntity;
 import net.hollowbit.archipeloserver.entity.living.Player;
+import net.hollowbit.archipeloserver.entity.living.movementanimation.types.KnockbackMovementAnimation;
 import net.hollowbit.archipeloshared.HitCalculator;
 import net.hollowbit.archipeloshared.UseTypeSettings;
 
@@ -46,8 +48,9 @@ public abstract class UseType {
 	 * @param item
 	 * @param user
 	 * @param time
+	 * @param knockback
 	 */
-	protected void damageWithItem (Item item, Player user, long time) {
+	protected void damageWithItem (Item item, Player user, long time, boolean knockback) {
 		ArrayList<Entity> entitiesOnMap = (ArrayList<Entity>) user.getMap().getEntities();
 		for (Entity entity : entitiesOnMap) {
 			if (entity == user || !entity.getEntityType().isHittable())
@@ -56,6 +59,10 @@ public abstract class UseType {
 			//Check for entity hits
 			if (HitCalculator.didEntityHitEntityRects(user.getFootX(), user.getFootY(), entity.getCollisionRects(time), item.getType().hitRange, user.getLocation().getDirection())) {
 				entity.heal(-((int) user.getStatsManager().hit(item)));
+				if (knockback) {
+					if (entity instanceof LivingEntity)
+						((LivingEntity) entity).addMovementAnimation(new KnockbackMovementAnimation((LivingEntity) entity, user.getLocation().getDirection(), user.getStatsManager().getKnockback(item), Entity.DAMAGE_FLASH_DURATION));
+				}
 			}
 		}
 	}

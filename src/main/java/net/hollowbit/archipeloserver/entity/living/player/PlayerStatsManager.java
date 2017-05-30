@@ -116,6 +116,15 @@ public class PlayerStatsManager implements EventHandler {
 		return damage * damageMultiplier;
 	}
 	
+	/**
+	 * Returns the knockback distance if an item is used.
+	 * @param item
+	 * @return
+	 */
+	public float getKnockback (Item item) {
+		return 16;//TODO Implement real knockback
+	}
+	
 	public float getSpeed (boolean isSprinting, boolean isRolling) {
 		if (isRolling)
 			return getBaseSpeed() * ROLLING_SPEED_SCALE;

@@ -19,6 +19,7 @@ public class ArchipeloServer {
 
 	public static final float TICK20 = 1 / 20f;
 	public static final float TICK60 = 1 / 60f;
+	public static float STATETIME = 0;
 	public static final int TILE_SIZE = 16;
 	public static final String VERSION = "0.1a";
 	public static final int MAX_CHARACTERS_PER_PLAYER = 4;
@@ -84,10 +85,10 @@ public class ArchipeloServer {
 				long startTime = System.currentTimeMillis();
 				
 				while (running) {
-					float deltaTime = (System.currentTimeMillis() - startTime) / 1000f;
+					//float deltaTime = (System.currentTimeMillis() - startTime) / 1000f;
 					startTime = System.currentTimeMillis();
 					
-					world.tick20(deltaTime);
+					world.tick20(TICK20);
 					long timeToSleep = (long) (TICK20 * 1000 - (System.currentTimeMillis() - startTime));
 					if (timeToSleep >= 0) {
 						try {
@@ -109,11 +110,13 @@ public class ArchipeloServer {
 				long startTime = System.currentTimeMillis();
 				
 				while (running) {
-					float deltaTime = (System.currentTimeMillis() - startTime) / 1000f;
+					//float deltaTime = (System.currentTimeMillis() - startTime) / 1000f;
 					startTime = System.currentTimeMillis();
 					
+					STATETIME += TICK60;
+					
 					networkManager.update();
-					world.tick60(deltaTime);
+					world.tick60(TICK60);
 					long timeToSleep = (long) (TICK60 * 1000 - (System.currentTimeMillis() - startTime));
 					if (timeToSleep >= 0) {
 						try {

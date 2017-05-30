@@ -6,6 +6,8 @@ import java.util.LinkedList;
 
 import com.badlogic.gdx.math.Vector2;
 
+import net.hollowbit.archipeloserver.entity.living.movementanimation.MovementAnimation;
+import net.hollowbit.archipeloserver.entity.living.movementanimation.MovementAnimationManager;
 import net.hollowbit.archipeloserver.tools.entity.EntityStepOnData;
 import net.hollowbit.archipeloserver.tools.entity.Location;
 import net.hollowbit.archipeloserver.tools.event.EventHandler;
@@ -20,14 +22,16 @@ import net.hollowbit.archipeloshared.EntitySnapshot;
 public abstract class LivingEntity extends Entity implements EventHandler {
 	
 	private HashSet<EntityStepOnData> entitiesSteppedOn;
-	public static final double DIAGONAL_FACTOR = Math.sqrt(2);
+	public static final float DIAGONAL_FACTOR = (float) Math.sqrt(2);
 	private float lastSpeed;
+	protected MovementAnimationManager movementAnimationManager;
 	
 	@Override
 	public void create(String name, int style, Location location, EntityType entityType) {
 		super.create(name, style, location, entityType);
 		entitiesSteppedOn = new HashSet<EntityStepOnData>();
 		lastSpeed = entityType.getSpeed();
+		this.movementAnimationManager = new MovementAnimationManager();
 		this.addToEventManager(EventType.EntityTeleport, EventType.EntityMove);
 	}
 	
@@ -36,6 +40,7 @@ public abstract class LivingEntity extends Entity implements EventHandler {
 		super.create(fullSnapshot, map, entityType);
 		entitiesSteppedOn = new HashSet<EntityStepOnData>();
 		lastSpeed = entityType.getSpeed();
+		this.movementAnimationManager = new MovementAnimationManager();
 		this.addToEventManager(EventType.EntityTeleport, EventType.EntityMove);
 	}
 	
@@ -51,6 +56,22 @@ public abstract class LivingEntity extends Entity implements EventHandler {
 			changes.putFloat("speed", this.getSpeed());
 			lastSpeed = this.getSpeed();
 		}
+	}
+	
+	@Override
+	public void tick60(float deltaTime) {
+		super.tick60(deltaTime);
+		
+		//Apply movement animations if any were execute.
+		movementAnimationManager.tick60(deltaTime);
+	}
+	
+	/**
+	 * Add a movement animation to this entity to be performed.
+	 * @param animation
+	 */
+	public void addMovementAnimation(MovementAnimation animation) {
+		this.movementAnimationManager.addAnimation(animation);
 	}
 	
 	private synchronized void addEntityToStepList (EntityStepOnData entityStepOnData) {
@@ -92,32 +113,45 @@ public abstract class LivingEntity extends Entity implements EventHandler {
 	}
 	
 	/**
+	 * Proper way to move an entity using the default speed.
+	 * @param direction
+	 * @param deltaTime
+	 * @param checkCollisions
+	 * @param speed
+	 * @return
+	 */
+	public boolean move (Direction direction, float deltaTime, boolean checkCollisions) {
+		return this.move(direction, deltaTime, checkCollisions, getSpeed());
+	}
+	
+	/**
 	 * Proper way to move an entity
 	 * @param direction
 	 * @param deltaTime
 	 * @param checkCollisions
+	 * @param speed
 	 * @return
 	 */
 	@SuppressWarnings("incomplete-switch")
-	public boolean move (Direction direction, float deltaTime, boolean checkCollisions) {
+	public boolean move (Direction direction, float deltaTime, boolean checkCollisions, float speed) {
 		//Calculate new position
 		Vector2 newPos = new Vector2(location.pos);
 		Vector2 newPosVertical = new Vector2(location.pos);
 		switch (direction) {
 		case UP:
-			newPosVertical.add(0, (float) (deltaTime * getSpeed()));
+			newPosVertical.add(0, (float) (deltaTime * speed));
 			break;
 		case UP_LEFT:
 		case UP_RIGHT:
-			newPosVertical.add(0, (float) (deltaTime * getSpeed() / LivingEntity.DIAGONAL_FACTOR));
+			newPosVertical.add(0, (float) (deltaTime * speed / LivingEntity.DIAGONAL_FACTOR));
 			break;
 			
 		case DOWN:
-			newPosVertical.add(0, (float) (-deltaTime * getSpeed()));
+			newPosVertical.add(0, (float) (-deltaTime * speed));
 			break;
 		case DOWN_LEFT:
 		case DOWN_RIGHT:
-			newPosVertical.add(0, (float) (-deltaTime * getSpeed() / LivingEntity.DIAGONAL_FACTOR));
+			newPosVertical.add(0, (float) (-deltaTime * speed / LivingEntity.DIAGONAL_FACTOR));
 			break;
 		}
 		
@@ -138,18 +172,18 @@ public abstract class LivingEntity extends Entity implements EventHandler {
 		Vector2 newPosHorizontal = new Vector2(newPos);
 		switch (direction) {
 		case LEFT:
-			newPosHorizontal.add((float) (-deltaTime * getSpeed()), 0);
+			newPosHorizontal.add((float) (-deltaTime * speed), 0);
 			break;
 		case UP_LEFT:
 		case DOWN_LEFT:
-			newPosHorizontal.add((float) (-deltaTime * getSpeed() / LivingEntity.DIAGONAL_FACTOR), 0);
+			newPosHorizontal.add((float) (-deltaTime * speed / LivingEntity.DIAGONAL_FACTOR), 0);
 			break;
 		case RIGHT:
-			newPosHorizontal.add((float) (deltaTime * getSpeed()), 0);
+			newPosHorizontal.add((float) (deltaTime * speed), 0);
 			break;
 		case UP_RIGHT:
 		case DOWN_RIGHT:
-			newPosHorizontal.add((float) (deltaTime * getSpeed() / LivingEntity.DIAGONAL_FACTOR), 0);
+			newPosHorizontal.add((float) (deltaTime * speed / LivingEntity.DIAGONAL_FACTOR), 0);
 			break;
 		}
 		
