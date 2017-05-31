@@ -172,7 +172,6 @@ public class PlayerStatsManager implements EventHandler {
 	
 	@Override
 	public boolean onPlayerInventoryChanged (PlayerInventoryChangeEvent event) {
-		System.out.println("PlayerStatsManager.java  test!");
 		if (event.getPlayer() == player) {
 			if (event.getInventoryId() == PlayerInventory.BUFFS_EQUIP_INVENTORY || event.getInventoryId() == PlayerInventory.EQUIPPED_INVENTORY || event.getInventoryId() == PlayerInventory.WEAPON_EQUIP_INVENTORY) {
 				update();
