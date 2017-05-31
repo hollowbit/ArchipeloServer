@@ -9,7 +9,7 @@ import net.hollowbit.archipeloserver.entity.EntityAnimationManager.EntityAnimati
 import net.hollowbit.archipeloserver.entity.living.Player;
 import net.hollowbit.archipeloserver.network.packets.PopupTextPacket;
 import net.hollowbit.archipeloserver.network.packets.TeleportPacket;
-import net.hollowbit.archipeloserver.particles.HealthParticles;
+import net.hollowbit.archipeloserver.particles.types.HealthParticles;
 import net.hollowbit.archipeloserver.tools.entity.Location;
 import net.hollowbit.archipeloserver.tools.event.events.editable.EntityDeathEvent;
 import net.hollowbit.archipeloserver.tools.event.events.editable.EntityInteractionEvent;
@@ -449,6 +449,10 @@ public abstract class Entity {
 	public Vector2 getCenterPoint () {
 		CollisionRect viewRect = entityType.getViewRect(location.getX(), location.getY());
 		return new Vector2(location.getX() + viewRect.width / 2, location.getY() + viewRect.height / 2);
+	}
+	
+	public CollisionRect getViewRect() {
+		return entityType.getViewRect(location.getX(), location.getY());
 	}
 	
 	public float getSpeed () {

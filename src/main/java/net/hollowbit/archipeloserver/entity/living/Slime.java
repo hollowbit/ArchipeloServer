@@ -1,9 +1,11 @@
 package net.hollowbit.archipeloserver.entity.living;
 
+import net.hollowbit.archipeloserver.entity.Entity;
 import net.hollowbit.archipeloserver.entity.EntityAnimationManager.EntityAnimationObject;
 import net.hollowbit.archipeloserver.entity.EntityType;
 import net.hollowbit.archipeloserver.entity.LivingEntity;
 import net.hollowbit.archipeloserver.entity.components.MonsterFollowComponent;
+import net.hollowbit.archipeloserver.particles.types.EntityChunkParticles;
 import net.hollowbit.archipeloserver.world.Map;
 import net.hollowbit.archipeloshared.EntitySnapshot;
 
@@ -63,6 +65,14 @@ public class Slime extends LivingEntity {
 	@Override
 	public boolean ignoreHardnessOfCollisionRects(Player player, String rectName) {
 		return false;
+	}
+	
+	@Override
+	public void heal(float amount, Entity healer) {
+		super.heal(amount, healer);
+		
+		if (amount < 0)
+			location.map.spawnParticles(new EntityChunkParticles(this));
 	}
 
 }

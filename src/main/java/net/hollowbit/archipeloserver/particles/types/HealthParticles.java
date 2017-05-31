@@ -1,6 +1,8 @@
-package net.hollowbit.archipeloserver.particles;
+package net.hollowbit.archipeloserver.particles.types;
 
 import net.hollowbit.archipeloserver.entity.Entity;
+import net.hollowbit.archipeloserver.particles.ParticleType;
+import net.hollowbit.archipeloserver.particles.Particles;
 import net.hollowbit.archipeloshared.CollisionRect;
 
 public class HealthParticles extends Particles {
