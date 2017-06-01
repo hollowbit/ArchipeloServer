@@ -12,9 +12,12 @@ public class EntityAnimationManager {
 	private String meta;
 	private float animationLength;
 	
-	public EntityAnimationManager (Entity entity, String animationId, String animationMeta, float stateTime) {
+	public EntityAnimationManager (Entity entity, EntitySnapshot fullSnapshot) {
+		this(entity, fullSnapshot.getString("anim", entity.getEntityType().getDefaultAnimationId()), fullSnapshot.getString("animMeta", ""), fullSnapshot.getFloat("animTime", 0));
+	}
+	
+	public EntityAnimationManager (Entity entity, String animationId, String animationMeta, float animTime) {
 		this.entity = entity;
-		
 		if (animationId == null || animationId.equals("") || animationId.equals("null")) {//If there is no animation specified in save, use the default one
 			this.id = entity.getEntityType().getDefaultAnimationId();
 		} else
@@ -23,7 +26,7 @@ public class EntityAnimationManager {
 		this.data = entity.getEntityType().getAnimationDataById(id);
 		this.animationLength = data.totalRuntime;
 		this.meta = animationMeta;
-		this.stateTime = stateTime;
+		this.stateTime = animTime;
 	}
 	
 	public void update (float deltaTime) {
@@ -42,13 +45,28 @@ public class EntityAnimationManager {
 	}
 	
 	/**
-	 * Applies the animation to an entity snapshot
+	 * Applies the animation to an entity full snapshot
 	 * @param interpSnapshot
 	 */
-	public void applyToEntitySnapshot (EntitySnapshot interpSnapshot) {
-		interpSnapshot.anim = id;
-		interpSnapshot.animMeta = meta;
-		interpSnapshot.animTime = stateTime;
+	public void applyToEntityFullSnapshot (EntitySnapshot fullSnapshot) {
+		fullSnapshot.putString("anim", id);
+		fullSnapshot.putString("animMeta", meta);
+		fullSnapshot.putFloat("animLength", animationLength);
+		fullSnapshot.putFloat("animTime", stateTime);
+	}
+	
+	/**
+	 * Will change the animation id without reseting the statetime, meta and custom length.
+	 * @param animationId
+	 */
+	public void changeWithoutReset(String animationId) {
+		if (entity.getEntityType().hasAnimation(animationId)) {
+			if (!this.id.equals(animationId)) {//Only apply if the animation id changed, otherwise there is no point
+				this.id = animationId;
+				this.data = entity.getEntityType().getAnimationDataById(animationId);
+				applyToEntityChanges(animationId, meta, animationLength, false);
+			}
+		}
 	}
 	
 	/**
@@ -65,27 +83,41 @@ public class EntityAnimationManager {
 	 * @param animationMeta
 	 */
 	public void change (String animationId, String animationMeta) {
-		this.change(animationId, animationMeta, entity.getEntityType().getAnimationDataById(animationId).totalRuntime);
+		if (entity.getEntityType().hasAnimation(animationId))//Needs to be checked here since we use it below
+			this.change(animationId, animationMeta, entity.getEntityType().getAnimationDataById(animationId).totalRuntime);
 	}
 	
 	public void change (String animationId, String animationMeta, float customAnimationLength) {
 		//Make sure this entity has this animation
 		if (entity.getEntityType().hasAnimation(animationId)) {
-			if (!animationId.equals(id))
+			boolean reset = false;
+			boolean changed = false;
+			if (!animationId.equals(id)) {
 				this.stateTime = 0;
-			this.id = animationId;
-			this.data = entity.getEntityType().getAnimationDataById(animationId);
+				this.id = animationId;
+				this.data = entity.getEntityType().getAnimationDataById(animationId);
+				reset = true;
+				changed = true;
+			}
+			
+			if(!this.meta.equals(animationMeta))
+				changed = true;
 			this.meta = animationMeta;
+			
+			if(this.animationLength != customAnimationLength)
+				changed = true;
 			this.animationLength = customAnimationLength;
+			
+			if (changed)//Only update client if there was a change made
+				applyToEntityChanges(animationId, animationMeta, customAnimationLength, reset);
 		}
 	}
 	
-	/**
-	 * Used to determine if the current animation is an animation of a player using something.
-	 * @return
-	 */
-	public boolean isUseAnimation () {
-		return id.equals("use") || id.equals("usewalk") || id.equals("thrust");
+	private void applyToEntityChanges(String animationId, String meta, float animationLength, boolean reset) {
+		entity.getChangesSnapshot().putString("anim", animationId);
+		entity.getChangesSnapshot().putString("animMeta", meta);
+		entity.getChangesSnapshot().putFloat("animLength", animationLength);
+		entity.getChangesSnapshot().putBoolean("resetAnim", reset);
 	}
 	
 	public String getAnimationId () {

@@ -74,7 +74,7 @@ public abstract class Entity {
 		
 		changes = new EntitySnapshot(this.name, this.entityType.getId(), true);
 		log = new EntityLog();
-		animationManager = new EntityAnimationManager(this, fullSnapshot.anim, fullSnapshot.animMeta, fullSnapshot.animTime);
+		animationManager = new EntityAnimationManager(this, fullSnapshot);
 		audioManager = new EntityAudioManager(this);
 	}
 	
@@ -160,7 +160,6 @@ public abstract class Entity {
 	 */
 	public EntitySnapshot getInterpSnapshot () {
 		EntitySnapshot snapshot = new EntitySnapshot(this.name, this.entityType.getId(), true);
-		animationManager.applyToEntitySnapshot(snapshot);
 		audioManager.applyToInterpSnapshot(snapshot);
 		
 		for (EntityComponent component : components)
@@ -187,7 +186,7 @@ public abstract class Entity {
 		snapshot.putInt("style", style);
 		if (this.getEntityType().showHealthBar())
 			snapshot.putFloat("health", health);
-		animationManager.applyToEntitySnapshot(snapshot);
+		animationManager.applyToEntityFullSnapshot(snapshot);
 		
 		for (EntityComponent component : components)
 			component.editFullSnapshot(snapshot);

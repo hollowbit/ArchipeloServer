@@ -439,11 +439,18 @@ public class Player extends LivingEntity implements PacketHandler, RollableEntit
 		case Controls.LEFT:
 		case Controls.DOWN:
 		case Controls.RIGHT:
-			if (!isMoving() && !isRolling() && !isThrusting()) {
-				if (isUsing())
-					animationManager.change("use");
-				else
-					animationManager.change("default");
+			if (!isRolling() && !isThrusting()) {
+				if (isMoving()) {
+					if (isUsing())
+						animationManager.changeWithoutReset("usewalk");
+					else
+						animationManager.change("walk");
+				} else {
+					if (isUsing())
+						animationManager.changeWithoutReset("use");
+					else
+						animationManager.change("default");
+				}
 			}
 			break;
 		}
@@ -506,7 +513,7 @@ public class Player extends LivingEntity implements PacketHandler, RollableEntit
 		case Controls.RIGHT:
 			if (!isRolling()) {
 				if (isUsing())
-					animationManager.change("usewalk");
+					animationManager.changeWithoutReset("usewalk");
 				else
 					animationManager.change("walk");
 			}
