@@ -23,7 +23,11 @@ public enum ItemType {
 	HAIR1("hair1"),
 	FACE1("face1"),
 	BLOBBY_ASHES("blobby_ashes"),
-	TEST_SWORD("test_sword", new TestSwordUseType())/*,
+	SPEAR_BASIC("spear_basic", new BasicWeaponUseType()),
+	ASSISTANT_GENERAL("assistant_general", new BasicWeaponUseType()),
+	SOUL_DISRUPTOR("soul_disruptor", new BasicWeaponUseType()),
+	SPIRIT_DISRUPTOR("spirit_disruptor", new BasicWeaponUseType()),
+	DEMONS_TONGUE("demons_tongue", new BasicWeaponUseType())/*,
 	SWORD("sword"),
 	POTION_SMALL("potion_small", new HealthPotionUseType())*/;
 	
@@ -91,7 +95,7 @@ public enum ItemType {
 		}
 		ItemTypeData data = json.fromJson(ItemTypeData.class, fileString);
 		
-		this.id = data.id;
+		this.id = id;
 		this.iconX = data.iconX;
 		this.iconY = data.iconY;
 		this.minDamage = data.minDamage;

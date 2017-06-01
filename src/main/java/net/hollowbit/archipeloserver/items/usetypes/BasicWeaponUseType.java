@@ -5,13 +5,13 @@ import net.hollowbit.archipeloserver.items.Item;
 import net.hollowbit.archipeloserver.items.UseType;
 import net.hollowbit.archipeloshared.UseTypeSettings;
 
-public class TestSwordUseType extends UseType {
+public class BasicWeaponUseType extends UseType {
 
 	@Override
 	public UseTypeSettings useItemTap(Item item, Player user, long time) {
 		this.damageWithItem(item, user, time, true);
 		//int useAnimation = user.getRandom().nextInt(item.getType().numOfUseAnimations);
-		return new UseTypeSettings(0, 0, false);
+		return new UseTypeSettings(0, 0, true);
 	}
 
 	@Override
