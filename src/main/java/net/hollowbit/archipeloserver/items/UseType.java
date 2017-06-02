@@ -11,6 +11,8 @@ import net.hollowbit.archipeloshared.UseTypeSettings;
 
 public abstract class UseType {
 	
+	protected static final float STANDARD_DOUBLE_TAP_DELTA = 0.21f;
+	
 	/**
 	 * Uses an item on tapping action button. Returns a UseTypeSettings object with information about animations and sounds.
 	 * Could return null if unsuccessful.

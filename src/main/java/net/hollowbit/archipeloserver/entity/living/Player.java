@@ -60,7 +60,7 @@ import net.hollowbit.archipeloshared.UseTypeSettings;
 
 public class Player extends LivingEntity implements PacketHandler, RollableEntity {
 	
-	public static final float ROLL_DOUBLE_CLICK_DURATION = 0.3f;
+	public static final float ROLL_DOUBLE_CLICK_DURATION = 0.21f;
 	public static final float DEFAULT_HIT_RANGE = 8;
 	public static final float EMPTY_HAND_USE_ANIMATION_LENTH = 0.5f;
 	
@@ -110,6 +110,7 @@ public class Player extends LivingEntity implements PacketHandler, RollableEntit
 	UnloadedLocation respawnLocation;
 	EventHandler respawner;
 	boolean movementEnabled = true;
+	float timeAttackHeld = 0;
 	
 	Thread controlsUpdater;
 	boolean running = true;
@@ -241,6 +242,8 @@ public class Player extends LivingEntity implements PacketHandler, RollableEntit
 	
 	@Override
 	public void tick60 (float deltaTime) {
+		this.timeAttackHeld += deltaTime;
+		
 		//Tick timer for roll double-click
 		if (rollDoubleClickTimer >= 0) {
 			rollDoubleClickTimer -= deltaTime;
@@ -425,10 +428,15 @@ public class Player extends LivingEntity implements PacketHandler, RollableEntit
 	
 	
 	private void controlUp (int control) {
+		long time = System.currentTimeMillis() - CONTROLS_UPDATE_DELAY - WORLD_SNAPSHOT_DELAY - hbUser.getPing();
 		switch (control) {
 		case Controls.ATTACK:
-			if (isCurrentlyUsingAnItem())
+			if (isCurrentlyUsingAnItem()) {
 				animationManager.endCurrentAnimation();
+				Item item = inventory.getWeaponInventory().getRawStorage()[0];
+				if (item != null)
+					item.useHold(this, timeAttackHeld, time);
+			}
 			break;
 		case Controls.ROLL:
 			if (!isRolling() && !isCurrentlyUsingAnItem()) {
@@ -460,6 +468,7 @@ public class Player extends LivingEntity implements PacketHandler, RollableEntit
 	}
 	
 	private void controlDown (int control) {
+		long time = System.currentTimeMillis() - CONTROLS_UPDATE_DELAY - WORLD_SNAPSHOT_DELAY - hbUser.getPing();
 		switch (control) {
 		case Controls.ROLL:
 			if (!isCurrentlyUsingAnItem() && isMoving()) {
@@ -478,8 +487,11 @@ public class Player extends LivingEntity implements PacketHandler, RollableEntit
 			
 			break;
 		case Controls.ATTACK:
-			if (!isRolling() && !isCurrentlyUsingAnItem()) {
-				long time = System.currentTimeMillis() - CONTROLS_UPDATE_DELAY - WORLD_SNAPSHOT_DELAY - hbUser.getPing();
+			if (isCurrentlyUsingAnItem()) {
+				Item item = inventory.getWeaponInventory().getRawStorage()[0];
+				if (item != null)
+					item.useDoubleTap(this, timeAttackHeld, time);
+			} else if (!isRolling()) {
 				ArrayList<Entity> entitiesOnMap = (ArrayList<Entity>) location.getMap().getEntities();
 				boolean useHitAnimation = true;
 				
@@ -502,6 +514,7 @@ public class Player extends LivingEntity implements PacketHandler, RollableEntit
 					Item item = inventory.getWeaponInventory().getRawStorage()[0];
 					
 					if (item != null) {
+						timeAttackHeld = 0;
 						UseTypeSettings settings = item.useTap(this, time);
 						if (settings != null)
 							playUseAnimation(item, settings.animationType, item.getType().getUseAnimationByUseType(settings.animationType).usesThrust(), settings.soundType);
