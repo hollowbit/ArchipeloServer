@@ -428,7 +428,7 @@ public class Player extends LivingEntity implements PacketHandler, RollableEntit
 	private void controlUp (int control) {
 		switch (control) {
 		case Controls.ROLL:
-			if (!isRolling()) {
+			if (!isRolling() && !isCurrentlyUsingAnItem()) {
 				if (isMoving())
 					animationManager.change("walk");
 				else
@@ -459,7 +459,7 @@ public class Player extends LivingEntity implements PacketHandler, RollableEntit
 	private void controlDown (int control) {
 		switch (control) {
 		case Controls.ROLL:
-			if (!isUsing() && isMoving()) {
+			if (!isCurrentlyUsingAnItem() && isMoving()) {
 				animationManager.change("sprint");
 				if (rollDoubleClickTimer <= 0) {
 					rollDoubleClickTimer = ROLL_DOUBLE_CLICK_DURATION;
@@ -501,7 +501,7 @@ public class Player extends LivingEntity implements PacketHandler, RollableEntit
 					if (item != null) {
 						UseTypeSettings settings = item.useTap(this, time);
 						if (settings != null)
-							playUseAnimation(item, settings.animationType, settings.thrust, settings.soundType);
+							playUseAnimation(item, settings.animationType, item.getType().getUseAnimationByUseType(settings.animationType).usesThrust(), settings.soundType);
 					} else
 						playUseAnimation(null, 0, false, 0);
 				}
@@ -536,7 +536,7 @@ public class Player extends LivingEntity implements PacketHandler, RollableEntit
 			//Build the animation meta data
 			Color color = new Color(item.color);
 			animationMeta = item.getType() + ";" + animationType + ";" + item.style + ";" + color.r + ";" + color.g + ";" + color.b + ";" + color.a;
-			useAnimationLength = item.getType().getAnimationLength(animationType);
+			useAnimationLength = item.getType().getUseAnimationLength(animationType);
 			
 			//Play sound of the item
 			audioManager.playUnsafeSound(item.getType().getSoundById(item.style, soundType));

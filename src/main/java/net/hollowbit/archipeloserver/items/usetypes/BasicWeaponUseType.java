@@ -11,7 +11,7 @@ public class BasicWeaponUseType extends UseType {
 	public UseTypeSettings useItemTap(Item item, Player user, long time) {
 		this.damageWithItem(item, user, time, true);
 		//int useAnimation = user.getRandom().nextInt(item.getType().numOfUseAnimations);
-		return new UseTypeSettings(0, 0, true);
+		return new UseTypeSettings(0, 0);
 	}
 
 	@Override

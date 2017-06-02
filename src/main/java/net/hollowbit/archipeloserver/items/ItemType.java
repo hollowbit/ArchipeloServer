@@ -9,7 +9,8 @@ import java.util.HashMap;
 import com.badlogic.gdx.utils.Json;
 
 import net.hollowbit.archipeloserver.ArchipeloServer;
-import net.hollowbit.archipeloserver.items.usetypes.*;
+import net.hollowbit.archipeloserver.items.ItemUseAnimation.IllegalItemUseAnimationDataException;
+import net.hollowbit.archipeloserver.items.usetypes.BasicWeaponUseType;
 import net.hollowbit.archipeloshared.ItemTypeData;
 
 public enum ItemType {
@@ -46,6 +47,7 @@ public enum ItemType {
 	public static final int WEARABLE_SIZE = 32;
 	
 	public String id;
+	public int iconSize;
 	public int iconX, iconY;
 	public int maxStackSize;
 	public int durability;
@@ -55,8 +57,6 @@ public enum ItemType {
 	public boolean consumable;
 	public boolean material;
 	public int numOfStyles;
-	public int numOfUseAnimations;
-	public float[] useAnimationLengths;
 	public boolean renderUsingColor;
 	public String[][] sounds;
 	
@@ -69,6 +69,8 @@ public enum ItemType {
 	public float critMultiplier;
 	public int critChance;
 	public int hitRange;
+	
+	public ItemUseAnimation[] usableAnimations;
 	
 	private UseType useType;
 	
@@ -96,8 +98,7 @@ public enum ItemType {
 		ItemTypeData data = json.fromJson(ItemTypeData.class, fileString);
 		
 		this.id = id;
-		this.iconX = data.iconX;
-		this.iconY = data.iconY;
+		this.iconSize = data.iconSize;
 		this.minDamage = data.minDamage;
 		this.maxDamage = data.maxDamage;
 		this.defense = data.defense;
@@ -114,10 +115,17 @@ public enum ItemType {
 		this.consumable = data.consumable;
 		this.material = data.material;
 		this.numOfStyles = data.numOfStyles;
-		this.numOfUseAnimations = data.numOfUseAnimations;
-		this.useAnimationLengths = data.useAnimationLengths;
 		this.sounds = data.sounds;
 		this.hitRange = data.hitRange;
+		
+		this.usableAnimations = new ItemUseAnimation[data.useAnimData.length];
+		for (int i = 0; i < usableAnimations.length; i++) {
+			try {
+				usableAnimations[i] = new ItemUseAnimation(this, data.useAnimData[i]);
+			} catch (IllegalItemUseAnimationDataException e) {
+				System.out.println(e.getMessage());
+			}
+		}
 		
 		if (equipType == EQUIP_INDEX_USABLE)
 			this.useType = useType;
@@ -138,11 +146,16 @@ public enum ItemType {
 		return "";
 	}
 	
-	public float getAnimationLength(int animationType) {
-		if (animationType >= 0 && animationType < useAnimationLengths.length)
-			return useAnimationLengths[animationType];
-		else
-			return 0;
+	public int getNumOfUseAnimationTypes() {
+		return usableAnimations.length;
+	}
+	
+	public float getUseAnimationLength(int animationType) {
+		return usableAnimations[animationType % getNumOfUseAnimationTypes()].getTotalRuntime();
+	}
+	
+	public ItemUseAnimation getUseAnimationByUseType(int useType) {
+		return usableAnimations[useType % getNumOfUseAnimationTypes()];
 	}
 	
 	@Override

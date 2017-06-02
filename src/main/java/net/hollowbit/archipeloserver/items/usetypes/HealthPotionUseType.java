@@ -17,7 +17,7 @@ public class HealthPotionUseType extends UseType {
 			user.addHealth(item.getType().minDamage);
 			return true;
 		}*/
-		return new UseTypeSettings(0, 0, false);
+		return new UseTypeSettings(0, 0);
 	}
 
 	@Override
