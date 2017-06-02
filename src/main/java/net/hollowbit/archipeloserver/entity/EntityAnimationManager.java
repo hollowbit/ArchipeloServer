@@ -11,6 +11,9 @@ public class EntityAnimationManager {
 	private float stateTime;
 	private String meta;
 	private float animationLength;
+	private boolean stickOnLastFrame = false;
+	private boolean canEndEarly = false;
+	private boolean endWhenPossible = false;
 	
 	public EntityAnimationManager (Entity entity, EntitySnapshot fullSnapshot) {
 		this(entity, fullSnapshot.getString("anim", entity.getEntityType().getDefaultAnimationId()), fullSnapshot.getString("animMeta", ""), fullSnapshot.getFloat("animTime", 0));
@@ -33,15 +36,8 @@ public class EntityAnimationManager {
 		stateTime += deltaTime;
 		
 		//If this animation doesn't loop and is over time limit, call change event on entities to get a new animation to replace it.
-		if (data.finiteLength && stateTime > animationLength) {
-			EntityAnimationObject newAnim = entity.animationCompleted(id);
-			
-			//Set new animation if not null
-			if (newAnim != null)
-				this.change(newAnim.animationId, newAnim.animationMeta);
-			else//If null, use the default animation for this entity
-				this.change(entity.getEntityType().getDefaultAnimationId());
-		}
+		if ((!stickOnLastFrame || endWhenPossible) && animationEndReached())
+			this.endCurrentAnimation();
 	}
 	
 	/**
@@ -84,10 +80,10 @@ public class EntityAnimationManager {
 	 */
 	public void change (String animationId, String animationMeta) {
 		if (entity.getEntityType().hasAnimation(animationId))//Needs to be checked here since we use it below
-			this.change(animationId, animationMeta, entity.getEntityType().getAnimationDataById(animationId).totalRuntime);
+			this.change(animationId, animationMeta, entity.getEntityType().getAnimationDataById(animationId).totalRuntime, false, false);
 	}
 	
-	public void change (String animationId, String animationMeta, float customAnimationLength) {
+	public void change (String animationId, String animationMeta, float customAnimationLength, boolean stickOnLastFrame, boolean canEndEarly) {
 		//Make sure this entity has this animation
 		if (entity.getEntityType().hasAnimation(animationId)) {
 			boolean reset = false;
@@ -108,6 +104,9 @@ public class EntityAnimationManager {
 				changed = true;
 			this.animationLength = customAnimationLength;
 			
+			this.stickOnLastFrame = stickOnLastFrame;
+			this.canEndEarly = canEndEarly;
+			
 			if (changed)//Only update client if there was a change made
 				applyToEntityChanges(animationId, animationMeta, customAnimationLength, reset);
 		}
@@ -118,6 +117,34 @@ public class EntityAnimationManager {
 		entity.getChangesSnapshot().putString("animMeta", meta);
 		entity.getChangesSnapshot().putFloat("animLength", animationLength);
 		entity.getChangesSnapshot().putBoolean("resetAnim", reset);
+	}
+	
+	/**
+	 * Will end the current animation, if possible, and ask the entity for a new one
+	 */
+	public void endCurrentAnimation() {
+		if (!canEndAnimation()) {
+			this.endWhenPossible = true;
+			return;
+		}
+		
+		this.endWhenPossible = false;
+		
+		EntityAnimationObject newAnim = entity.animationCompleted(id);
+		
+		//Set new animation if not null
+		if (newAnim != null)
+			this.change(newAnim.animationId, newAnim.animationMeta);
+		else//If null, use the default animation for this entity
+			this.change(entity.getEntityType().getDefaultAnimationId());
+	}
+	
+	private boolean canEndAnimation() {
+		return canEndEarly || animationEndReached();
+	}
+	
+	private boolean animationEndReached() {
+		return data.finiteLength && stateTime > animationLength;
 	}
 	
 	public String getAnimationId () {

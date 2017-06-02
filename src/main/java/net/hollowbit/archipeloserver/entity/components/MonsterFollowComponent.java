@@ -107,6 +107,10 @@ public class MonsterFollowComponent extends EntityComponent implements EventHand
 		return false;
 	}
 	
+	public Player getTarget() {
+		return target;
+	}
+
 	@Override
 	public boolean onEntityDeath(EntityDeathEvent event) {
 		if (event.getEntity() == target) {

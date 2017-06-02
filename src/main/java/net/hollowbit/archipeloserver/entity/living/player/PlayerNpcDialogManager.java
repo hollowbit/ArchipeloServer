@@ -10,10 +10,13 @@ import net.hollowbit.archipeloserver.network.PacketHandler;
 import net.hollowbit.archipeloserver.network.PacketType;
 import net.hollowbit.archipeloserver.network.packets.NpcDialogPacket;
 import net.hollowbit.archipeloserver.network.packets.NpcDialogRequestPacket;
+import net.hollowbit.archipeloserver.tools.event.EventHandler;
+import net.hollowbit.archipeloserver.tools.event.EventType;
+import net.hollowbit.archipeloserver.tools.event.events.editable.EntityMoveEvent;
 import net.hollowbit.archipeloserver.tools.executables.ExecutionCommand;
 import net.hollowbit.archipeloserver.tools.npcdialogs.NpcDialog;
 
-public class PlayerNpcDialogManager implements PacketHandler {
+public class PlayerNpcDialogManager implements PacketHandler, EventHandler {
 	
 	private Player player;
 	private ArrayList<String> allowedLinks;
@@ -23,6 +26,7 @@ public class PlayerNpcDialogManager implements PacketHandler {
 		this.player = player;
 		allowedLinks = new ArrayList<String>();
 		ArchipeloServer.getServer().getNetworkManager().addPacketHandler(this);
+		this.addToEventManager(EventType.EntityMove);
 	}
 
 	@Override
@@ -44,15 +48,18 @@ public class PlayerNpcDialogManager implements PacketHandler {
 		return false;
 	}
 	
-	/**
-	 * Call when player moves
-	 */
-	public void playerMoved () {
-		allowedLinks.clear();
+	@Override
+	public boolean onEntityMove(EntityMoveEvent event) {
+		if (event.getEntity() == player) {
+			allowedLinks.clear();
+			return true;
+		}
+		return EventHandler.super.onEntityMove(event);
 	}
 	
 	public void dispose () {
 		ArchipeloServer.getServer().getNetworkManager().removePacketHandler(this);
+		this.removeFromEventManager();
 	}
 	
 	/**
@@ -72,8 +79,7 @@ public class PlayerNpcDialogManager implements PacketHandler {
 		
 		if (dialog == null)//Don't send if somehow we reached a null dialog
 			return;
-
-		player.stopMovement();
+		
 		handleMessage(sender, dialog);
 		player.sendPacket(new NpcDialogPacket(dialog, player.getMap(), prefix));
 	}

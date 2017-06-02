@@ -58,11 +58,11 @@ public abstract class UseType {
 			
 			//Check for entity hits
 			if (HitCalculator.didEntityHitEntityRects(user.getFootX(), user.getFootY(), entity.getCollisionRects(time), item.getType().hitRange, user.getLocation().getDirection())) {
-				entity.heal(-((int) user.getStatsManager().hit(item)));
 				if (knockback) {
 					if (entity instanceof LivingEntity)
 						((LivingEntity) entity).addMovementAnimation(new KnockbackMovementAnimation((LivingEntity) entity, user.getLocation().getDirection(), user.getStatsManager().getKnockback(item), Entity.DAMAGE_FLASH_DURATION));
 				}
+				entity.heal(-((int) user.getStatsManager().hit(item)));
 			}
 		}
 	}

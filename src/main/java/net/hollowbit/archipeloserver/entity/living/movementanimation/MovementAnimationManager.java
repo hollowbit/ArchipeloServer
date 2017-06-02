@@ -31,4 +31,8 @@ public class MovementAnimationManager {
 		animations.add(animation);
 	}
 	
+	public synchronized void clearAll() {
+		animations.clear();
+	}
+	
 }

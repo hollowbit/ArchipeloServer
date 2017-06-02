@@ -91,6 +91,9 @@ public class EventManager {
 	 * @param editable
 	 */
 	public Event triggerEvent (Event event, boolean editable) {
+		if (event.wasCancelled())
+			return event;//If the event is cancelled, don't bother triggering it.
+		
 		boolean handled = false;
 		LinkedList<EventHandler> clonedHandlerList = cloneHandlerList();
 		
@@ -108,6 +111,9 @@ public class EventManager {
 		
 		while (priority != null) {
 			for (EventHandler eventHandler : clonedHandlerList) {
+				if (event.wasCancelled())
+					return event;//Stop bothering event handlers if the event was cancelled already
+				
 				//Only handle event with this handler if it has the correct priority
 				if (getPriorityOfHandler(eventHandler, event.getType()) != priority)
 					continue;
@@ -162,13 +168,13 @@ public class EventManager {
 						handled = true;
 					break;
 				}
+				event.setHandled(handled || event.wasHandled());
 			}
 			
 			//Go to next lowest priority
 			priority = priority.getNextLowest();
 		}
 		
-		event.setHandled(handled);
 		return event;
 	}
 	

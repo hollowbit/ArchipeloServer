@@ -105,7 +105,7 @@ public abstract class Entity {
 		EntityInteractionEvent event = new EntityInteractionEvent(this, target, collisionRectName, interactionType);
 		event.trigger();
 		
-		if (!event.wasCanceled())
+		if (!event.wasCancelled())
 			target.interactFrom(this, collisionRectName, interactionType);
 		event.close();
 	}
@@ -250,7 +250,7 @@ public abstract class Entity {
 		
 		EntityTeleportEvent event = new EntityTeleportEvent(this, newPos, location.pos, location.map, mapName, islandName, location.getDirection(), direction);
 		event.trigger();
-		if (event.wasCanceled()) {
+		if (event.wasCancelled()) {
 			event.close();
 			return;
 		}
@@ -366,9 +366,10 @@ public abstract class Entity {
 	 * Can be negative to damage this entity.
 	 * May trigger an entity death event.
 	 * @param amount
+	 * @return Whether entity died
 	 */
-	public void heal(float amount) {
-		this.heal(amount, null);
+	public boolean heal(float amount) {
+		return this.heal(amount, null);
 	}
 	
 	/**
@@ -376,15 +377,11 @@ public abstract class Entity {
 	 * May trigger an entity death event.
 	 * @param amount
 	 * @param healer
+	 * @return Whether entity died
 	 */
-	public void heal (float amount, Entity healer) {
+	public boolean heal(float amount, Entity healer) {
 		float oldHealth = this.health;
 		this.health += amount;
-		
-		if (amount < 0)//Play flash animation depending if this was a heal or damage
-			this.changes.putBoolean("flash", true);
-		else
-			this.changes.putBoolean("flash", false);
 		
 		location.map.spawnParticles(new HealthParticles(this, (int) amount));
 		
@@ -393,15 +390,23 @@ public abstract class Entity {
 			EntityDeathEvent event = new EntityDeathEvent(this, healer, oldHealth, this.health);
 			event.trigger();
 			
-			if (event.wasCanceled()) {//Canceled, reset health or set it to new value
+			if (event.wasCancelled()) {//Canceled, reset health or set it to new value
 				if (event.isNewHealthSet())
 					this.health = event.getNewHealth();
 				else
 					this.health = oldHealth;
-			} else//Event not canceled, remove entity
+			} else {//Event not canceled, remove entity
 				this.remove();
+				event.close();
+				return true;
+			}
 			event.close();
 		} else {
+			if (amount < 0)//Play flash animation depending if this was a heal or damage
+				this.changes.putBoolean("flash", true);
+			else
+				this.changes.putBoolean("flash", false);
+			
 			//Entity not dead. Just clamp health and update health bars
 			if (health > this.getMaxHealth())
 				health = this.getMaxHealth();
@@ -409,6 +414,7 @@ public abstract class Entity {
 			if (this.getEntityType().showHealthBar())
 				this.changes.putFloat("health", health);
 		}
+		return false;
 	}
 	
 	/**

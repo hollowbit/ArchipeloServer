@@ -27,6 +27,7 @@ import net.hollowbit.archipeloserver.entity.living.player.PlayerStatsManager;
 import net.hollowbit.archipeloserver.hollowbitserver.HollowBitUser;
 import net.hollowbit.archipeloserver.items.Item;
 import net.hollowbit.archipeloserver.items.ItemType;
+import net.hollowbit.archipeloserver.items.ItemUseAnimation;
 import net.hollowbit.archipeloserver.network.LogoutReason;
 import net.hollowbit.archipeloserver.network.Packet;
 import net.hollowbit.archipeloserver.network.PacketHandler;
@@ -108,6 +109,7 @@ public class Player extends LivingEntity implements PacketHandler, RollableEntit
 	int seed;
 	UnloadedLocation respawnLocation;
 	EventHandler respawner;
+	boolean movementEnabled = true;
 	
 	Thread controlsUpdater;
 	boolean running = true;
@@ -176,6 +178,7 @@ public class Player extends LivingEntity implements PacketHandler, RollableEntit
 			public boolean onEntityDeath(EntityDeathEvent event) {
 				if (event.getEntity() == player) {
 					event.cancel();
+					player.movementAnimationManager.clearAll();
 					event.setNewHealth(EntityType.PLAYER.getMaxHealth());
 					if (event.hasKiller())
 						sendPacket(new PopupTextPacket("{youWereKilledBy} " + event.getKiller().getName(), PopupTextPacket.Type.NORMAL));
@@ -197,7 +200,7 @@ public class Player extends LivingEntity implements PacketHandler, RollableEntit
 	 * @param controls
 	 */
 	private void applyControlExceptions (boolean[] controls) {
-		if (isThrusting()) {
+		if (isThrusting() || !movementEnabled) {
 			controls[Controls.UP] = false;
 			controls[Controls.LEFT] = false;
 			controls[Controls.DOWN] = false;
@@ -259,12 +262,8 @@ public class Player extends LivingEntity implements PacketHandler, RollableEntit
 		}
 	}
 	
-	public void stopMovement () {
-		rollDoubleClickTimer = 0;
-		controls[Controls.UP] = false;
-		controls[Controls.LEFT] = false;
-		controls[Controls.DOWN] = false;
-		controls[Controls.RIGHT] = false;
+	public void setMovementEnabled(boolean movementEnabled) {
+		this.movementEnabled = movementEnabled;
 	}
 	
 	public Direction getMovementDirection () {
@@ -427,6 +426,10 @@ public class Player extends LivingEntity implements PacketHandler, RollableEntit
 	
 	private void controlUp (int control) {
 		switch (control) {
+		case Controls.ATTACK:
+			if (isCurrentlyUsingAnItem())
+				animationManager.endCurrentAnimation();
+			break;
 		case Controls.ROLL:
 			if (!isRolling() && !isCurrentlyUsingAnItem()) {
 				if (isMoving())
@@ -543,15 +546,18 @@ public class Player extends LivingEntity implements PacketHandler, RollableEntit
 		}
 		
 		//Use appropriate animations depending
+		ItemUseAnimation animationInfo = null;
+		if (item != null)
+			animationInfo = item.getType().getUseAnimationByUseType(animationType);
+		else
+			animationInfo = ItemUseAnimation.DEFAULT;
 		if (thrust) {
-			if (isMoving())
-				stopMovement();
-			animationManager.change("thrust", animationMeta, useAnimationLength);
+			animationManager.change("thrust", animationMeta, useAnimationLength, animationInfo.doesStick(), animationInfo.canEndEarly());
 		} else {
 			if (isMoving())
-				animationManager.change("usewalk", animationMeta, useAnimationLength);
+				animationManager.change("usewalk", animationMeta, useAnimationLength, animationInfo.doesStick(), animationInfo.canEndEarly());
 			else
-				animationManager.change("use", animationMeta, useAnimationLength);
+				animationManager.change("use", animationMeta, useAnimationLength, animationInfo.doesStick(), animationInfo.canEndEarly());
 		}
 	}
 	
@@ -580,15 +586,6 @@ public class Player extends LivingEntity implements PacketHandler, RollableEntit
 	
 	private synchronized void removeAllCommands (LinkedList<ControlsPacket> commandsToRemove) {
 		commandsToExecute.removeAll(commandsToRemove);
-	}
-	
-	@Override
-	public boolean move (Direction direction, float deltaTime, boolean checkCollisions) {
-		if (super.move(direction, deltaTime, checkCollisions)) {
-			npcDialogManager.playerMoved();
-			return true;
-		} else
-			return false;
 	}
 	
 	@Override
@@ -708,9 +705,10 @@ public class Player extends LivingEntity implements PacketHandler, RollableEntit
 	}
 	
 	@Override
-	public void heal(float amount, Entity healer) {
-		super.heal(amount, healer);
+	public boolean heal(float amount, Entity healer) {
+		boolean dead = super.heal(amount, healer);
 		this.sendPacket(new PlayerStatsPacket(health));//Update health on client
+		return dead;
 	}
 	
 	public Random getRandom() {

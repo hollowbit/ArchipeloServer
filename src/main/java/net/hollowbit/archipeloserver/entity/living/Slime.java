@@ -5,6 +5,7 @@ import net.hollowbit.archipeloserver.entity.EntityAnimationManager.EntityAnimati
 import net.hollowbit.archipeloserver.entity.EntityType;
 import net.hollowbit.archipeloserver.entity.LivingEntity;
 import net.hollowbit.archipeloserver.entity.components.MonsterFollowComponent;
+import net.hollowbit.archipeloserver.entity.living.movementanimation.types.KnockbackMovementAnimation;
 import net.hollowbit.archipeloserver.particles.types.EntityChunkParticles;
 import net.hollowbit.archipeloserver.world.Map;
 import net.hollowbit.archipeloshared.EntitySnapshot;
@@ -29,11 +30,17 @@ public class Slime extends LivingEntity {
 	@Override
 	public void tick20(float deltaTime) {
 		super.tick20(deltaTime);
+	}
+	
+	@Override
+	public void tick60(float deltaTime) {
+		super.tick60(deltaTime);
 		
 		if (followComponent.isTargetWithinDistance(24)) {
 			engaged = true;
 			timer += deltaTime;
 			if (timer >= attackInterval) {
+				followComponent.getTarget().addMovementAnimation(new KnockbackMovementAnimation(followComponent.getTarget(), this.getLocation().getDirection(), 16, 0.2f));
 				followComponent.healTarget(-10);
 				timer -= attackInterval;
 			}
@@ -41,11 +48,7 @@ public class Slime extends LivingEntity {
 			engaged = false;
 			timer = attackInterval - initAttackWait;
 		}
-	}
-	
-	@Override
-	public void tick60(float deltaTime) {
-		super.tick60(deltaTime);
+		
 		if (isMoving() && !engaged)
 			this.animationManager.change("walk");
 		else
@@ -68,11 +71,12 @@ public class Slime extends LivingEntity {
 	}
 	
 	@Override
-	public void heal(float amount, Entity healer) {
-		super.heal(amount, healer);
+	public boolean heal(float amount, Entity healer) {
+		boolean dead = super.heal(amount, healer);
 		
 		if (amount < 0)
 			location.map.spawnParticles(new EntityChunkParticles(this));
+		return dead;
 	}
 
 }

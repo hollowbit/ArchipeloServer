@@ -5,15 +5,24 @@ import java.io.IOException;
 import net.hollowbit.archipeloshared.ItemUseAnimationData;
 
 public class ItemUseAnimation {
+
+	public static final ItemUseAnimation DEFAULT = new ItemUseAnimation();
 	
+	private boolean canEndEarly;
 	private boolean thrust;
 	private boolean stick;
 	private float[] timings;
 	private float totalRuntime;
 	
+	public ItemUseAnimation() {
+		this.canEndEarly = true;
+		this.stick = true;
+	}
+	
 	public ItemUseAnimation(ItemType item, ItemUseAnimationData data) throws IllegalItemUseAnimationDataException {
 		this.stick = data.stick;
 		this.thrust = data.thrust;
+		this.canEndEarly = data.canEndEarly;
 		if (data.timings == null && data.runtime > 0)
 			createRuntimeAnimation(item, data);
 		else if (data.runtime <= 0 && data.timings != null)
@@ -43,6 +52,10 @@ public class ItemUseAnimation {
 	
 	public boolean usesThrust() {
 		return thrust;
+	}
+	
+	public boolean canEndEarly() {
+		return canEndEarly;
 	}
 	
 	public boolean isRuntime() {

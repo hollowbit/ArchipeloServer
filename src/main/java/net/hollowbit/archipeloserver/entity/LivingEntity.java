@@ -12,6 +12,7 @@ import net.hollowbit.archipeloserver.tools.entity.EntityStepOnData;
 import net.hollowbit.archipeloserver.tools.entity.Location;
 import net.hollowbit.archipeloserver.tools.event.EventHandler;
 import net.hollowbit.archipeloserver.tools.event.EventType;
+import net.hollowbit.archipeloserver.tools.event.events.editable.EntityDeathEvent;
 import net.hollowbit.archipeloserver.tools.event.events.editable.EntityMoveEvent;
 import net.hollowbit.archipeloserver.tools.event.events.editable.EntityTeleportEvent;
 import net.hollowbit.archipeloserver.world.Map;
@@ -32,7 +33,7 @@ public abstract class LivingEntity extends Entity implements EventHandler {
 		entitiesSteppedOn = new HashSet<EntityStepOnData>();
 		lastSpeed = entityType.getSpeed();
 		this.movementAnimationManager = new MovementAnimationManager();
-		this.addToEventManager(EventType.EntityTeleport, EventType.EntityMove);
+		this.addToEventManager(EventType.EntityTeleport, EventType.EntityMove, EventType.EntityDeath);
 	}
 	
 	@Override
@@ -204,7 +205,7 @@ public abstract class LivingEntity extends Entity implements EventHandler {
 		//Create event and check
 		EntityMoveEvent event = new EntityMoveEvent(this, location.pos, newPos);//trigger move event
 		event.trigger();
-		if (event.wasCanceled()) {
+		if (event.wasCancelled()) {
 			event.close();
 			return false;
 		} else {
@@ -217,7 +218,7 @@ public abstract class LivingEntity extends Entity implements EventHandler {
 	
 	@Override
 	public boolean onEntityMove(EntityMoveEvent event) {
-		if (event.getEntity() == this && !event.wasCanceled()) {
+		if (event.getEntity() == this && !event.wasCancelled()) {
 			//Update step on list of entity
 			ArrayList<Entity> entitiesOnMap = (ArrayList<Entity>) location.getMap().getEntityManager().duplicateEntityList();
 			for (Entity entity : entitiesOnMap) {
@@ -281,11 +282,21 @@ public abstract class LivingEntity extends Entity implements EventHandler {
 	public boolean onEntityTeleport(EntityTeleportEvent event) {
 		if (event.getEntity() == this) {
 			//If changing map, clear all entities from step on list
-			if (!event.wasCanceled() && event.isNewMap())
+			if (!event.wasCancelled() && event.isNewMap())
 				entitiesSteppedOn.clear();
 			return true;
 		}
 		return EventHandler.super.onEntityTeleport(event);
+	}
+	
+	@Override
+	public boolean onEntityDeath(EntityDeathEvent event) {
+		if (event.getEntity() == this) {
+			if (!event.wasCancelled())
+				movementAnimationManager.clearAll();
+			return true;
+		}
+		return EventHandler.super.onEntityDeath(event);
 	}
 	
 	protected boolean doesCurrentPositionCollideWithMap () {

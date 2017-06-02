@@ -121,7 +121,7 @@ public class PlayerInventory {
 		PlayerInventoryAddEvent event = new PlayerInventoryAddEvent(player, item);
 		event.trigger();
 		
-		if (event.wasCanceled()) {
+		if (event.wasCancelled()) {
 			event.close();
 			return null;
 		}
@@ -158,7 +158,7 @@ public class PlayerInventory {
 		PlayerBankAddEvent event = new PlayerBankAddEvent(player, item);
 		event.trigger();
 		
-		if (event.wasCanceled()) {
+		if (event.wasCancelled()) {
 			event.close();
 			return;
 		}
@@ -178,7 +178,7 @@ public class PlayerInventory {
 		PlayerInventoryRemoveEvent event = new PlayerInventoryRemoveEvent(player, item);
 		event.trigger();
 		
-		if (event.wasCanceled()) {
+		if (event.wasCancelled()) {
 			event.close();
 			return false;
 		}
@@ -236,7 +236,7 @@ public class PlayerInventory {
 		PlayerInventoryMoveEvent event = new PlayerInventoryMoveEvent(player, toSlot, fromSlot, toInventory, fromInventory);
 		event.trigger();
 		
-		if (event.wasCanceled()) {
+		if (event.wasCancelled()) {
 			event.close();
 			return false;
 		}

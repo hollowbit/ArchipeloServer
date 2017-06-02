@@ -6,7 +6,7 @@ import net.hollowbit.archipeloserver.ArchipeloServer;
 
 public abstract class EditableEvent extends Event implements Closeable {
 	
-	protected boolean canceled = false;
+	protected boolean cancelled = false;
 	protected boolean editingPrevented = false;
 	
 	public EditableEvent(EventType type) {
@@ -19,7 +19,7 @@ public abstract class EditableEvent extends Event implements Closeable {
 	 */
 	public boolean cancel () {
 		if (!editingPrevented) {
-			this.canceled = true;
+			this.cancelled = true;
 			return true;
 		}
 		
@@ -27,8 +27,8 @@ public abstract class EditableEvent extends Event implements Closeable {
 	}
 	
 	@Override
-	public boolean wasCanceled () {
-		return canceled;
+	public boolean wasCancelled () {
+		return cancelled;
 	}
 	
 	/**
@@ -42,7 +42,7 @@ public abstract class EditableEvent extends Event implements Closeable {
 	 * Trigger this event after the changes were applied, if the event wasn't canceled.
 	 */
 	public void close() {
-		if (!canceled)
+		if (!cancelled)
 			ArchipeloServer.getServer().getEventManager().triggerEvent(this, false);
 	}
 	

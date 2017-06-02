@@ -30,7 +30,7 @@ public abstract class Event {
 		this.handled = handled;
 	}
 	
-	public boolean wasCanceled () {
+	public boolean wasCancelled () {
 		return false;
 	}
 	
