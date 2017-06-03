@@ -125,4 +125,9 @@ public abstract class Inventory {
 	 */
 	public abstract Inventory duplicate();
 	
+	/**
+	 * Deletes an item in the specified slot
+	 */
+	public abstract void deleteItemInSlot(int slot);
+	
 }

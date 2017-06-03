@@ -28,7 +28,12 @@ public enum ItemType {
 	ASSISTANT_GENERAL("assistant_general", new BasicWeaponUseType()),
 	SOUL_DISRUPTOR("soul_disruptor", new BasicWeaponUseType()),
 	SPIRIT_DISRUPTOR("spirit_disruptor", new BasicWeaponUseType()),
-	DEMONS_TONGUE("demons_tongue", new BasicWeaponUseType())/*,
+	DEMONS_TONGUE("demons_tongue", new BasicWeaponUseType()),
+	FANN_KATANA("fann_katana", new BasicWeaponUseType()),
+	HYLIAN_BROADSWORD("hylian_broadsword", new BasicWeaponUseType()),
+	LITTLE_RED("little_red", new BasicWeaponUseType()),
+	SOUL_TRAPPER("soul_trapper", new BasicWeaponUseType()),
+	TRAINING_SWORD("training_sword", new BasicWeaponUseType())/*,
 	SWORD("sword"),
 	POTION_SMALL("potion_small", new HealthPotionUseType())*/;
 	

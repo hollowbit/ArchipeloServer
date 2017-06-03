@@ -238,5 +238,11 @@ public class FixedInventory extends Inventory {
 	public Inventory duplicate () {
 		return new FixedInventory(this);
 	}
+
+	@Override
+	public void deleteItemInSlot(int slot) {
+		if (doesSlotExists(slot))
+			storage[slot] = null;
+	}
 	
 }

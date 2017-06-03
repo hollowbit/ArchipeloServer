@@ -35,14 +35,27 @@ public class InventoryForm extends RequestableForm implements EventHandler {
 	@Override
 	public void interactWith (Player player, String command, HashMap<String, String> data) {
 		super.interactWith(player, command, data);
+		
+		int fromSlot = 0;
+		int toSlot = 0;
+		int fromInventory = 0;
+		int toInventory = 0;
+		
 		switch (command) {
 		case "move":
-			int fromSlot = Integer.parseInt(data.get(KEY_FROM_SLOT));
-			int toSlot = Integer.parseInt(data.get(KEY_TO_SLOT));
-			int fromInventory = Integer.parseInt(data.get(KEY_FROM_INVENTORY));
-			int toInventory = Integer.parseInt(data.get(KEY_TO_INVENTORY));
+			fromSlot = Integer.parseInt(data.get(KEY_FROM_SLOT));
+			toSlot = Integer.parseInt(data.get(KEY_TO_SLOT));
+			fromInventory = Integer.parseInt(data.get(KEY_FROM_INVENTORY));
+			toInventory = Integer.parseInt(data.get(KEY_TO_INVENTORY));
 			
 			player.getInventory().move(fromSlot, toSlot, fromInventory, toInventory);
+			this.updateClient();
+			break;
+		case "delete":
+			fromSlot = Integer.parseInt(data.get(KEY_FROM_SLOT));
+			fromInventory = Integer.parseInt(data.get(KEY_FROM_INVENTORY));
+			
+			player.getInventory().deleteItemsInSlot(fromSlot, fromInventory);
 			this.updateClient();
 			break;
 		}

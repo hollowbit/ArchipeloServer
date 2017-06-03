@@ -1,6 +1,6 @@
 {dialogs:[
 
-{id:"swordSignGive", choices:["swordSignEnd"], exec:[{id:"addFlag", args:{flag:"swordSignGaveItem"}}, {id:"giveItems", args:{items:"[{id: spear_basic},{id: assistant_general},{id: soul_disruptor},{id: spirit_disruptor},{id: demons_tongue}]"}}]},
+{id:"swordSignGive", choices:["swordSignEnd"], exec:[{id:"addFlag", args:{flag:"swordSignGaveItem"}}, {id:"giveItems", args:{items:"[{id: spear_basic},{id: assistant_general},{id: soul_disruptor},{id: spirit_disruptor},{id: demons_tongue},{id: fann_katana},{id: hylian_broadsword},{id: little_red},{id: soul_trapper},{id: training_sword}]"}}]},
 {id:"swordSignAlready"},
 {id:"swordSignEnd"}
 

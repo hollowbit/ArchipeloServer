@@ -194,6 +194,15 @@ public class PlayerInventory {
 	}
 	
 	/**
+	 * Delete an item in a specific slot of a specific inventory.
+	 * @param slot
+	 * @param inventory
+	 */
+	public void deleteItemsInSlot(int slot, int inventory) {
+		inventoriesInArray[inventory].deleteItemInSlot(slot);
+	}
+	
+	/**
 	 * Determines if the player has a specific item in main inventory.
 	 * @param item
 	 * @return

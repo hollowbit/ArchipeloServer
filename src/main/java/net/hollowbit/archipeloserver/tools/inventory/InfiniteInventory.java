@@ -210,5 +210,11 @@ public class InfiniteInventory extends Inventory {
 	public Inventory duplicate () {
 		return new InfiniteInventory(this);
 	}
+
+	@Override
+	public void deleteItemInSlot(int slot) {
+		if (doesSlotExists(slot))
+			storage.remove(slot);
+	}
 	
 }
