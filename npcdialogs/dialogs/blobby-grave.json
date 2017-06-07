@@ -1,0 +1,5 @@
+{dialogs:[
+{id:"blobbyGraveStart", interruptable: true, cond:{id:"hasFlag", args:{flag:"blobbyGraveCrushed"}}, change:"blobbyGraveCrushed"},
+{id:"blobbyGraveCrushed", interruptable: true, cond:{id:"hasFlag", args:{flag:"blobbyGraveGotAshes"}}, change:"blobbyGraveEnd", exec:[{id:"addFlag", args:{flag:"blobbyGraveGotAshes"}}, {id:"giveItems", args:{items:"[{id:blobby_ashes}]"}}]},
+{id:"blobbyGraveEnd", interruptable: true}
+]}

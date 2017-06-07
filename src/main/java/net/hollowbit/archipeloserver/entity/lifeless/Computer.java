@@ -69,8 +69,8 @@ public class Computer extends LifelessEntity implements EventHandler {
 	
 	public void turnOn (Player user) {
 		this.animationManager.change("on");
-		this.user.setMovementEnabled(false);
 		this.user = user;
+		this.user.setMovementEnabled(false);
 		this.on = true;
 		this.changes.putBoolean("on", on);
 	}

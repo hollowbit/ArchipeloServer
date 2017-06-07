@@ -24,7 +24,7 @@ public class PlayerCountResponseQueryTask extends ResponseQueryTask {
 	@Override
 	public void execute (Connection conn) {
 		try {
-			PreparedStatement statement = conn.prepareStatement("select count(*) as 'count' from players where hbUuid = ?");
+			PreparedStatement statement = conn.prepareStatement("select count(*) as 'count' from players where hbUuid = ? and active = 1");
 			statement.setString(1, hbUuid);
 			ResultSet rs = statement.executeQuery();
 			if (!rs.next()) {

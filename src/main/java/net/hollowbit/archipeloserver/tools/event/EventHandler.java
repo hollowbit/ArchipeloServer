@@ -1,18 +1,8 @@
 package net.hollowbit.archipeloserver.tools.event;
 
 import net.hollowbit.archipeloserver.ArchipeloServer;
-import net.hollowbit.archipeloserver.tools.event.events.editable.EntityDeathEvent;
-import net.hollowbit.archipeloserver.tools.event.events.editable.EntityInteractionEvent;
-import net.hollowbit.archipeloserver.tools.event.events.editable.EntityMoveEvent;
-import net.hollowbit.archipeloserver.tools.event.events.editable.EntityTeleportEvent;
-import net.hollowbit.archipeloserver.tools.event.events.editable.PlayerBankAddEvent;
-import net.hollowbit.archipeloserver.tools.event.events.editable.PlayerInventoryAddEvent;
-import net.hollowbit.archipeloserver.tools.event.events.editable.PlayerInventoryMoveEvent;
-import net.hollowbit.archipeloserver.tools.event.events.editable.PlayerInventoryRemoveEvent;
-import net.hollowbit.archipeloserver.tools.event.events.readonly.PlayerInventoryChangeEvent;
-import net.hollowbit.archipeloserver.tools.event.events.readonly.PlayerJoinEvent;
-import net.hollowbit.archipeloserver.tools.event.events.readonly.PlayerLeaveEvent;
-import net.hollowbit.archipeloserver.tools.event.events.readonly.PlayerStatsChangeEvent;
+import net.hollowbit.archipeloserver.tools.event.events.editable.*;
+import net.hollowbit.archipeloserver.tools.event.events.readonly.*;
 
 public interface EventHandler {
 	
@@ -28,6 +18,7 @@ public interface EventHandler {
 	public default boolean onPlayerStatsChange (PlayerStatsChangeEvent event) {return false;}
 	public default boolean onEntityInteraction (EntityInteractionEvent event) {return false;}
 	public default boolean onEntityDeath (EntityDeathEvent event) {return false;}
+	public default boolean onEntityHeal (EntityHealEvent event) {return false;}
 	
 	public default void addToEventManager(EventType... typesToRegister) {
 		ArchipeloServer.getServer().getEventManager().add(this);
@@ -64,6 +55,7 @@ public interface EventHandler {
 		public boolean onPlayerStatsChange (PlayerStatsChangeEvent event) {System.out.println("EventHandler.java Event Triggered: Player Stats Change"); return false;}
 		public boolean onEntityInteraction (EntityInteractionEvent event) {System.out.println("EventHandler.java Event Triggered: Entity Interaction Occured"); return false;}
 		public boolean onEntityDeath (EntityDeathEvent event) {System.out.println("EventHandler.java Event Triggered: Entity Death Occured"); return false;}
+		public boolean onEntityHeal (EntityHealEvent event) {System.out.println("EventHandler.java Event Triggered: Entity Heal Occured"); return false;}
 		
 	}
 	

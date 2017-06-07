@@ -3,18 +3,8 @@ package net.hollowbit.archipeloserver.tools.event;
 import java.util.HashMap;
 import java.util.LinkedList;
 
-import net.hollowbit.archipeloserver.tools.event.events.editable.EntityDeathEvent;
-import net.hollowbit.archipeloserver.tools.event.events.editable.EntityInteractionEvent;
-import net.hollowbit.archipeloserver.tools.event.events.editable.EntityMoveEvent;
-import net.hollowbit.archipeloserver.tools.event.events.editable.EntityTeleportEvent;
-import net.hollowbit.archipeloserver.tools.event.events.editable.PlayerBankAddEvent;
-import net.hollowbit.archipeloserver.tools.event.events.editable.PlayerInventoryAddEvent;
-import net.hollowbit.archipeloserver.tools.event.events.editable.PlayerInventoryMoveEvent;
-import net.hollowbit.archipeloserver.tools.event.events.editable.PlayerInventoryRemoveEvent;
-import net.hollowbit.archipeloserver.tools.event.events.readonly.PlayerInventoryChangeEvent;
-import net.hollowbit.archipeloserver.tools.event.events.readonly.PlayerJoinEvent;
-import net.hollowbit.archipeloserver.tools.event.events.readonly.PlayerLeaveEvent;
-import net.hollowbit.archipeloserver.tools.event.events.readonly.PlayerStatsChangeEvent;
+import net.hollowbit.archipeloserver.tools.event.events.editable.*;
+import net.hollowbit.archipeloserver.tools.event.events.readonly.*;
 
 public class EventManager {
 	
@@ -165,6 +155,10 @@ public class EventManager {
 					break;
 				case EntityDeath:
 					if (eventHandler.onEntityDeath((EntityDeathEvent) event))
+						handled = true;
+					break;
+				case EntityHeal:
+					if (eventHandler.onEntityHeal((EntityHealEvent) event))
 						handled = true;
 					break;
 				}

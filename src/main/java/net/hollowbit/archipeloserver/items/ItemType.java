@@ -65,6 +65,7 @@ public enum ItemType {
 	public boolean renderUsingColor;
 	public String[][] sounds;
 	
+	public int knockback;
 	public int minDamage;
 	public int maxDamage;
 	public int defense;
@@ -104,6 +105,7 @@ public enum ItemType {
 		
 		this.id = id;
 		this.iconSize = data.iconSize;
+		this.knockback = data.knockback;
 		this.minDamage = data.minDamage;
 		this.maxDamage = data.maxDamage;
 		this.defense = data.defense;

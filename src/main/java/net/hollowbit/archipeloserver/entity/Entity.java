@@ -12,6 +12,7 @@ import net.hollowbit.archipeloserver.network.packets.TeleportPacket;
 import net.hollowbit.archipeloserver.particles.types.HealthParticles;
 import net.hollowbit.archipeloserver.tools.entity.Location;
 import net.hollowbit.archipeloserver.tools.event.events.editable.EntityDeathEvent;
+import net.hollowbit.archipeloserver.tools.event.events.editable.EntityHealEvent;
 import net.hollowbit.archipeloserver.tools.event.events.editable.EntityInteractionEvent;
 import net.hollowbit.archipeloserver.tools.event.events.editable.EntityTeleportEvent;
 import net.hollowbit.archipeloserver.world.Island;
@@ -380,8 +381,18 @@ public abstract class Entity {
 	 * @return Whether entity died
 	 */
 	public boolean heal(float amount, Entity healer) {
+		EntityHealEvent eventHeal = new EntityHealEvent(amount, this, healer);
+		eventHeal.trigger();
+		
+		if (eventHeal.wasCancelled()) {
+			eventHeal.close();
+			return false;
+		}
+		
 		float oldHealth = this.health;
-		this.health += amount;
+		this.health += eventHeal.getAmount();
+		healer = eventHeal.getHealer();
+		eventHeal.close();
 		
 		location.map.spawnParticles(new HealthParticles(this, (int) amount));
 		

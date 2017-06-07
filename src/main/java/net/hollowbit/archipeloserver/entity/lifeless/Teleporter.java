@@ -20,13 +20,15 @@ public class Teleporter extends LifelessEntity {
 	@Override
 	public void create(EntitySnapshot fullSnapshot, Map map, EntityType entityType) {
 		super.create(fullSnapshot, map, entityType);
-		this.teleportLocation = fullSnapshot.getObject("teleportLocation", new SavedLocation(), SavedLocation.class);
+		this.teleportLocation = fullSnapshot.getObject("teleportLocation", null, SavedLocation.class);
 		
-		if (teleportLocation.direction == -1)
-			changesDirection = false;
-		else {
-			changesDirection = true;
-			this.teleportDirection = Direction.values()[teleportLocation.direction];
+		if (teleportLocation != null) {
+			if (teleportLocation.direction == -1)
+				changesDirection = false;
+			else {
+				changesDirection = true;
+				this.teleportDirection = Direction.values()[teleportLocation.direction];
+			}
 		}
 	}
 	
@@ -34,6 +36,8 @@ public class Teleporter extends LifelessEntity {
 	public void interactFrom(Entity entity, String collisionRectName, EntityInteractionType interactionType) {
 		super.interactFrom(entity, collisionRectName, interactionType);
 		if (interactionType == EntityInteractionType.STEP_ON) {
+			if (this.teleportLocation == null || !entity.isPlayer())
+				return;
 
 			Direction newDirection = teleportDirection;
 			if (!changesDirection)

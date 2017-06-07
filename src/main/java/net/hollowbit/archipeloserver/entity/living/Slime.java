@@ -74,8 +74,8 @@ public class Slime extends LivingEntity {
 	public boolean heal(float amount, Entity healer) {
 		boolean dead = super.heal(amount, healer);
 		
-		if (amount < 0)
-			location.map.spawnParticles(new EntityChunkParticles(this));
+		if (amount < 0 && healer != null)
+			location.map.spawnParticles(new EntityChunkParticles(this, healer.getLocation().getDirection()));
 		return dead;
 	}
 

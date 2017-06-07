@@ -1,28 +1,27 @@
 package net.hollowbit.archipeloserver.tools;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.File;
+import java.util.Scanner;
 
 public class FileReader {
 	
 	public static String readFileIntoString(String path) {
-		String fileData = "";
-		
-		InputStream in = FileReader.class.getResourceAsStream(path);
-		BufferedReader reader = new BufferedReader(new InputStreamReader(in));
-		String line;
-		try {
-			while ((line = reader.readLine()) != null) {
-				fileData += line;
-			}
-			reader.close();
-			in.close();
-		} catch (IOException e) {
-			e.printStackTrace();
+		File file = new File(path);
+		if (file.exists()) {
+			try {
+				Scanner scanner = new Scanner(file);
+				String fileData = "";
+				
+				while (scanner.hasNext()) {
+					fileData += scanner.next();
+				}
+					
+				scanner.close();
+				return fileData;
+			} catch (Exception e) {}
 		}
-		return fileData;
+
+		return null;
 	}
 	
 }

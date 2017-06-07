@@ -260,7 +260,7 @@ public class Player extends LivingEntity implements PacketHandler, RollableEntit
 			this.move(direction, deltaTime, true);
 			
 			//Changes direction if lock is off
-			if (!controls[Controls.LOCK])
+			if (!controls[Controls.DIRECTION_LOCK])
 				this.setDirection(direction);
 		}
 	}
@@ -294,7 +294,7 @@ public class Player extends LivingEntity implements PacketHandler, RollableEntit
 	
 	@Override
 	public boolean isMoving () {
-		return (controls[Controls.UP] || controls[Controls.LEFT] || controls[Controls.DOWN] || controls[Controls.RIGHT]) && !animationManager.getAnimationId().equals("thrust");
+		return (controls[Controls.UP] || controls[Controls.LEFT] || controls[Controls.DOWN] || controls[Controls.RIGHT]) && !animationManager.getAnimationId().equals("thrust") && !controls[Controls.MOVEMENT_LOCK] && movementEnabled;
 	}
 	
 	public boolean isSprinting () {
@@ -302,7 +302,7 @@ public class Player extends LivingEntity implements PacketHandler, RollableEntit
 	}
 	
 	public boolean isDirectionLocked () {
-		return controls[Controls.LOCK];
+		return controls[Controls.DIRECTION_LOCK];
 	}
 	
 	@Override
@@ -337,7 +337,7 @@ public class Player extends LivingEntity implements PacketHandler, RollableEntit
 	
 	@Override
 	public float getSpeed () {
-		return statsManager.getSpeed(isSprinting(), isRolling());
+		return statsManager.getSpeed(isSprinting() && !isDirectionLocked(), isRolling());
 	}
 	
 	@Override
@@ -434,7 +434,7 @@ public class Player extends LivingEntity implements PacketHandler, RollableEntit
 			if (isCurrentlyUsingAnItem()) {
 				animationManager.endCurrentAnimation();
 				Item item = inventory.getWeaponInventory().getRawStorage()[0];
-				if (item != null)
+				if (item != null && item.getType() != null)
 					item.useHold(this, timeAttackHeld, time);
 			}
 			break;
@@ -489,7 +489,7 @@ public class Player extends LivingEntity implements PacketHandler, RollableEntit
 		case Controls.ATTACK:
 			if (isCurrentlyUsingAnItem()) {
 				Item item = inventory.getWeaponInventory().getRawStorage()[0];
-				if (item != null)
+				if (item != null && item.getType() != null)
 					item.useDoubleTap(this, timeAttackHeld, time);
 			} else if (!isRolling()) {
 				ArrayList<Entity> entitiesOnMap = (ArrayList<Entity>) location.getMap().getEntities();
@@ -513,7 +513,7 @@ public class Player extends LivingEntity implements PacketHandler, RollableEntit
 				if (useHitAnimation) {
 					Item item = inventory.getWeaponInventory().getRawStorage()[0];
 					
-					if (item != null) {
+					if (item != null && item.getType() != null) {
 						timeAttackHeld = 0;
 						UseTypeSettings settings = item.useTap(this, time);
 						if (settings != null)

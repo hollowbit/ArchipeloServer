@@ -45,53 +45,53 @@ public class PlayerStatsManager implements EventHandler {
 		//Calculate defense
 		this.defense = 0;
 		for (Item item : equipped) {
-			if (item != null)
+			if (item != null && item.getType() != null)
 				defense += item.getType().defense;
 		}
 		for (Item item : buffs) {
-			if (item != null)
+			if (item != null && item.getType() != null)
 				defense += item.getType().defense;
 		}
-		if (weapon != null)
+		if (weapon != null && weapon.getType() != null)
 			defense += weapon.getType().defense;
 		
 		//Calculate damage multiplier
 		damageMultiplier = 1;
 		for (Item item : equipped) {
-			if (item != null)
+			if (item != null && item.getType() != null)
 				damageMultiplier *= item.getType().damageMultiplier;
 		}
 		for (Item item : buffs) {
-			if (item != null)
+			if (item != null && item.getType() != null)
 				damageMultiplier *= item.getType().damageMultiplier;
 		}
-		if (weapon != null)
+		if (weapon != null && weapon.getType() != null)
 			damageMultiplier *= weapon.getType().damageMultiplier;
 		
 		//Calculate defense multiplier
 		defenseMultiplier = 1;
 		for (Item item : equipped) {
-			if (item != null)
+			if (item != null && item.getType() != null)
 				defenseMultiplier *= item.getType().defenseMultiplier;
 		}
 		for (Item item : buffs) {
-			if (item != null)
+			if (item != null && item.getType() != null)
 				defenseMultiplier *= item.getType().defenseMultiplier;
 		}
-		if (weapon != null)
+		if (weapon != null && weapon.getType() != null)
 			defenseMultiplier *= weapon.getType().defenseMultiplier;
 		
 		//Calculate speed multiplier
 		speedMultiplier = 1;
 		for (Item item : equipped) {
-			if (item != null)
+			if (item != null && item.getType() != null)
 				speedMultiplier *= item.getType().speedMultiplier;
 		}
 		for (Item item : buffs) {
-			if (item != null)
+			if (item != null && item.getType() != null)
 				speedMultiplier *= item.getType().speedMultiplier;
 		}
-		if (weapon != null)
+		if (weapon != null && weapon.getType() != null)
 			speedMultiplier *= weapon.getType().speedMultiplier;
 		
 		PlayerStatsChangeEvent event = new PlayerStatsChangeEvent(player, speed, defense, damageMultiplier, defenseMultiplier, speedMultiplier);
@@ -122,7 +122,7 @@ public class PlayerStatsManager implements EventHandler {
 	 * @return
 	 */
 	public float getKnockback (Item item) {
-		return 16;//TODO Implement real knockback
+		return item.getType().knockback;
 	}
 	
 	public float getSpeed (boolean isSprinting, boolean isRolling) {

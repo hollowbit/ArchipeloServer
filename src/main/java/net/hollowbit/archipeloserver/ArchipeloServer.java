@@ -12,6 +12,7 @@ import net.hollowbit.archipeloserver.tools.database.DatabaseManager;
 import net.hollowbit.archipeloserver.tools.event.EventManager;
 import net.hollowbit.archipeloserver.tools.executables.ExecutableManager;
 import net.hollowbit.archipeloserver.tools.log.Logger;
+import net.hollowbit.archipeloserver.tools.npcdialogs.GlobalNpcDialogManager;
 import net.hollowbit.archipeloserver.world.MapElementManager;
 import net.hollowbit.archipeloserver.world.World;
 
@@ -41,6 +42,7 @@ public class ArchipeloServer {
 	private ExecutableManager executableManager;
 	private EventManager eventManager;
 	private SoundManager soundManager;
+	private GlobalNpcDialogManager npcDialogManager;
 	private Logger logger;
 	private World world;
 	private Thread tick20;
@@ -69,6 +71,7 @@ public class ArchipeloServer {
 		eventManager = new EventManager();
 		
 		soundManager = new SoundManager();
+		npcDialogManager = new GlobalNpcDialogManager();
 		ItemType.loadAssets();
 		
 		//Add test event handler to manager
@@ -176,6 +179,10 @@ public class ArchipeloServer {
 	
 	public SoundManager getSoundManager() {
 		return soundManager;
+	}
+	
+	public GlobalNpcDialogManager getNpcDialogManager() {
+		return npcDialogManager;
 	}
 
 	public void stop () {

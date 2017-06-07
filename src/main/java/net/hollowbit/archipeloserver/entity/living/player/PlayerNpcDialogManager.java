@@ -67,19 +67,23 @@ public class PlayerNpcDialogManager implements PacketHandler, EventHandler {
 	 * @param messageId
 	 */
 	public void sendNpcDialog (Entity sender, String messageId) {
-		this.sendNpcDialog(sender, messageId, NpcDialog.getPrefix(player.getMap()));
+		NpcDialog dialog = player.getMap().getNpcDialogManager().getNpcDialogById(messageId);
+		this.sendNpcDialog(sender, dialog, NpcDialog.getPrefix(player.getMap()));
 	}
 	
 	public void sendNpcDialog (Entity sender, String messageId, String prefix) {
-		NpcDialog dialog = player.getMap().getNpcDialogManager().getNpcDialogById(messageId);
-		
+		NpcDialog dialog = ArchipeloServer.getServer().getNpcDialogManager().getNpcDialogById(prefix, messageId);
+		this.sendNpcDialog(sender, dialog, prefix);
+	}
+	
+	private void sendNpcDialog(Entity sender, NpcDialog dialog, String prefix) {
 		//While conditions are met on all dialogs, get the next one and test
 		while (dialog != null && dialog.cond != null && dialog.cond.isConditionMet(player))
 			dialog = player.getMap().getNpcDialogManager().getNpcDialogById(dialog.change);
 		
 		if (dialog == null)//Don't send if somehow we reached a null dialog
 			return;
-		
+			
 		handleMessage(sender, dialog);
 		player.sendPacket(new NpcDialogPacket(dialog, player.getMap(), prefix));
 	}
