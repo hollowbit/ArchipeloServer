@@ -670,6 +670,41 @@ public class Player extends LivingEntity implements PacketHandler, RollableEntit
 			this.sendPacket(new ChatMessagePacket("", "{pong} " + hbUser.getPing() + "ms", "server"));
 		} else if (label.equalsIgnoreCase("logoff") || label.equalsIgnoreCase("exit") || label.equalsIgnoreCase("logout")) {
 			this.remove(LogoutReason.LEAVE, "");
+		} else if (label.equalsIgnoreCase("give")) {//give items to a player
+			if (args.length != 3 && args.length != 4) {
+				this.sendPacket(new ChatMessagePacket("", "{invalidArguments}", "server"));
+				return;
+			}
+			
+			Player target = location.getMap().getEntityManager().getPlayer(args[0]);
+			if (target == null) {
+				this.sendPacket(new ChatMessagePacket("", "{invalidPlayer}", "server"));
+				return;
+			}
+			
+			ItemType itemType = ItemType.getItemTypeById(args[1]);
+			if (itemType == null) {
+				this.sendPacket(new ChatMessagePacket("", "{invalidItem}", "server"));
+				return;
+			}
+			
+			try {
+				int amount = Integer.parseInt(args[2]);
+				
+				int style = 0;
+				if (args.length == 4)
+					style = Integer.parseInt(args[3]);
+				
+				if (style >= 0 && style < itemType.numOfStyles && amount > 0) {
+					//All args are valid, give the item to the player
+					this.sendPacket(new ChatMessagePacket("", "{commandSuccessful}", "server"));
+					target.getInventory().add(new Item(itemType, style, amount));
+					return;
+				}
+			} catch (Exception e) {}
+			
+			//Will happen if amount is bad
+			this.sendPacket(new ChatMessagePacket("", "{invalidNumber}", "server"));
 		}
 	}
 	

@@ -58,6 +58,9 @@ public class EntityManager {
 	
 	public Player getPlayer (String name) {
 		Entity entity = entities.get(name);
+		if (entity == null)
+			return null;
+		
 		if (entity.isPlayer()) {
 			return (Player) entity;
 		} else {

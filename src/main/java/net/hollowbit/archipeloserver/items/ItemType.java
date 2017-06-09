@@ -195,6 +195,10 @@ public enum ItemType {
 		return itemTypes.get(item.id);
 	}
 	
+	public static ItemType getItemTypeById (String id) {
+		return itemTypes.get(id);
+	}
+	
 	public static void loadAssets() {
 		for (ItemType type : ItemType.values())
 			type.loadSounds();
