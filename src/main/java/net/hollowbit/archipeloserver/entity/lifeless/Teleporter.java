@@ -46,10 +46,7 @@ public class Teleporter extends LifelessEntity {
 			if (entity.isPlayer()) {//don't allow inter-map teleportation with non-players
 				Player p = (Player) entity;
 				
-				if (!teleportLocation.island.equals("")) {
-					p.teleport(teleportLocation.x, teleportLocation.y, newDirection, teleportLocation.map, teleportLocation.island);
-					return;
-				} else if (!teleportLocation.map.equals("")) {
+				if (!teleportLocation.map.equals("")) {
 					p.teleport(teleportLocation.x, teleportLocation.y, newDirection, teleportLocation.map);
 					return;
 				}

@@ -4,6 +4,7 @@ import java.util.HashSet;
 
 import com.badlogic.gdx.math.Vector2;
 
+import net.hollowbit.archipeloserver.ArchipeloServer;
 import net.hollowbit.archipeloserver.entity.EntityComponent;
 import net.hollowbit.archipeloserver.entity.LivingEntity;
 import net.hollowbit.archipeloserver.tools.audio.SoundCalculator;
@@ -36,7 +37,7 @@ public class FootstepPlayerComponent extends EntityComponent {
 		super.tick20(deltaTime);
 		Vector2 tilePos = entity.getFeetTile();
 		
-		String tileSound = entity.getMap().getTileTypeAtLocation((int) tilePos.x, (int) tilePos.y).getFootstepSound();
+		String tileSound = ArchipeloServer.getServer().getMapElementManager().getTile((entity.getMap().getTile((int) tilePos.x, (int) tilePos.y))).getFootstepSound();
 		if (!possibleSoundTypes.contains(tileSound))
 			tileSound = "default";
 		

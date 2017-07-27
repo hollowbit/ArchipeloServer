@@ -10,6 +10,7 @@ public class EntityManager {
 	
 	private HashMap<String, Entity> entities;
 	private ArrayList<Entity> entitiesList;
+	private int numPlayers = 0;
 	
 	public EntityManager () {
 		entities = new HashMap<String, Entity>();
@@ -17,31 +18,22 @@ public class EntityManager {
 	}
 	
 	public synchronized void addEntity (Entity entity) {
+		if (entity.isPlayer())
+			numPlayers++;
 		entities.put(entity.getName(), entity);
 		entitiesList.add(entity);
 	}
 	
 	public synchronized void removeEntity (Entity entity) {
+		if (entity.isPlayer())
+			numPlayers--;
 		entities.remove(entity);
 		entitiesList.remove(entity);
 	}
 	
 	public synchronized ArrayList<Entity> duplicateEntityList () {
-		ArrayList<Entity> entityList = new ArrayList<Entity>();
-		entityList.addAll(entitiesList);
+		ArrayList<Entity> entityList = new ArrayList<Entity>(entitiesList);
 		return entityList;
-	}
-	
-	public void tick20 (float deltaTime) {
-		for (Entity entity : duplicateEntityList()) {
-			entity.tick20(deltaTime);
-		}
-	}
-	
-	public void tick60 (float deltaTime) {
-		for (Entity entity : duplicateEntityList()) {
-			entity.tick60(deltaTime);
-		}
 	}
 	
 	public synchronized Entity getEntity (String name) {
@@ -68,9 +60,9 @@ public class EntityManager {
 		}
 	}
 	
-	public Collection<Entity> getEntities () {
+	/* Collection<Entity> getEntities () {
 		return entitiesList;
-	}
+	}*/
 	
 	public Collection<Player> getPlayers () {
 		ArrayList<Player> players = new ArrayList<Player>();
@@ -79,6 +71,10 @@ public class EntityManager {
 				players.add((Player) entity);
 		}
 		return players;
+	}
+	
+	public boolean noPlayersInList() {
+		return numPlayers <= 0;
 	}
 	
 }

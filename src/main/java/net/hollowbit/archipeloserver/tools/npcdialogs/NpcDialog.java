@@ -16,7 +16,7 @@ public class NpcDialog {
 	public boolean endConversation = false;
 	
 	public static String getPrefix (Map map) {
-		return map.getIsland().getName() + "-" + map.getName();
+		return map.getName();
 	}
 	
 }

@@ -2,9 +2,10 @@ package net.hollowbit.archipeloserver.tools.entity;
 
 import com.badlogic.gdx.math.Vector2;
 
-import net.hollowbit.archipeloserver.world.Island;
+import net.hollowbit.archipeloserver.ArchipeloServer;
 import net.hollowbit.archipeloserver.world.Map;
 import net.hollowbit.archipeloserver.world.World;
+import net.hollowbit.archipeloshared.ChunkData;
 import net.hollowbit.archipeloshared.Direction;
 
 public class Location {
@@ -39,6 +40,14 @@ public class Location {
 		return pos.y;
 	}
 	
+	public int getChunkX() {
+		return (int) Math.floor((float) pos.x / ArchipeloServer.TILE_SIZE / ChunkData.SIZE);
+	}
+	
+	public int getChunkY() {
+		return (int) Math.floor((float) pos.y / ArchipeloServer.TILE_SIZE / ChunkData.SIZE);
+	}
+	
 	public int getDirectionInt () {
 		return direction.ordinal();
 	}
@@ -59,12 +68,8 @@ public class Location {
 		return map;
 	}
 	
-	public Island getIsland () {
-		return map.getIsland();
-	}
-	
 	public World getWorld () {
-		return map.getIsland().getWorld();
+		return map.getWorld();
 	}
 	
 	public void addY (float amount) {

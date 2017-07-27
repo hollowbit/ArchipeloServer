@@ -22,34 +22,32 @@ public class PlayerUpdateQueryTask extends QueryTask {
 	@Override
 	public void execute(Connection conn) {
 		try {
-			PreparedStatement statement = conn.prepareStatement("update players set `name`=?, `x`=?, `y`=?, `island`=?, `map`=?, `weaponInventory`=?, `consumablesInventory`=?, `buffsInventory`=?, `ammoInventory`=?, `uneditableEquippedInventory`=?, `equippedInventory`=?, `cosmeticInventory`=?, `bankInventory`=?, `inventory`=?, `lastPlayed`=?, `flags`=?, `health`=?, `respawnX`=?, `respawnY`=?, `respawnIsland`=?, `respawnMap`=? where uuid = ?");
+			PreparedStatement statement = conn.prepareStatement("update players set `name`=?, `x`=?, `y`=?, `map`=?, `weaponInventory`=?, `consumablesInventory`=?, `buffsInventory`=?, `ammoInventory`=?, `uneditableEquippedInventory`=?, `equippedInventory`=?, `cosmeticInventory`=?, `bankInventory`=?, `inventory`=?, `lastPlayed`=?, `flags`=?, `health`=?, `respawnX`=?, `respawnY`=?, `respawnMap`=? where uuid = ?");
 			statement.setString(1, player.getName());
 			statement.setFloat(2, player.getLocation().getX());
 			statement.setFloat(3, player.getLocation().getY());
-			statement.setString(4, player.getLocation().getIsland().getName());
-			statement.setString(5, player.getLocation().getMap().getName());
+			statement.setString(4, player.getLocation().getMap().getName());
 			
 			//Inventory
-			statement.setString(6, player.getInventory().getWeaponInventory().getJson());
-			statement.setString(7, player.getInventory().getConsumablesInventory().getJson());
-			statement.setString(8, player.getInventory().getBuffsInventory().getJson());
-			statement.setString(9, player.getInventory().getAmmoInventory().getJson());
-			statement.setString(10, player.getInventory().getUneditableEquippedInventory().getJson());
-			statement.setString(11, player.getInventory().getEquippedInventory().getJson());
-			statement.setString(12, player.getInventory().getCosmeticInventory().getJson());
-			statement.setString(13, player.getInventory().getBankInventory().getJson());
-			statement.setString(14, player.getInventory().getMainInventory().getJson());
+			statement.setString(5, player.getInventory().getWeaponInventory().getJson());
+			statement.setString(6, player.getInventory().getConsumablesInventory().getJson());
+			statement.setString(7, player.getInventory().getBuffsInventory().getJson());
+			statement.setString(8, player.getInventory().getAmmoInventory().getJson());
+			statement.setString(9, player.getInventory().getUneditableEquippedInventory().getJson());
+			statement.setString(10, player.getInventory().getEquippedInventory().getJson());
+			statement.setString(11, player.getInventory().getCosmeticInventory().getJson());
+			statement.setString(12, player.getInventory().getBankInventory().getJson());
+			statement.setString(13, player.getInventory().getMainInventory().getJson());
 			
-			statement.setDate(15, DatabaseManager.getCurrentDate());
-			statement.setString(16, player.getFlagsManager().getFlagsJson());
+			statement.setDate(14, DatabaseManager.getCurrentDate());
+			statement.setString(15, player.getFlagsManager().getFlagsJson());
 			
-			statement.setFloat(17, player.getHealth());
-			statement.setFloat(18, player.getRespawnLocation().getX());
-			statement.setFloat(19, player.getRespawnLocation().getY());
-			statement.setString(20, player.getRespawnLocation().getIsland());
-			statement.setString(21, player.getRespawnLocation().getMap());
+			statement.setFloat(16, player.getHealth());
+			statement.setFloat(17, player.getRespawnLocation().getX());
+			statement.setFloat(18, player.getRespawnLocation().getY());
+			statement.setString(19, player.getRespawnLocation().getMap());
 			
-			statement.setString(22, player.getId());//Update where uuid is the same
+			statement.setString(20, player.getId());//Update where uuid is the same
 			
 			statement.executeUpdate();
 		} catch (SQLException e) {

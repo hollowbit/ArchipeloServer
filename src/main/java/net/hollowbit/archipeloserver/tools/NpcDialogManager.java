@@ -44,7 +44,7 @@ public class NpcDialogManager {
 	}
 	
 	private static NpcDialogs getNpcDialogsFileByMap (Map map) {
-		File dialogFile = new File("islands/" + map.getIsland().getName() + "/" + map.getName() + "/npc_dialogs.json");
+		File dialogFile = new File("maps/" + map.getName() + "/npc_dialogs.json");
 		if (dialogFile.exists()) {
 			boolean unableToLoad = false;
 			try {
@@ -68,7 +68,7 @@ public class NpcDialogManager {
 			}
 			
 			if (unableToLoad)
-				System.out.println("Could not load NPC dialogs for " + map.getIsland().getName() + "-" + map.getName());
+				System.out.println("Could not load NPC dialogs for " + map.getName());
 			return null;
 		} else {
 			return null;

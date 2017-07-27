@@ -14,16 +14,15 @@ public class EntityTeleportEvent extends EditableEvent {
 	private Vector2 newPos, oldPos;
 	private Direction oldDirection, newDirection;
 	private Map oldMap;
-	private String newMap, newIsland;
+	private String newMap;
 
-	public EntityTeleportEvent(Entity entity, Vector2 newPos, Vector2 oldPos, Map oldMap, String newMap, String newIsland, Direction oldDirection, Direction newDirection) {
+	public EntityTeleportEvent(Entity entity, Vector2 newPos, Vector2 oldPos, Map oldMap, String newMap, Direction oldDirection, Direction newDirection) {
 		super(EventType.EntityTeleport);
 		this.entity = entity;
 		this.newPos = new Vector2(newPos);
 		this.oldPos = new Vector2(oldPos);
 		this.oldMap = oldMap;
 		this.newMap = newMap;
-		this.newIsland = newIsland;
 		this.oldDirection = oldDirection;
 		this.newDirection = newDirection;
 	}
@@ -48,17 +47,6 @@ public class EntityTeleportEvent extends EditableEvent {
 			return;
 		
 		this.newMap = newMap;
-	}
-
-	public String getNewIsland() {
-		return newIsland;
-	}
-
-	public void setNewIsland(String newIsland) {
-		if (editingPrevented)
-			return;
-		
-		this.newIsland = newIsland;
 	}
 
 	public Direction getNewDirection() {
@@ -88,12 +76,8 @@ public class EntityTeleportEvent extends EditableEvent {
 		return oldMap;
 	}
 	
-	public boolean isNewIsland() {
-		return !oldMap.getIsland().getName().equals(newIsland);
-	}
-	
 	public boolean isNewMap() {
-		return !oldMap.getName().equals(newMap) || isNewIsland();
+		return !oldMap.getName().equals(newMap);
 	}
 
 }

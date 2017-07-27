@@ -1,7 +1,18 @@
 package net.hollowbit.archipeloserver.world;
 
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.TreeMap;
+
+import com.badlogic.gdx.utils.Json;
+import com.badlogic.gdx.utils.JsonValue.PrettyPrintSettings;
+import com.badlogic.gdx.utils.JsonWriter;
 
 import net.hollowbit.archipeloserver.ArchipeloServer;
 import net.hollowbit.archipeloserver.entity.Entity;
@@ -13,9 +24,12 @@ import net.hollowbit.archipeloserver.network.packets.EntityAddPacket;
 import net.hollowbit.archipeloserver.network.packets.EntityRemovePacket;
 import net.hollowbit.archipeloserver.particles.Particles;
 import net.hollowbit.archipeloserver.tools.npcdialogs.NpcDialogManager;
-import net.hollowbit.archipeloserver.world.map.MapLoader;
+import net.hollowbit.archipeloserver.world.map.Chunk;
+import net.hollowbit.archipeloserver.world.map.ChunkRow;
+import net.hollowbit.archipeloshared.ChunkData;
 import net.hollowbit.archipeloshared.CollisionRect;
 import net.hollowbit.archipeloshared.EntitySnapshot;
+import net.hollowbit.archipeloshared.InvalidMapFolderException;
 import net.hollowbit.archipeloshared.MapData;
 import net.hollowbit.archipeloshared.MapSnapshot;
 import net.hollowbit.archipeloshared.TileData;
@@ -37,47 +51,55 @@ public class Map {
 	
 	private String name;
 	private MapSnapshot changes;
-	private String[][] tileData;
-	private String[][] elementData;
 	private boolean[][] collisionMap;
-	private EntityManager entityManager;
+	private TreeMap<Integer, ChunkRow> chunkRows;
 	private NpcDialogManager npcDialogManager;
 	private FormManager formManager;
-	private Island island;
+	private EntityManager entityManager;
+	private World world;
+	private boolean canSave;
 	private String displayName;
 	private int climat;
 	private int type;
 	private boolean naturalLighting;
 	private String music;
 	private boolean loaded = false;
+	Json json = new Json();
 	
-	public Map (String name, Island island) {
+	private int width, height;
+	private int minTileX, maxTileX, minTileY, maxTileY;
+	
+	public Map (String name, World world) {
 		this.name = name;
-		this.island = island;
-		entityManager = new EntityManager();
+		this.world = world;
+		chunkRows = new TreeMap<Integer, ChunkRow>();
 		npcDialogManager = new NpcDialogManager(this);
 		formManager = new FormManager(this);
 		changes = new MapSnapshot(name, displayName);
 	}
 	
 	public void tick20 (float deltaTime) {
-		entityManager.tick20(deltaTime);
+		for (Entity entity : entityManager.duplicateEntityList()) {
+			entity.tick20(deltaTime);
+		}
 	}
 	
 	public void tick60 (float deltaTime) {
-		entityManager.tick60(deltaTime);
+		for (Entity entity : entityManager.duplicateEntityList()) {
+			entity.tick60(deltaTime);
+		}
 	}
 
 	//If you wish to add this map, load it from its island, not here.
 	public boolean load () {
-		ArchipeloServer.getServer().getLogger().info("Loading map " + getIsland().getName() + ":" + getName() + ".");
+		ArchipeloServer.getServer().getLogger().info("Loading map: " + getName() + ".");
 		displayName = makeDisplayName();
-		MapData mapData = MapLoader.loadMap(this);
-		if (mapData == null) {
-			loaded = false;
-			return false;
+		
+		try {
+			this.loadFromFile();
+		} catch (InvalidMapFolderException e) {
+			ArchipeloServer.getServer().getLogger().error("Could not load map " + this.name + ". Reason: " + e.getMessage());
 		}
-		applyMapData(mapData);
 		generateCollisionMap();
 		loaded = true;
 		return true;
@@ -85,18 +107,26 @@ public class Map {
 	
 	//If you wish to remove this map, unload it from its island, not here.
 	public void unload () {
-		ArchipeloServer.getServer().getLogger().info("Unloading map " + getIsland().getName() + ":" + getName() + ".");
-		//MapLoader.saveMap(this);
+		ArchipeloServer.getServer().getLogger().info("Unloading map: " + getName() + ".");
+		try {
+			if (canSave)
+				this.saveToFile();
+		} catch (IOException e) {
+			ArchipeloServer.getServer().getLogger().error("Could not save map " + this.name + ". Reason: " + e.getMessage());
+		}
 		formManager.dispose();
 		loaded = false;
 	}
 	
 	private void generateCollisionMap () {
-		collisionMap = new boolean[tileData.length * TileData.COLLISION_MAP_SCALE][tileData[0].length * TileData.COLLISION_MAP_SCALE];
-		for (int row = 0; row < tileData.length; row++) {
-			for (int col = 0; col < tileData[0].length; col++) {
+		collisionMap = new boolean[getHeight() * TileData.COLLISION_MAP_SCALE][getWidth() * TileData.COLLISION_MAP_SCALE];
+		for (int row = 0; row < getHeight(); row++) {
+			for (int col = 0; col < getWidth(); col++) {
 				//Apply tile collision map
-				Tile tile = ArchipeloServer.getServer().getMapElementManager().getTile(tileData[row][col]);
+				Tile tile = ArchipeloServer.getServer().getMapElementManager().getTile(getTile(col, row));
+				if (tile == null)
+					continue;
+				
 				for (int tileRow = 0; tileRow < tile.getCollisionTable().length; tileRow++) {
 					for (int tileCol = 0; tileCol < tile.getCollisionTable()[0].length; tileCol++) {
 						int x = col * TileData.COLLISION_MAP_SCALE + tileCol;
@@ -110,7 +140,7 @@ public class Map {
 					}
 				}
 				
-				MapElement element = ArchipeloServer.getServer().getMapElementManager().getElement(elementData[row][col]);
+				MapElement element = ArchipeloServer.getServer().getMapElementManager().getElement(getElement(col, row));
 				
 				if (element != null) {
 					for (int elementRow = 0; elementRow < element.getCollisionTable().length; elementRow++) {
@@ -159,7 +189,7 @@ public class Map {
 		boolean isPlayer = testEntity instanceof Player;
 		
 		//Check for collisions with entities
-		for (Entity entity : entityManager.duplicateEntityList()) {
+		for (Entity entity : getEntities()) {
 			if (entity == testEntity)
 				continue;
 			
@@ -205,12 +235,8 @@ public class Map {
 		return displayName;
 	}
 	
-	public Island getIsland () {
-		return island;
-	}
-	
 	public World getWorld () {
-		return island.getWorld();
+		return world;
 	}
 	
 	public MapSnapshot getChangesSnapshot () {
@@ -219,17 +245,14 @@ public class Map {
 	
 	public MapSnapshot getFullSnapshot () {
 		MapSnapshot snapshot = new MapSnapshot(name, displayName);
-		snapshot.setTileData(tileData.clone());
-		snapshot.setElementData(elementData.clone());
 		snapshot.putString("display-name", displayName);
-		snapshot.putString("island-name", island.getName());
 		snapshot.putInt("fade-color", naturalLighting ? FADE_COLOR_WHITE : FADE_COLOR_BLACK);
 		snapshot.putString("music", music);
 		return snapshot;
 	}
 	
 	/**
-	 * Safer way to loop through entities
+	 * Safe way to loop through entities. Prevents ConcurrentModification Exceptions.
 	 * Exceptions
 	 * @return
 	 */
@@ -237,25 +260,11 @@ public class Map {
 		return entityManager.duplicateEntityList();
 	}
 	
-	/**
-	 * Not recommended in most cases. May cause ConcurrentModification
-	 * @return
-	 */
-	public Collection<Entity> getEntitiesOriginal () {
-		return entityManager.getEntities();
-	}
-	
 	public Collection<Player> getPlayers () {
-		ArrayList<Player> players = new ArrayList<Player>();
-		for (Entity entity : getEntities()) {
-			if (entity.isPlayer()) {
-				players.add((Player) entity);
-			}
-		}
-		return players;
+		return entityManager.getPlayers();
 	}
 	
-	public EntityManager getEntityManager () {
+	public EntityManager getEntityManager() {
 		return entityManager;
 	}
 	
@@ -271,7 +280,11 @@ public class Map {
 		entityManager.addEntity(entity);
 	}
 	
-	public void removeEntity (Entity entity) {
+	/**
+	 * Please call Entity.remove() instead. Can cause bugs otherwise.
+	 * @param entity
+	 */
+	public void removeEntityUnsafe (Entity entity) {
 		entityManager.removeEntity(entity);
 		
 		EntityRemovePacket removePacket = new EntityRemovePacket(entity);
@@ -281,8 +294,8 @@ public class Map {
 		
 		//Check if there are any players left. If not, unload the map.
 		if (entity.isPlayer()) {
-			if (entityManager.getPlayers().isEmpty()) {
-				island.unloadMap(this);
+			if (entityManager.noPlayersInList()) {
+				world.unloadMap(this);
 			}
 		}
 	}
@@ -299,29 +312,8 @@ public class Map {
 		return false;
 	}
 	
-	public String[][] getTileData() {
-		return tileData;
-	}
-	
-	public String[][] getElementData() {
-		return elementData;
-	}
-	
 	public NpcDialogManager getNpcDialogManager () {
 		return npcDialogManager;
-	}
-	
-	public void applyMapData (MapData mapData) {
-		displayName = mapData.displayName;
-		tileData = mapData.tileData;
-		elementData = mapData.elementData;
-		climat = mapData.climat;
-		type = mapData.type;
-		naturalLighting = mapData.naturalLighting;
-		music = mapData.music;
-		for (EntitySnapshot snapshot : mapData.entitySnapshots) {
-			entityManager.addEntity(EntityType.createEntityBySnapshot(snapshot, this));
-		}
 	}
 	
 	/**
@@ -394,11 +386,11 @@ public class Map {
 	}
 	
 	public int getWidth () {
-		return tileData[0].length;
+		return width;
 	}
 	
 	public int getHeight () {
-		return tileData.length;
+		return height;
 	}
 	
 	public int getPixelWidth () {
@@ -409,11 +401,300 @@ public class Map {
 		return getHeight() * ArchipeloServer.TILE_SIZE;
 	}
 	
-	public Tile getTileTypeAtLocation (int x, int y) {
-		if (x < 0 || x >= tileData[0].length || y < 0 || y >= tileData.length)
+	/**
+	 * Will check if a chunk is loaded, if not it will load it, if possible.
+	 * Returns null if the chunk could not be loaded.
+	 * @param x
+	 * @param y
+	 * @return
+	 */
+	public Chunk loadChunk(int x, int y) {
+		ChunkRow row = chunkRows.get(y);
+		if (row == null) {
+			row = new ChunkRow(y);
+			chunkRows.put(y, row);
+		}
+		
+		Chunk chunk = row.getChunks().get(x);
+		if (chunk != null) {//Loaded so just return it
+			return chunk;
+		} else {//Not loaded so load it
+			File chunkFile = new File("maps/" + this.name + "/" + y + "/" + x + ".json");
+			if (!chunkFile.exists()) {
+				return null;
+			} else {
+				FileReader reader = null;
+				try {
+					reader = new FileReader(chunkFile);
+					ChunkData data = json.fromJson(ChunkData.class, reader);
+					
+					chunk = new Chunk(data, this);
+					row.getChunks().put(x, chunk);
+					
+					//Load entities
+					for (EntitySnapshot snapshot : data.entities)
+						entityManager.addEntity(EntityType.createEntityBySnapshot(snapshot, this));
+					
+					return chunk;
+				} catch (Exception e) {
+					return null;
+				} finally {
+					try {
+						reader.close();
+					} catch (Exception e) {}
+				}
+				
+			}
+		}
+	}
+	
+	/**
+	 * Used to unload chunks that aren't loaded by players
+	 * @param validChunks
+	 */
+	public void unloadChunksNotInSet(HashSet<Chunk> validChunks) {
+		Iterator<ChunkRow> i = chunkRows.values().iterator();
+		while (i.hasNext()) {
+			ChunkRow row = i.next();
+			Iterator<Chunk> i2 = row.getChunks().values().iterator();
+			while (i2.hasNext()) {
+				Chunk chunk = i2.next();
+				if (!validChunks.contains(chunk)) {
+					i2.remove();
+					unloadChunk(chunk);
+				}
+			}
+			
+			if (row.getChunks().isEmpty())
+				i.remove();
+		}
+	}
+	
+	/**
+	 * Call this before removing the chunk from its row.
+	 */
+	protected void unloadChunk(Chunk chunk) {
+		ChunkData data = chunk.getData();
+		for (Entity entity : getEntitiesInChunk(chunk)) {
+			if (canSave)
+				data.entities.add(entity.getSaveSnapshot());
+			entity.remove();
+		}
+		
+		if (canSave) {
+			File chunkFile = new File("maps/" + name + "/" + chunk.getY() + "/" + chunk.getX() + ".json");
+			FileWriter writer = null;
+			try {
+				writer = new FileWriter(chunkFile);
+				json.toJson(data, writer);
+			} catch (IOException e) {
+				ArchipeloServer.getServer().getLogger().caution("Could not save map chunk of: " + name + ":" + chunk.getX() + ":" + chunk.getY());
+			} finally {
+				try {
+					writer.close();
+				} catch (Exception e) {}
+			}
+		}
+	}
+	
+	protected ArrayList<Entity> getEntitiesInChunk(Chunk chunk) {
+		ArrayList<Entity> entities = new ArrayList<Entity>();
+		for (Entity entity : entityManager.duplicateEntityList()) {
+			if (entity.getLocation().getChunkX() == chunk.getX() && entity.getLocation().getChunkY() == chunk.getY())
+				entities.add(entity);
+		}
+		return entities;
+	}
+	
+	protected void loadFromFile() throws InvalidMapFolderException {
+		File folder = new File("maps/" + this.name + "/");
+		if (!folder.exists())
+			throw new InvalidMapFolderException("No folder selected");
+		
+		File settingsFile = new File(folder, "settings.json");
+		if (!settingsFile.exists())
+			throw new InvalidMapFolderException("Settings file not found. There must be a settings.json file in the map's root directory.");
+			
+		MapData mapData;
+		FileReader reader = null;
+		try {
+			 reader = new FileReader(settingsFile);
+			mapData = (MapData) json.fromJson(MapData.class, reader);
+		} catch (Exception e) {
+			throw new InvalidMapFolderException("Settings file is invalid.");
+		} finally {
+			try {
+				reader.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		
+		this.name = mapData.name;
+		this.displayName = mapData.displayName;
+		this.naturalLighting = mapData.naturalLighting;
+		this.music = mapData.music;
+		this.canSave = mapData.canSave;
+		//this.chunkLocations = mapData.chunks;//Not necessary, chunks are obtained on the fly and not all at once
+	}
+	
+	public void saveToFile() throws IOException {
+		if (!canSave)
+			return;
+		
+		File parentFolder = new File("maps/");
+		parentFolder.mkdirs();
+		File folder = new File(parentFolder, name + "/");
+		folder.mkdirs();
+		
+		File settingsFile = new File(folder, "settings.json");
+		settingsFile.createNewFile();
+
+		Json json = new Json();
+		PrettyPrintSettings settings = new PrettyPrintSettings();
+		settings.singleLineColumns = 30;
+		settings.wrapNumericArrays = false;
+		settings.outputType = JsonWriter.OutputType.javascript;
+		
+		FileWriter settingsWriter = new FileWriter(settingsFile);
+		MapData data = new MapData();
+		data.name = this.name;
+		data.displayName = this.displayName;
+		data.naturalLighting = this.naturalLighting;
+		data.music = this.music;
+		
+		settingsWriter.write(json.prettyPrint(data, settings));
+		settingsWriter.close();
+		
+		File chunkFolder = new File(folder, "chunks/");
+		chunkFolder.mkdirs();
+		deleteFolderContents(chunkFolder);//Make sure chunk folder is empty before putting things in it
+		
+		for (ChunkRow row : chunkRows.values()) {
+			File rowFolder = new File(chunkFolder, row.getY() + "/");
+			rowFolder.mkdirs();
+			deleteFolderContents(rowFolder);//Make sure row folder is empty
+			
+			for (Chunk chunk : row.getChunks().values()) {
+				FileWriter chunkFileWriter = new FileWriter(new File(rowFolder, chunk.getX() + ".json"));
+				
+				ChunkData chunkData = chunk.getData();
+				//Get entity save data
+				for (Entity entity : getEntitiesInChunk(chunk))
+					chunkData.entities.add(entity.getSaveSnapshot());
+				
+				chunkFileWriter.write(json.prettyPrint(chunkData, settings));
+				chunkFileWriter.close();
+			}
+		}
+	}
+	
+	private void deleteFolderContents(File folder) {
+		for (File child : folder.listFiles()) {
+			if (child.isDirectory())
+				deleteFolderContents(child);
+			child.delete();
+		}
+	}
+	
+	public boolean doesChunkExist(int x, int y) {
+		return this.getChunk(x, y) != null;
+	}
+	
+	public Chunk getChunk(int x, int y) {
+		ChunkRow row = chunkRows.get(y);
+		if (row == null)
 			return null;
 		
-		return ArchipeloServer.getServer().getMapElementManager().getTile(tileData[tileData.length - y - 1][x]);
+		return row.getChunks().get(x);
+	}
+	
+	/**
+	 * Recalculates the width and height of the map. Since it is a fairly costly calculation, this should only be done when necessary.
+	 */
+	protected void recalculateSizes() {
+		int lowestX = chunkRows.get(0).getChunks().get(0).getX();
+		int highestX = chunkRows.get(0).getChunks().get(0).getX();
+		
+		for (ChunkRow row : chunkRows.values()) {
+			for (Chunk chunk : row.getChunks().values()) {
+				if (chunk.getX() < lowestX)
+					lowestX = chunk.getX();
+				
+				if (chunk.getX() > highestX)
+					highestX = chunk.getX();
+			}
+		}
+		this.width = (highestX - lowestX + 1) * ChunkData.SIZE;
+		this.minTileX = lowestX * ChunkData.SIZE;
+		this.maxTileX = (highestX + 1) * ChunkData.SIZE - 1;
+		
+		int lowestY = chunkRows.lastKey();
+		int highestY = chunkRows.firstKey();
+		
+		this.height = (highestY - lowestY + 1) * ChunkData.SIZE;
+		this.minTileY = lowestY * ChunkData.SIZE;
+		this.maxTileY = (highestY + 1) * ChunkData.SIZE - 1;
+	}
+
+	public int getMinTileX() {
+		return minTileX;
+	}
+
+	public int getMaxTileX() {
+		return maxTileX;
+	}
+
+	public int getMinTileY() {
+		return minTileY;
+	}
+
+	public int getMaxTileY() {
+		return maxTileY;
+	}
+	
+	public String getTile(int chunkX, int chunkY, int xWithinChunk, int yWithinChunk) {
+		Chunk chunk = getChunk(chunkX, chunkY);
+		if (chunk == null)
+			return null;
+		
+		return chunk.getTiles()[yWithinChunk][xWithinChunk];
+	}
+	
+	public String getTile(int tileX, int tileY) {
+		int chunkX = (int) Math.floor((float) tileX / ChunkData.SIZE);
+		int chunkY = (int) Math.floor((float) tileY / ChunkData.SIZE);
+		
+		int xWithinChunk = Math.abs(tileX) % ChunkData.SIZE;
+		if (tileX < 0)
+			xWithinChunk = ChunkData.SIZE - xWithinChunk;
+		int yWithinChunk = Math.abs(tileY) % ChunkData.SIZE;
+		if (tileY < 0)
+			yWithinChunk = ChunkData.SIZE - yWithinChunk;
+		
+		return getTile(chunkX, chunkY, xWithinChunk, yWithinChunk);
+	}
+	
+	public String getElement(int chunkX, int chunkY, int xWithinChunk, int yWithinChunk) {
+		Chunk chunk = getChunk(chunkX, chunkY);
+		if (chunk == null)
+			return null;
+		
+		return chunk.getElements()[yWithinChunk][xWithinChunk];
+	}
+	
+	public String getElement(int tileX, int tileY) {
+		int chunkX = (int) Math.floor((float) tileX / ChunkData.SIZE);
+		int chunkY = (int) Math.floor((float) tileY / ChunkData.SIZE);
+		
+		int xWithinChunk = Math.abs(tileX) % ChunkData.SIZE;
+		if (tileX < 0)
+			xWithinChunk = ChunkData.SIZE - xWithinChunk;
+		int yWithinChunk = Math.abs(tileY) % ChunkData.SIZE;
+		if (tileY < 0)
+			yWithinChunk = ChunkData.SIZE - yWithinChunk;
+		
+		return getElement(chunkX, chunkY, xWithinChunk, yWithinChunk);
 	}
 	
 }

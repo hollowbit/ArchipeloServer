@@ -1,7 +1,0 @@
-{dialogs:[
-
-{id:"swordSignGive", choices:["swordSignEnd"], exec:[{id:"addFlag", args:{flag:"swordSignGaveItem"}}, {id:"giveItems", args:{items:"[{id: spear_basic},{id: assistant_general},{id: soul_disruptor},{id: spirit_disruptor},{id: demons_tongue},{id: fann_katana},{id: hylian_broadsword},{id: little_red},{id: fallen_angel_blade},{id: training_sword},{id: angel_blade},{id: angelic_claymore},{id: beast_fury},{id: desert_rapier},{id: dragons_breath},{id: iron_buldge},{id: iron_hatchet},{id: iron_scepter},{id: mighty_hammer},{id: the_fairy_man},{id: world_breaker}]"}}]},
-{id:"swordSignAlready"},
-{id:"swordSignEnd"}
-
-]}

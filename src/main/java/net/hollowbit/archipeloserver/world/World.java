@@ -4,10 +4,14 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
 
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.utils.Json;
 
 import net.hollowbit.archipeloserver.ArchipeloServer;
+import net.hollowbit.archipeloserver.entity.Entity;
 import net.hollowbit.archipeloserver.entity.living.Player;
 import net.hollowbit.archipeloserver.entity.living.player.PlayerData;
 import net.hollowbit.archipeloserver.entity.living.player.PlayerInventory;
@@ -22,10 +26,14 @@ import net.hollowbit.archipeloserver.network.packets.FlagsAddPacket;
 import net.hollowbit.archipeloserver.network.packets.PlayerDeletePacket;
 import net.hollowbit.archipeloserver.network.packets.PlayerListPacket;
 import net.hollowbit.archipeloserver.network.packets.PlayerPickPacket;
+import net.hollowbit.archipeloserver.network.packets.WorldSnapshotPacket;
 import net.hollowbit.archipeloserver.tools.Configuration;
 import net.hollowbit.archipeloserver.tools.database.QueryTaskResponseHandler.PlayerCountQueryTaskResponseHandler;
 import net.hollowbit.archipeloserver.tools.database.QueryTaskResponseHandler.PlayerDataQueryTaskResponseHandler;
 import net.hollowbit.archipeloserver.tools.database.QueryTaskResponseHandler.PlayerListQueryTaskResponseHandler;
+import net.hollowbit.archipeloserver.world.map.Chunk;
+import net.hollowbit.archipeloshared.ChunkData;
+import net.hollowbit.archipeloshared.EntitySnapshot;
 import net.hollowbit.archipeloshared.StringValidator;
 
 public class World implements PacketHandler {
@@ -33,42 +41,44 @@ public class World implements PacketHandler {
 	public static final int TICKS_PER_DAY = 36000;
 	
 	private int time;
-	private ArrayList<Island> loadedIslands;
+	private ArrayList<Map> loadedMaps;
+	private Json json;
 	
 	public World () {
 		time = 0;
-		loadedIslands = new ArrayList<Island>();
+		loadedMaps = new ArrayList<Map>();
+		json = new Json();
 		ArchipeloServer.getServer().getNetworkManager().addPacketHandler(this);
 	}
 	
-	public boolean isIslandLoaded (String islandName) {
-		for (Island island : duplicateIslandList()) {
-			if (island.getName().equalsIgnoreCase(islandName))
+	public boolean isMapLoaded (String mapName) {
+		for (Map map : duplicateMapList()) {
+			if (map.getName().equalsIgnoreCase(mapName))
 				return true;
 		}
 		return false;
 	}
 	
-	public boolean loadIsland (String islandName) {
-		Island island = new Island(islandName, this);
-		addIsland(island);
-		return island.load();
+	public boolean loadMap (String mapName) {
+		Map map = new Map(mapName, this);
+		addMap(map);
+		return map.load();
 	}
 	
-	public boolean unloadIsland (Island island) {
-		if (isIslandLoaded(island.getName())) {
-			island.unload();
-			removeIsland(island);
+	public boolean unloadMap (Map map) {
+		if (isMapLoaded(map.getName())) {
+			map.unload();
+			removeMap(map);
 			return true;
 		} else {
 			return false;	
 		}
 	}
 	
-	public Island getIsland (String islandName) {
-		for (Island island : duplicateIslandList()) {
-			if (island.getName().equalsIgnoreCase(islandName))
-				return island;
+	public Map getMap (String mapName) {
+		for (Map map : duplicateMapList()) {
+			if (map.getName().equalsIgnoreCase(mapName))
+				return map;
 		}
 		return null;
 	}
@@ -79,51 +89,160 @@ public class World implements PacketHandler {
 			time = 0;
 		}
 		
-		//Tick all islands
-		for (Island island : duplicateIslandList()) {
-			island.tick20(deltaTime);
+		//Tick all maps
+		for (Map map : duplicateMapList()) {
+			map.tick20(deltaTime);
 		}
 		
 		//Create world snapshots and send them
-		for (Island island : duplicateIslandList()) {
-			for (Map map : island.duplicateMapList()) {
-				if (!map.isLoaded())
-					continue;
+		for (Map map : duplicateMapList()) {
+			if (!map.isLoaded())
+				continue;
+			
+			HashSet<Chunk> chunksUsed = new HashSet<Chunk>();
+			
+			String mapSnapshot = json.toJson(map.getChangesSnapshot());
+			map.getChangesSnapshot().clear();
+			String fullMapSnapshot = null;
+			
+			HashMap<Integer, HashMap<Integer, String>> chunks = new HashMap<Integer, HashMap<Integer, String>>();
+			HashMap<Integer, HashMap<Integer, String>> changesChunks = new HashMap<Integer, HashMap<Integer, String>>();
+			HashMap<Integer, HashMap<Integer, String>> fullChunks = new HashMap<Integer, HashMap<Integer, String>>();
+			
+			for (Player player : map.getPlayers()) {
+				long timeCreated = System.currentTimeMillis();
+				WorldSnapshotPacket packet = new WorldSnapshotPacket(timeCreated, time, WorldSnapshotPacket.TYPE_INTERP);
+				WorldSnapshotPacket changesPacket = new WorldSnapshotPacket(timeCreated, time, WorldSnapshotPacket.TYPE_CHANGES);
+				WorldSnapshotPacket fullPacket = null;
 				
-				WorldSnapshot snapshot = new WorldSnapshot(this, map, WorldSnapshot.TYPE_INTERP);
-				byte[] snapshotPacketData = ArchipeloServer.getServer().getNetworkManager().getPacketData(snapshot.getPacket());
+				changesPacket.mapSnapshot = mapSnapshot;
 				
-				WorldSnapshot changesSnapshot = new WorldSnapshot(this, map, WorldSnapshot.TYPE_CHANGES);
-				byte[] changesSnapshotPacketData = ArchipeloServer.getServer().getNetworkManager().getPacketData(changesSnapshot.getPacket());
-				
-				WorldSnapshot fullSnapshot = null;
-				byte[] fullSnapshotPacketData = null;
-				
-				//Check if there are any new players on map, if so, create a full snapshot for them, otherwise don't even bother making it.
-				if (map.isThereNewPlayerOnMap()) {
-					fullSnapshot = new WorldSnapshot(this, map, WorldSnapshot.TYPE_FULL);
-					fullSnapshotPacketData = ArchipeloServer.getServer().getNetworkManager().getPacketData(fullSnapshot.getPacket());
+				boolean playerIsNew = player.isNewOnMap();
+				if (playerIsNew) {
+					fullPacket = new WorldSnapshotPacket(timeCreated, time, WorldSnapshotPacket.TYPE_FULL);
+					if (fullMapSnapshot == null)
+						fullMapSnapshot = json.toJson(map.getFullSnapshot());
+					fullPacket.mapSnapshot = fullMapSnapshot;
 				}
 				
-				for (Player player : map.getPlayers()) {
-					if (player.isNewOnMap()) {
-						ArchipeloServer.getServer().getNetworkManager().sendPacketData(fullSnapshotPacketData, player.getConnection());
-						player.setNewOnMap(false);
-					} else {
-						ArchipeloServer.getServer().getNetworkManager().sendPacketData(snapshotPacketData, player.getConnection());
-						ArchipeloServer.getServer().getNetworkManager().sendPacketData(changesSnapshotPacketData, player.getConnection());
+				for (int r = -1 * (WorldSnapshotPacket.NUM_OF_CHUNKS_WIDE / 2); r < WorldSnapshotPacket.NUM_OF_CHUNKS_WIDE / 2; r++) {
+					for (int c = -1 * (WorldSnapshotPacket.NUM_OF_CHUNKS_WIDE / 2); c < WorldSnapshotPacket.NUM_OF_CHUNKS_WIDE / 2; c++) {
+						Chunk chunk = map.loadChunk(c + player.getLocation().getChunkX(), r + player.getLocation().getChunkY());
+						
+						if (chunk != null) {//Could still be null if chunk cannot be loaded
+							chunksUsed.add(chunk);
+							int index = (r + WorldSnapshotPacket.NUM_OF_CHUNKS_WIDE / 2) * WorldSnapshotPacket.NUM_OF_CHUNKS_WIDE + (c + WorldSnapshotPacket.NUM_OF_CHUNKS_WIDE / 2);
+							
+							HashMap<Integer, String> row = chunks.get(chunk.getY());
+							if (row != null && row.containsKey(chunk.getX())) {//Check if chunk has already been loaded
+								//Use already loaded chunks
+								packet.chunks[index] = row.get(chunk.getX());
+								changesPacket.chunks[index] = changesChunks.get(chunk.getY()).get(chunk.getX());
+								
+								//If new on map and full chunks not loaded, then load them
+								if (playerIsNew) {
+									HashMap<Integer, String> fullRow = fullChunks.get(chunk.getY());
+									if (fullRow != null && fullRow.containsKey(chunk.getX())) {
+										fullPacket.chunks[index] = fullRow.get(chunk.getX());
+									} else {//Not loaded, so load it
+										ChunkData fullData = new ChunkData(chunk.getX(), chunk.getY());
+										fullData.tiles = chunk.getTiles();
+										fullData.elements = chunk.getElements();
+										
+										for (Entity entity : map.getEntities()) {
+											if (entity.getLocation().getChunkX() == chunk.getX() && entity.getLocation().getChunkY() == chunk.getY()) {
+												fullData.entities.add(entity.getFullSnapshot());
+											}
+										}
+										
+										String fullDataText = json.toJson(fullData);
+										fullRow = chunks.get(chunk.getY());
+										if (fullRow == null) {
+											fullRow = new HashMap<Integer, String>();
+											fullChunks.put(chunk.getY(), fullRow);
+										}
+										fullRow.put(chunk.getX(), fullDataText);
+										fullPacket.chunks[index] = fullDataText;
+									}
+								}
+							} else {//If not loaded, load them
+								ChunkData data = new ChunkData(chunk.getX(), chunk.getY());
+								ChunkData changesData = new ChunkData(chunk.getX(), chunk.getY());
+								ChunkData fullData = new ChunkData(chunk.getX(), chunk.getY());
+								
+								ArrayList<EntitySnapshot> changesSnapshots = new ArrayList<EntitySnapshot>();
+								
+								for (Entity entity : map.getEntities()) {
+									if (entity.getLocation().getChunkX() == chunk.getX() && entity.getLocation().getChunkY() == chunk.getY()) {
+										data.entities.add(entity.getInterpSnapshot());
+										if (!entity.getChangesSnapshot().isEmpty())
+											changesData.entities.add(entity.getChangesSnapshot());
+										changesSnapshots.add(entity.getChangesSnapshot());
+										
+										if (playerIsNew) {
+											fullData.entities.add(entity.getFullSnapshot());
+										}
+									}
+								}
+								
+								//Parse data to Strings and save them
+								String dataText = json.toJson(data);
+								HashMap<Integer, String> rowInterp = chunks.get(chunk.getY());
+								if (rowInterp == null) {
+									rowInterp = new HashMap<Integer, String>();
+									chunks.put(chunk.getY(), rowInterp);
+								}
+								rowInterp.put(chunk.getX(), dataText);
+								packet.chunks[index] = dataText;
+								
+								String changesDataText = json.toJson(changesData);
+								HashMap<Integer, String> rowChanges = chunks.get(chunk.getY());
+								if (rowChanges == null) {
+									rowChanges = new HashMap<Integer, String>();
+									changesChunks.put(chunk.getY(), rowChanges);
+								}
+								rowChanges.put(chunk.getX(), changesDataText);
+								changesPacket.chunks[index] = changesDataText;
+								
+								if (playerIsNew) {
+									fullData.tiles = chunk.getTiles();
+									fullData.elements = chunk.getElements();
+									
+									String fullDataText = json.toJson(fullData);
+									HashMap<Integer, String> rowFull = chunks.get(chunk.getY());
+									if (rowFull == null) {
+										rowFull = new HashMap<Integer, String>();
+										fullChunks.put(chunk.getY(), rowFull);
+									}
+									rowFull.put(chunk.getX(), fullDataText);
+									fullPacket.chunks[index] = fullDataText;
+								}
+								
+								//Clear changes snapshots
+								for (EntitySnapshot snapshot : changesSnapshots)
+									snapshot.clear();
+							}
+						}
 					}
 				}
 				
-				//Clears all changes snapshots of all entities so that next time they are reset.
-				changesSnapshot.clear();
+				//Send compiled packets
+				player.sendPacket(packet);
+				player.sendPacket(changesPacket);
+				
+				if (playerIsNew) {
+					player.sendPacket(fullPacket);
+					player.setNewOnMap(false);
+				}
 			}
+			
+			map.unloadChunksNotInSet(chunksUsed);
 		}
 	}
 	
 	public void tick60 (float deltaTime) {//Executed 60 times per second.
-		for (Island island : duplicateIslandList()) {
-			island.tick60(deltaTime);
+		for (Map map : duplicateMapList()) {
+			map.tick60(deltaTime);
 		}
 	}
 	
@@ -131,18 +250,18 @@ public class World implements PacketHandler {
 		return time;
 	}
 	
-	private synchronized ArrayList<Island> duplicateIslandList () {
-		ArrayList<Island> islandList = new ArrayList<Island>();
-		islandList.addAll(loadedIslands);
-		return islandList;
+	private synchronized ArrayList<Map> duplicateMapList () {
+		ArrayList<Map> mapList = new ArrayList<Map>();
+		mapList.addAll(loadedMaps);
+		return mapList;
 	}
 	
-	private synchronized void addIsland (Island island) {
-		loadedIslands.add(island);
+	private synchronized void addMap (Map map) {
+		loadedMaps.add(map);
 	}
 	
-	private synchronized void removeIsland (Island island) {
-		loadedIslands.remove(island);
+	private synchronized void removeMap (Map map) {
+		loadedMaps.remove(map);
 	}
 	
 	public boolean isPlayerOnline (String name) {
@@ -154,20 +273,18 @@ public class World implements PacketHandler {
 	}
 	
 	public Player getPlayer (String name) {
-		for (Island island : loadedIslands) {
-			for (Map map : island.getMaps()) {
-				Player player = map.getEntityManager().getPlayer(name);
-				if (player != null)
-					return player;
-			}
+		for (Map map : loadedMaps) {
+			Player player = map.getEntityManager().getPlayer(name);
+			if (player != null)
+				return player;
 		}
 		return null;
 	}
 	
 	public Collection<Player> getOnlinePlayers () {
 		ArrayList<Player> onlinePlayers = new ArrayList<Player>();
-		for (Island island : loadedIslands) {
-			onlinePlayers.addAll(island.getPlayers());
+		for (Map map : loadedMaps) {
+			onlinePlayers.addAll(map.getPlayers());
 		}
 		return onlinePlayers;
 	}
@@ -181,35 +298,16 @@ public class World implements PacketHandler {
 	
 	private void loadPlayerUsingPlayerData (String address, HollowBitUser hbu, PlayerPickPacket playerPickPacket, PlayerData pd, boolean firstTimeLogin) {
 		Configuration config = ArchipeloServer.getServer().getConfig();
-		Island island = null;
 		Map map = null;
 		
-		String islandName = null;
 		String mapName = null;
 		
-		//If island isn't loaded already, load it
-		if (!isIslandLoaded(pd.island)) {
-			if (!loadIsland(pd.island)) {
-				//If island didn't load, send player to (their) spawn
-				if (!isIslandLoaded(config.spawnIsland)) {
-					loadIsland(config.spawnIsland);
-				}
-				islandName = config.spawnIsland;
-			} else {
-				islandName = pd.island;
-			}
-		} else {
-			islandName = pd.island;
-		}
-		
-		island = getIsland(islandName);
-		
 		//If map isn't loaded already, load it
-		if (!island.isMapLoaded(pd.map)) {
-			if (!island.loadMap(pd.map)) {
+		if (!isMapLoaded(pd.map)) {
+			if (!loadMap(pd.map)) {
 				//If map didn't load, send player to (their) spawn
-				if (!island.isMapLoaded(config.spawnMap)) {
-					island.loadMap(config.spawnMap);
+				if (!isMapLoaded(config.spawnMap)) {
+					loadMap(config.spawnMap);
 				}
 				mapName = config.spawnMap;
 			} else {
@@ -219,7 +317,7 @@ public class World implements PacketHandler {
 			mapName = pd.map;
 		}
 		
-		map = island.getMap(mapName);
+		map = getMap(mapName);
 		
 		Player player = new Player(pd.name, address, firstTimeLogin);
 		player.load(map, pd, hbu);
@@ -363,7 +461,7 @@ public class World implements PacketHandler {
 					for (int i = 0; i < playerList.size(); i++) {
 						playerListPacket.playerEquippedInventories[i] = PlayerInventory.getDisplayInventory(playerList.get(i).uneditableEquippedInventory, playerList.get(i).equippedInventory, playerList.get(i).cosmeticInventory, playerList.get(i).weaponInventory);
 						playerListPacket.names[i] = playerList.get(i).name;
-						playerListPacket.islands[i] = playerList.get(i).island;
+						playerListPacket.islands[i] = playerList.get(i).map;
 						playerListPacket.lastPlayedDateTimes[i] = lastPlayedFormat.format(playerList.get(i).lastPlayed);
 						playerListPacket.creationDateTimes[i] = createdFormat.format(playerList.get(i).creationDate);
 					}

@@ -15,7 +15,6 @@ import net.hollowbit.archipeloserver.tools.event.events.editable.EntityDeathEven
 import net.hollowbit.archipeloserver.tools.event.events.editable.EntityHealEvent;
 import net.hollowbit.archipeloserver.tools.event.events.editable.EntityInteractionEvent;
 import net.hollowbit.archipeloserver.tools.event.events.editable.EntityTeleportEvent;
-import net.hollowbit.archipeloserver.world.Island;
 import net.hollowbit.archipeloserver.world.Map;
 import net.hollowbit.archipeloserver.world.World;
 import net.hollowbit.archipeloshared.CollisionRect;
@@ -66,7 +65,7 @@ public abstract class Entity {
 		this.style = fullSnapshot.getInt("style", 0);
 		if (this.style >= entityType.getNumberOfStyles()) {
 			this.style = 0;
-			ArchipeloServer.getServer().getLogger().caution("Entity " + this.name + " on map " + this.getMap().getIsland().getName() + ":" + this.getMap().getName() + " has a bad style attribute.");
+			ArchipeloServer.getServer().getLogger().caution("Entity " + this.name + " on map " + this.getMap().getName() + " has a bad style attribute.");
 		}
 		
 		this.health = fullSnapshot.getFloat("health", entityType.getMaxHealth());
@@ -132,8 +131,11 @@ public abstract class Entity {
 		return style;
 	}
 	
+	/**
+	 * Proper way to remove an entity.
+	 */
 	public void remove () {
-		location.getMap().removeEntity(this);
+		location.getMap().removeEntityUnsafe(this);
 		
 		for (EntityComponent component : components)
 			component.remove();
@@ -222,12 +224,8 @@ public abstract class Entity {
 		teleport(x, y, direction, location.getMap().getName());
 	}
 	
-	public void teleport (float x, float y, Direction direction, String mapName) {
-		teleport(x, y, direction, mapName, location.getIsland().getName());
-	}
-	
 	public void teleport (Location location) {
-		teleport(location.getX(), location.getY(), location.getDirection(), location.getMap().getName(), location.getIsland().getName());
+		teleport(location.getX(), location.getY(), location.getDirection(), location.getMap().getName());
 	}
 	
 	/**
@@ -244,12 +242,11 @@ public abstract class Entity {
 	 * @param y
 	 * @param direction
 	 * @param mapName
-	 * @param islandName
 	 */
-	public void teleport (float x, float y, Direction direction, String mapName, String islandName) {
+	public void teleport (float x, float y, Direction direction, String mapName) {
 		Vector2 newPos = new Vector2(x, y);
 		
-		EntityTeleportEvent event = new EntityTeleportEvent(this, newPos, location.pos, location.map, mapName, islandName, location.getDirection(), direction);
+		EntityTeleportEvent event = new EntityTeleportEvent(this, newPos, location.pos, location.map, mapName, location.getDirection(), direction);
 		event.trigger();
 		if (event.wasCancelled()) {
 			event.close();
@@ -260,35 +257,15 @@ public abstract class Entity {
 		newPos.y = event.getNewPos().y;
 		direction = event.getNewDirection();
 		mapName = event.getNewMap();
-		islandName = event.getNewIsland();
 		
-		boolean islandChanged = !location.getIsland().getName().equals(islandName);
-		boolean mapChanged = islandChanged || !location.getMap().getName().equals(mapName);
+		boolean mapChanged = !location.getMap().getName().equals(mapName);
 		
 		World world = ArchipeloServer.getServer().getWorld();
-		Island island = null;
 		Map map = null;
 		
-		if (islandChanged) {
-			//Map sure island and map are loaded
-			if (!world.isIslandLoaded(islandName)) {
-				if (!world.loadIsland(islandName)) {
-					if (isPlayer()) {
-						Player p = (Player) this;
-						p.sendPacket(new PopupTextPacket("Unable to teleport.", PopupTextPacket.Type.NORMAL));
-						event.cancel();
-						event.close();
-						return;
-					}
-				}
-			}
-			island = world.getIsland(islandName);
-		} else
-			island = location.getIsland();
-		
 		if (mapChanged) {
-			if (!island.isMapLoaded(mapName)) {
-				if (!island.loadMap(mapName)) {
+			if (!world.isMapLoaded(mapName)) {
+				if (!world.loadMap(mapName)) {
 					if (isPlayer()) {
 						Player p = (Player) this;
 						p.sendPacket(new PopupTextPacket("Unable to teleport.", PopupTextPacket.Type.NORMAL));
@@ -298,11 +275,11 @@ public abstract class Entity {
 					}
 				}
 			}
-			map = island.getMap(mapName);
+			map = world.getMap(mapName);
 			
 			//Add player to other map then remove it from current
 			map.addEntity(this);
-			location.getMap().removeEntity(this);
+			location.getMap().removeEntityUnsafe(this);
 			location.setMap(map);
 		} else
 			map = location.getMap();

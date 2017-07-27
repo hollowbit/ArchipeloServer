@@ -34,7 +34,7 @@ public class DoorLocked extends Door {
 	}
 	
 	private String getDefaultUnlockFlag () {
-		return this.location.map.getIsland().getName() + "-" + this.location.map.getName() + "-" + this.name + "Unlock";
+		return this.location.map.getName() + "-" + this.name + "Unlock";
 	}
 	
 	@Override

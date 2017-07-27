@@ -1,8 +1,8 @@
-dbAddress: hollowbit.net:3306
+dbAddress: 144.217.163.60:3306
 dbUsername: testserverlogin
 dbPassword: HvQQwsk9Ed2A9Ysx
 name: Emerald
-hbServerAddress: hollowbit.net:22123
+hbServerAddress: 144.217.163.60:22123
 hbServerPassword: astrongpassword
 motd: Welcome to Archipelo!
 region: 0

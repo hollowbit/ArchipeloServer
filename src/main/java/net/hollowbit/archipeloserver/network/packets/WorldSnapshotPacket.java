@@ -1,34 +1,33 @@
 package net.hollowbit.archipeloserver.network.packets;
 
-import java.util.HashMap;
-import java.util.Map.Entry;
-
-import com.badlogic.gdx.utils.Json;
-
 import net.hollowbit.archipeloserver.network.Packet;
 import net.hollowbit.archipeloserver.network.PacketType;
-import net.hollowbit.archipeloserver.world.WorldSnapshot;
-import net.hollowbit.archipeloshared.EntitySnapshot;
 
 public class WorldSnapshotPacket extends Packet {
+	
+	public static final int NUM_OF_CHUNKS = 9;//Must be a perfect square
+	public static final int NUM_OF_CHUNKS_WIDE = (int) Math.sqrt(NUM_OF_CHUNKS);//Must be a perfect square
+	
+	public static final int TYPE_INTERP = 0;
+	public static final int TYPE_CHANGES = 1;
+	public static final int TYPE_FULL = 2;
 	
 	public double timeCreatedMillis;
 	public int time;
 	public int type;
-	public HashMap<String, String> entitySnapshots;
 	public String mapSnapshot;
+	public String[] chunks;
 	
-	public WorldSnapshotPacket (WorldSnapshot snapshot) {
+	public WorldSnapshotPacket() {
 		super(PacketType.WORLD_SNAPSHOT);
-		timeCreatedMillis = (double) snapshot.timeCreatedMillis;
-		time = snapshot.time;
-		type = snapshot.type;
-		entitySnapshots = new HashMap<String, String>();
-		Json json = new Json();
-		for (Entry<String, EntitySnapshot> entry : snapshot.entitySnapshots.entrySet()) {
-			entitySnapshots.put(entry.getKey(), json.toJson(entry.getValue()));
-		}
-		mapSnapshot = json.toJson(snapshot.mapSnapshot);
+	}
+	
+	public WorldSnapshotPacket(long timeCreatedMillis, int time, int type) {
+		this();
+		this.timeCreatedMillis = (double) timeCreatedMillis;
+		this.time = time;
+		this.type = type;
+		this.chunks = new String[NUM_OF_CHUNKS];
 	}
 
 }

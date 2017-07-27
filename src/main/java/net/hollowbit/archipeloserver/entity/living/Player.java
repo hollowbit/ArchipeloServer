@@ -40,7 +40,6 @@ import net.hollowbit.archipeloserver.network.packets.PopupTextPacket;
 import net.hollowbit.archipeloserver.network.packets.PositionCorrectionPacket;
 import net.hollowbit.archipeloserver.tools.Configuration;
 import net.hollowbit.archipeloserver.tools.StaticTools;
-import net.hollowbit.archipeloserver.tools.UnloadedLocation;
 import net.hollowbit.archipeloserver.tools.database.DatabaseManager;
 import net.hollowbit.archipeloserver.tools.entity.Location;
 import net.hollowbit.archipeloserver.tools.event.EventHandler;
@@ -55,6 +54,7 @@ import net.hollowbit.archipeloshared.Direction;
 import net.hollowbit.archipeloshared.EntitySnapshot;
 import net.hollowbit.archipeloshared.HitCalculator;
 import net.hollowbit.archipeloshared.RollableEntity;
+import net.hollowbit.archipeloshared.SavedLocation;
 import net.hollowbit.archipeloshared.TileSoundType;
 import net.hollowbit.archipeloshared.UseTypeSettings;
 
@@ -107,7 +107,7 @@ public class Player extends LivingEntity implements PacketHandler, RollableEntit
 	LinkedList<ControlsPacket> commandsToExecute;
 	Random random;
 	int seed;
-	UnloadedLocation respawnLocation;
+	SavedLocation respawnLocation;
 	EventHandler respawner;
 	boolean movementEnabled = true;
 	float timeAttackHeld = 0;
@@ -186,7 +186,7 @@ public class Player extends LivingEntity implements PacketHandler, RollableEntit
 					else
 						sendPacket(new PopupTextPacket("{youDied}", PopupTextPacket.Type.NORMAL));
 						
-					player.teleport(respawnLocation.getX(), respawnLocation.getY(), Direction.DOWN, respawnLocation.getMap(), respawnLocation.getIsland());
+					player.teleport(respawnLocation.getX(), respawnLocation.getY(), Direction.DOWN, respawnLocation.getMap());
 					return true;
 				}
 				return false;
@@ -231,7 +231,7 @@ public class Player extends LivingEntity implements PacketHandler, RollableEntit
 		this.health = playerData.health;
 		this.seed = StaticTools.getRandom().nextInt(1000000);
 		this.random = new Random(seed);
-		this.respawnLocation = new UnloadedLocation(playerData.respawnX, playerData.respawnY, playerData.respawnIsland, playerData.respawnMap);
+		this.respawnLocation = new SavedLocation(playerData.respawnX, playerData.respawnY, playerData.respawnMap);
 		
 		//Send player stats to itself
 		this.sendPacket(new PlayerStatsPacket(health));
@@ -748,7 +748,7 @@ public class Player extends LivingEntity implements PacketHandler, RollableEntit
 		return statsManager;
 	}
 	
-	public UnloadedLocation getRespawnLocation() {
+	public SavedLocation getRespawnLocation() {
 		return respawnLocation;
 	}
 	
