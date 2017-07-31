@@ -27,6 +27,7 @@ import net.hollowbit.archipeloserver.tools.npcdialogs.NpcDialogManager;
 import net.hollowbit.archipeloserver.world.map.Chunk;
 import net.hollowbit.archipeloserver.world.map.ChunkRow;
 import net.hollowbit.archipeloshared.ChunkData;
+import net.hollowbit.archipeloshared.ChunkLocation;
 import net.hollowbit.archipeloshared.CollisionRect;
 import net.hollowbit.archipeloshared.EntitySnapshot;
 import net.hollowbit.archipeloshared.InvalidMapFolderException;
@@ -68,6 +69,7 @@ public class Map {
 	
 	private int width, height;
 	private int minTileX, maxTileX, minTileY, maxTileY;
+	private ArrayList<ChunkLocation> chunkLocations;
 	
 	public Map (String name, World world) {
 		this.name = name;
@@ -401,6 +403,10 @@ public class Map {
 		return getHeight() * ArchipeloServer.TILE_SIZE;
 	}
 	
+	public ArrayList<ChunkLocation> getChunkLocations() {
+		return chunkLocations;
+	}
+	
 	/**
 	 * Will check if a chunk is loaded, if not it will load it, if possible.
 	 * Returns null if the chunk could not be loaded.
@@ -535,7 +541,13 @@ public class Map {
 		this.naturalLighting = mapData.naturalLighting;
 		this.music = mapData.music;
 		this.canSave = mapData.canSave;
-		//this.chunkLocations = mapData.chunks;//Not necessary, chunks are obtained on the fly and not all at once
+		this.width = mapData.width;
+		this.height = mapData.height;
+		this.minTileX = mapData.minTileX;
+		this.minTileY = mapData.minTileY;
+		this.maxTileX = mapData.maxTileX;
+		this.maxTileY = mapData.maxTileY;
+		this.chunkLocations = mapData.chunks;//Not necessary, chunks are obtained on the fly and not all at once
 	}
 	
 	public void saveToFile() throws IOException {
@@ -607,34 +619,6 @@ public class Map {
 			return null;
 		
 		return row.getChunks().get(x);
-	}
-	
-	/**
-	 * Recalculates the width and height of the map. Since it is a fairly costly calculation, this should only be done when necessary.
-	 */
-	protected void recalculateSizes() {
-		int lowestX = chunkRows.get(0).getChunks().get(0).getX();
-		int highestX = chunkRows.get(0).getChunks().get(0).getX();
-		
-		for (ChunkRow row : chunkRows.values()) {
-			for (Chunk chunk : row.getChunks().values()) {
-				if (chunk.getX() < lowestX)
-					lowestX = chunk.getX();
-				
-				if (chunk.getX() > highestX)
-					highestX = chunk.getX();
-			}
-		}
-		this.width = (highestX - lowestX + 1) * ChunkData.SIZE;
-		this.minTileX = lowestX * ChunkData.SIZE;
-		this.maxTileX = (highestX + 1) * ChunkData.SIZE - 1;
-		
-		int lowestY = chunkRows.lastKey();
-		int highestY = chunkRows.firstKey();
-		
-		this.height = (highestY - lowestY + 1) * ChunkData.SIZE;
-		this.minTileY = lowestY * ChunkData.SIZE;
-		this.maxTileY = (highestY + 1) * ChunkData.SIZE - 1;
 	}
 
 	public int getMinTileX() {

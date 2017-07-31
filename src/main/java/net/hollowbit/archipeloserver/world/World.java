@@ -42,6 +42,7 @@ public class World implements PacketHandler {
 	
 	private int time;
 	private ArrayList<Map> loadedMaps;
+	private HashMap<Player, HashSet<Chunk>> playerLoadedChunks;
 	private Json json;
 	
 	public World () {
@@ -49,6 +50,8 @@ public class World implements PacketHandler {
 		loadedMaps = new ArrayList<Map>();
 		json = new Json();
 		ArchipeloServer.getServer().getNetworkManager().addPacketHandler(this);
+		
+		playerLoadedChunks = new HashMap<Player, HashSet<Chunk>>();
 	}
 	
 	public boolean isMapLoaded (String mapName) {
@@ -117,20 +120,34 @@ public class World implements PacketHandler {
 				
 				changesPacket.mapSnapshot = mapSnapshot;
 				
-				boolean playerIsNew = player.isNewOnMap();
-				if (playerIsNew) {
-					fullPacket = new WorldSnapshotPacket(timeCreated, time, WorldSnapshotPacket.TYPE_FULL);
-					if (fullMapSnapshot == null)
-						fullMapSnapshot = json.toJson(map.getFullSnapshot());
-					fullPacket.mapSnapshot = fullMapSnapshot;
-				}
+				fullPacket = new WorldSnapshotPacket(timeCreated, time, WorldSnapshotPacket.TYPE_FULL);
+				if (fullMapSnapshot == null)
+					fullMapSnapshot = json.toJson(map.getFullSnapshot());
+				fullPacket.mapSnapshot = fullMapSnapshot;
+				
+				HashSet<Chunk> chunksForPlayer = new HashSet<Chunk>();
+				
+				boolean needsFullSnapshot = false;
 				
 				for (int r = -1 * (WorldSnapshotPacket.NUM_OF_CHUNKS_WIDE / 2); r < WorldSnapshotPacket.NUM_OF_CHUNKS_WIDE / 2; r++) {
 					for (int c = -1 * (WorldSnapshotPacket.NUM_OF_CHUNKS_WIDE / 2); c < WorldSnapshotPacket.NUM_OF_CHUNKS_WIDE / 2; c++) {
 						Chunk chunk = map.loadChunk(c + player.getLocation().getChunkX(), r + player.getLocation().getChunkY());
 						
 						if (chunk != null) {//Could still be null if chunk cannot be loaded
+							chunksForPlayer.add(chunk);
 							chunksUsed.add(chunk);
+
+							//Determine if player needs full chunk data
+							boolean hasChunk = false;
+							HashSet<Chunk> chunksLoadedByPlayer = playerLoadedChunks.get(player);
+							if (chunksLoadedByPlayer != null)
+								hasChunk = chunksLoadedByPlayer.contains(chunk);
+							
+							boolean playerIsNew = player.isNewOnMap() || !hasChunk;
+							
+							if (playerIsNew)
+								needsFullSnapshot = true;
+							
 							int index = (r + WorldSnapshotPacket.NUM_OF_CHUNKS_WIDE / 2) * WorldSnapshotPacket.NUM_OF_CHUNKS_WIDE + (c + WorldSnapshotPacket.NUM_OF_CHUNKS_WIDE / 2);
 							
 							HashMap<Integer, String> row = chunks.get(chunk.getY());
@@ -230,10 +247,12 @@ public class World implements PacketHandler {
 				player.sendPacket(packet);
 				player.sendPacket(changesPacket);
 				
-				if (playerIsNew) {
+				if (needsFullSnapshot) {
 					player.sendPacket(fullPacket);
 					player.setNewOnMap(false);
 				}
+				
+				playerLoadedChunks.put(player, chunksForPlayer);
 			}
 			
 			map.unloadChunksNotInSet(chunksUsed);

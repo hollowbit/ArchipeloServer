@@ -8,21 +8,15 @@ import net.hollowbit.archipeloserver.entity.EntityType;
 import net.hollowbit.archipeloserver.world.Map;
 import net.hollowbit.archipeloshared.ChunkData;
 import net.hollowbit.archipeloshared.EntitySnapshot;
+import net.hollowbit.archipeloshared.TileData;
 
 public class Chunk {
 	
 	private int x, y;
 	private String[][] tiles;
 	private String[][] elements;
+	private boolean[][] collisionMap;
 	private Map map;
-	
-	public Chunk(int x, int y, Map map) {
-		super();
-		this.x = x;
-		this.y = y;
-		this.tiles = new String[ChunkData.SIZE][ChunkData.SIZE];
-		this.elements = new String[ChunkData.SIZE][ChunkData.SIZE];
-	}
 	
 	public Chunk(ChunkData data, Map map) {
 		this.map = map;
@@ -33,6 +27,39 @@ public class Chunk {
 		this.elements = data.elements;
 		for (EntitySnapshot snapshot : data.entities)
 			map.addEntity(EntityType.createEntityBySnapshot(snapshot, map));
+		
+		this.collisionMap = new boolean[ChunkData.SIZE * TileData.COLLISION_MAP_SCALE][ChunkData.SIZE * TileData.COLLISION_MAP_SCALE];
+		if (data.collisionData != null && !data.collisionData.equals("") && data.overrideCollisionData != null && !data.overrideCollisionData.equals("")) {
+			char[] bytes = data.collisionData.toCharArray();
+			char[] overrideBytes = data.overrideCollisionData.toCharArray();
+			
+			int i = 0;
+			int i2 = 0;
+	        for (int r = 0; r < collisionMap.length; r++) {
+	            for (int c = 0; c < collisionMap[0].length; c++) {
+	            	byte val = (byte) overrideBytes[i / Byte.SIZE];
+	            	int pos = i % Byte.SIZE;
+	            	boolean tick1 = ((val >> pos) & 1) == 1;
+	            	i++;
+	            	
+	            	val = (byte) overrideBytes[i / Byte.SIZE];
+	            	pos = i % Byte.SIZE;
+	            	boolean tick2 = ((val >> pos) & 1) == 1;
+	            	i++;
+	            	
+	            	if (!tick1 && !tick2) {//0
+	            		val = (byte) bytes[i2 / Byte.SIZE];
+	                	pos = i2 % Byte.SIZE;
+	                	collisionMap[r][c] = ((val >> pos) & 1) == 1;
+	            	} else if (!tick1 && tick2)//1
+	            		collisionMap[r][c] = false;
+	            	else if (tick1 && !tick2)//2
+	            		collisionMap[r][c] = true;
+	                
+	                i2++;
+	            }
+	        }
+		}
 	}
 	
 	/**
@@ -53,31 +80,31 @@ public class Chunk {
 		}
 		
 		data.entities = entities;
+		
+		//Serialize collision data
+		String collisionData = "";
+        int i = 0;
+        byte accum = 0;
+        for (int r = 0; r < collisionMap.length; r++) {
+            for (int c = 0; c < collisionMap[0].length; c++) {
+                if (collisionMap[r][c])
+                    accum |= (1 << i);
+                else
+                	accum &= ~(1 << i);
+                    
+                i++;
+                if (i >= Byte.SIZE) {
+                    i = 0;
+                    collisionData += (char) accum;
+                }
+            }
+        }
+        collisionData += (char) accum;
+		
+        data.collisionData = collisionData;
+		
 		return data;
 	}
-	
-	/**
-	 * Duplicates the values of the given chunk into this one.
-	 * @param chunk
-	 */
-	public void set(Chunk chunkToCopy) {
-		this.x = chunkToCopy.x;
-		this.y = chunkToCopy.y;
-		
-		this.tiles = new String[ChunkData.SIZE][ChunkData.SIZE];
-		for (int r = 0; r < ChunkData.SIZE; r++) {
-			for (int c = 0; c < ChunkData.SIZE; c++)
-				this.tiles[r][c] = chunkToCopy.tiles[r][c];
-		}
-		
-		this.elements = new String[ChunkData.SIZE][ChunkData.SIZE];
-		for (int r = 0; r < ChunkData.SIZE; r++) {
-			for (int c = 0; c < ChunkData.SIZE; c++)
-				this.elements[r][c] = chunkToCopy.elements[r][c];
-		}
-	}
-	
-	
 	
 	public Map getMap() {
 		return map;
@@ -105,6 +132,10 @@ public class Chunk {
 	
 	public String[][] getTiles() {
 		return tiles;
+	}
+	
+	public boolean[][] getCollisionMap() {
+		return collisionMap;
 	}
 	
 }
