@@ -438,7 +438,7 @@ public class Map {
 					row.getChunks().put(x, chunk);
 					
 					//Load entities
-					for (EntitySnapshot snapshot : data.entities)
+					for (EntitySnapshot snapshot : data.entities.values())
 						entityManager.addEntity(EntityType.createEntityBySnapshot(snapshot, this));
 					
 					return chunk;
@@ -480,10 +480,10 @@ public class Map {
 	 * Call this before removing the chunk from its row.
 	 */
 	protected void unloadChunk(Chunk chunk) {
-		ChunkData data = chunk.getData();
+		ChunkData data = chunk.getSaveData();
 		for (Entity entity : getEntitiesInChunk(chunk)) {
 			if (canSave)
-				data.entities.add(entity.getSaveSnapshot());
+				data.entities.put(entity.getName(), entity.getSaveSnapshot());
 			entity.remove();
 		}
 		
@@ -590,10 +590,10 @@ public class Map {
 			for (Chunk chunk : row.getChunks().values()) {
 				FileWriter chunkFileWriter = new FileWriter(new File(rowFolder, chunk.getX() + ".json"));
 				
-				ChunkData chunkData = chunk.getData();
+				ChunkData chunkData = chunk.getSaveData();
 				//Get entity save data
 				for (Entity entity : getEntitiesInChunk(chunk))
-					chunkData.entities.add(entity.getSaveSnapshot());
+					chunkData.entities.put(entity.getName(), entity.getSaveSnapshot());
 				
 				chunkFileWriter.write(json.prettyPrint(chunkData, settings));
 				chunkFileWriter.close();

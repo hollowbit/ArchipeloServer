@@ -13,8 +13,9 @@ public class WorldSnapshotPacket extends Packet {
 	public static final int TYPE_FULL = 2;
 	
 	public double timeCreatedMillis;
+	public boolean newMap = false;
 	public int time;
-	public int type;
+	public int type = 0;
 	public String mapSnapshot;
 	public String[] chunks;
 	

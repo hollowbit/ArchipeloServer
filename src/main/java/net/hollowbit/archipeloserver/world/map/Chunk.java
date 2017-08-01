@@ -1,6 +1,6 @@
 package net.hollowbit.archipeloserver.world.map;
 
-import java.util.ArrayList;
+import java.util.HashMap;
 
 import net.hollowbit.archipeloserver.ArchipeloServer;
 import net.hollowbit.archipeloserver.entity.Entity;
@@ -16,6 +16,8 @@ public class Chunk {
 	private String[][] tiles;
 	private String[][] elements;
 	private boolean[][] collisionMap;
+	private String collisionData;
+	private String overrideCollisionData;
 	private Map map;
 	
 	public Chunk(ChunkData data, Map map) {
@@ -25,8 +27,11 @@ public class Chunk {
 		this.y = data.y;
 		this.tiles = data.tiles;
 		this.elements = data.elements;
-		for (EntitySnapshot snapshot : data.entities)
+		for (EntitySnapshot snapshot : data.entities.values())
 			map.addEntity(EntityType.createEntityBySnapshot(snapshot, map));
+		
+		this.collisionData = data.collisionData;
+		this.overrideCollisionData = data.overrideCollisionData;
 		
 		this.collisionMap = new boolean[ChunkData.SIZE * TileData.COLLISION_MAP_SCALE][ChunkData.SIZE * TileData.COLLISION_MAP_SCALE];
 		if (data.collisionData != null && !data.collisionData.equals("") && data.overrideCollisionData != null && !data.overrideCollisionData.equals("")) {
@@ -66,22 +71,27 @@ public class Chunk {
 	 * Returns the chunk data to be saved to a file
 	 * @return
 	 */
-	public ChunkData getData() {
+	public ChunkData getSaveData() {
 		ChunkData data = new ChunkData();
 		data.x = this.x;
 		data.y = this.y;
 		data.tiles = this.tiles;
 		data.elements = this.elements;
 		
-		ArrayList<EntitySnapshot> entities = new ArrayList<EntitySnapshot>();
+		HashMap<String, EntitySnapshot> entities = new HashMap<String, EntitySnapshot>();
 		for (Entity entity : map.getEntities()) {
 			if (entity.getLocation().getChunkX() == x && entity.getLocation().getChunkY() == y)
-				entities.add(entity.getSaveSnapshot());
+				entities.put(entity.getName(), entity.getSaveSnapshot());
 		}
 		
 		data.entities = entities;
+		data.collisionData = collisionData;
+		data.overrideCollisionData = overrideCollisionData;
 		
-		//Serialize collision data
+		return data;
+	}
+	
+	public String getSerializedCollisionData() {
 		String collisionData = "";
         int i = 0;
         byte accum = 0;
@@ -100,10 +110,7 @@ public class Chunk {
             }
         }
         collisionData += (char) accum;
-		
-        data.collisionData = collisionData;
-		
-		return data;
+        return collisionData;
 	}
 	
 	public Map getMap() {

@@ -168,7 +168,7 @@ public class World implements PacketHandler {
 										
 										for (Entity entity : map.getEntities()) {
 											if (entity.getLocation().getChunkX() == chunk.getX() && entity.getLocation().getChunkY() == chunk.getY()) {
-												fullData.entities.add(entity.getFullSnapshot());
+												fullData.entities.put(entity.getName(), entity.getFullSnapshot());
 											}
 										}
 										
@@ -191,13 +191,13 @@ public class World implements PacketHandler {
 								
 								for (Entity entity : map.getEntities()) {
 									if (entity.getLocation().getChunkX() == chunk.getX() && entity.getLocation().getChunkY() == chunk.getY()) {
-										data.entities.add(entity.getInterpSnapshot());
+										data.entities.put(entity.getName(), entity.getInterpSnapshot());
 										if (!entity.getChangesSnapshot().isEmpty())
-											changesData.entities.add(entity.getChangesSnapshot());
+											changesData.entities.put(entity.getName(), entity.getChangesSnapshot());
 										changesSnapshots.add(entity.getChangesSnapshot());
 										
 										if (playerIsNew) {
-											fullData.entities.add(entity.getFullSnapshot());
+											fullData.entities.put(entity.getName(), entity.getFullSnapshot());
 										}
 									}
 								}
@@ -224,6 +224,7 @@ public class World implements PacketHandler {
 								if (playerIsNew) {
 									fullData.tiles = chunk.getTiles();
 									fullData.elements = chunk.getElements();
+									fullData.collisionData = chunk.getSerializedCollisionData();
 									
 									String fullDataText = json.toJson(fullData);
 									HashMap<Integer, String> rowFull = chunks.get(chunk.getY());
@@ -248,6 +249,8 @@ public class World implements PacketHandler {
 				player.sendPacket(changesPacket);
 				
 				if (needsFullSnapshot) {
+					if (player.isNewOnMap())
+						fullPacket.newMap = true;
 					player.sendPacket(fullPacket);
 					player.setNewOnMap(false);
 				}
