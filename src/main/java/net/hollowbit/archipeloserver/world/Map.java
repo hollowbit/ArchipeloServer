@@ -396,10 +396,10 @@ public class Map {
 		}
 		
 		Chunk chunk = row.getChunks().get(x);
-		if (chunk != null) {//Loaded so just return it
-			return chunk;
-		} else {//Not loaded so load it
-			File chunkFile = new File("maps/" + this.name + "/" + y + "/" + x + ".json");
+		if (chunk != null) //Loaded so just return it
+			return chunk;	
+		else {//Not loaded so load it
+			File chunkFile = new File("maps/" + this.name + "/chunks/" + y + "/" + x + ".json");
 			if (!chunkFile.exists()) {
 				return null;
 			} else {

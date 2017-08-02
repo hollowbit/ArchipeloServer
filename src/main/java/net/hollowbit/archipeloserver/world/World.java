@@ -106,7 +106,7 @@ public class World implements PacketHandler {
 			
 			String mapSnapshot = json.toJson(map.getChangesSnapshot());
 			map.getChangesSnapshot().clear();
-			String fullMapSnapshot = null;
+			String fullMapSnapshot = json.toJson(map.getFullSnapshot());
 			
 			HashMap<Integer, HashMap<Integer, String>> chunks = new HashMap<Integer, HashMap<Integer, String>>();
 			HashMap<Integer, HashMap<Integer, String>> changesChunks = new HashMap<Integer, HashMap<Integer, String>>();
@@ -121,22 +121,21 @@ public class World implements PacketHandler {
 				changesPacket.mapSnapshot = mapSnapshot;
 				
 				fullPacket = new WorldSnapshotPacket(timeCreated, time, WorldSnapshotPacket.TYPE_FULL);
-				if (fullMapSnapshot == null)
-					fullMapSnapshot = json.toJson(map.getFullSnapshot());
 				fullPacket.mapSnapshot = fullMapSnapshot;
 				
 				HashSet<Chunk> chunksForPlayer = new HashSet<Chunk>();
 				
 				boolean needsFullSnapshot = false;
 				
-				for (int r = -1 * (WorldSnapshotPacket.NUM_OF_CHUNKS_WIDE / 2); r < WorldSnapshotPacket.NUM_OF_CHUNKS_WIDE / 2; r++) {
-					for (int c = -1 * (WorldSnapshotPacket.NUM_OF_CHUNKS_WIDE / 2); c < WorldSnapshotPacket.NUM_OF_CHUNKS_WIDE / 2; c++) {
+				for (int r = -1 * (WorldSnapshotPacket.NUM_OF_CHUNKS_WIDE / 2); r <= WorldSnapshotPacket.NUM_OF_CHUNKS_WIDE / 2; r++) {
+					for (int c = -1 * (WorldSnapshotPacket.NUM_OF_CHUNKS_WIDE / 2); c <= WorldSnapshotPacket.NUM_OF_CHUNKS_WIDE / 2; c++) {
 						Chunk chunk = map.loadChunk(c + player.getLocation().getChunkX(), r + player.getLocation().getChunkY());
+						//System.out.println("World.java in chunk!  " + (c + player.getLocation().getChunkX()) + "   " + (r + player.getLocation().getChunkY()));
 						
 						if (chunk != null) {//Could still be null if chunk cannot be loaded
 							chunksForPlayer.add(chunk);
 							chunksUsed.add(chunk);
-
+							
 							//Determine if player needs full chunk data
 							boolean hasChunk = false;
 							HashSet<Chunk> chunksLoadedByPlayer = playerLoadedChunks.get(player);
@@ -342,6 +341,7 @@ public class World implements PacketHandler {
 		map = getMap(mapName);
 		
 		Player player = new Player(pd.name, address, firstTimeLogin);
+		player.setNewOnMap(true);
 		player.load(map, pd, hbu);
 		if (firstTimeLogin)
 			ArchipeloServer.getServer().getDatabaseManager().createPlayer(player);
@@ -350,7 +350,6 @@ public class World implements PacketHandler {
 		hbu.setPlayer(player);
 		
 		map.addEntity(player);
-		player.setNewOnMap(true);
 		
 		//Login was successful so tell client
 		playerPickPacket.result = PlayerPickPacket.RESULT_SUCCESSFUL;
