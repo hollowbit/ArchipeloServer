@@ -784,11 +784,9 @@ public class Player extends LivingEntity implements PacketHandler, RollableEntit
 		playerData.name = name;
 		playerData.x = config.spawnX;
 		playerData.y = config.spawnY;
-		playerData.island = config.spawnIsland;
 		playerData.map = config.spawnMap;
 		playerData.respawnX = config.spawnX;
 		playerData.respawnY = config.spawnY;
-		playerData.respawnIsland = config.spawnIsland;
 		playerData.respawnMap = config.spawnMap;
 		playerData.health = EntityType.PLAYER.getMaxHealth();
 		playerData.lastPlayed = DatabaseManager.getCurrentDate();

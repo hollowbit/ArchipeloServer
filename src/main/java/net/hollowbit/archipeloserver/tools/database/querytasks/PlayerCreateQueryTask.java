@@ -51,7 +51,7 @@ public class PlayerCreateQueryTask extends QueryTask {
 			
 			statement.executeUpdate();
 		} catch (SQLException e) {
-			ArchipeloServer.getServer().getLogger().caution("Could not save player data to server.");
+			ArchipeloServer.getServer().getLogger().caution("Could not save player data to database. " + e.getMessage());
 		}
 	}
 

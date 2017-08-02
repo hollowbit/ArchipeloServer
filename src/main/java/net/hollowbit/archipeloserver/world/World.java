@@ -350,6 +350,7 @@ public class World implements PacketHandler {
 		hbu.setPlayer(player);
 		
 		map.addEntity(player);
+		player.setNewOnMap(true);
 		
 		//Login was successful so tell client
 		playerPickPacket.result = PlayerPickPacket.RESULT_SUCCESSFUL;

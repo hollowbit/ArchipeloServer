@@ -29,7 +29,7 @@ public class PlayerListResponseQueryTask extends ResponseQueryTask {
 	@Override
 	public void execute(Connection conn) {
 		try {
-			PreparedStatement statement = conn.prepareStatement("select name, island, lastPlayed, creationDate, weaponInventory, uneditableEquippedInventory, equippedInventory, cosmeticInventory from players where hbUuid = ? and active = 1");
+			PreparedStatement statement = conn.prepareStatement("select name, map, lastPlayed, creationDate, weaponInventory, uneditableEquippedInventory, equippedInventory, cosmeticInventory from players where hbUuid = ? and active = 1");
 			statement.setString(1, hbUuid);
 			ResultSet rs = statement.executeQuery();
 			
@@ -40,7 +40,7 @@ public class PlayerListResponseQueryTask extends ResponseQueryTask {
 				//Fill player data object with info and return
 				PlayerData pd = new PlayerData();
 				pd.name = rs.getString("name");
-				pd.island = rs.getString("island");
+				pd.map = rs.getString("map");
 				pd.lastPlayed = rs.getDate("lastPlayed");
 				pd.creationDate = rs.getDate("creationDate");
 				

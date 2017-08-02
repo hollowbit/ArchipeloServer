@@ -18,7 +18,6 @@ public class Configuration {
 	public String hbServerPassword = "astrongpassword";
 	public String motd = "Welcome to Archipelo!";
 	public int region = 0;
-	public String spawnIsland = "archipelo";
 	public String spawnMap = "island";
 	public float spawnX = 0;
 	public float spawnY = 0;
@@ -67,9 +66,6 @@ public class Configuration {
 			case "region":
 				this.region = Integer.parseInt(scanner.nextLine().substring(1));
 				break;
-			case "spawnIsland":
-				this.spawnIsland = scanner.nextLine().substring(1);
-				break;
 			case "spawnMap":
 				this.spawnMap = scanner.nextLine().substring(1);
 				break;
@@ -100,7 +96,6 @@ public class Configuration {
 			formatter.format("%s: %s\n", "hbServerPassword", hbServerPassword);
 			formatter.format("%s: %s\n", "motd", motd);
 			formatter.format("%s: %s\n", "region", region);
-			formatter.format("%s: %s\n", "spawnIsland", spawnIsland);
 			formatter.format("%s: %s\n", "spawnMap", spawnMap);
 			formatter.format("%s: %s\n", "spawnX", spawnX);
 			formatter.format("%s: %s", "spawnY", spawnY);

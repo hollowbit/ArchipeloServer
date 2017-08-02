@@ -52,7 +52,6 @@ public class Map {
 	
 	private String name;
 	private MapSnapshot changes;
-	private boolean[][] collisionMap;
 	private TreeMap<Integer, ChunkRow> chunkRows;
 	private NpcDialogManager npcDialogManager;
 	private FormManager formManager;
@@ -78,6 +77,7 @@ public class Map {
 		npcDialogManager = new NpcDialogManager(this);
 		formManager = new FormManager(this);
 		changes = new MapSnapshot(name, displayName);
+		entityManager = new EntityManager();
 	}
 	
 	public void tick20 (float deltaTime) {
@@ -102,7 +102,6 @@ public class Map {
 		} catch (InvalidMapFolderException e) {
 			ArchipeloServer.getServer().getLogger().error("Could not load map " + this.name + ". Reason: " + e.getMessage());
 		}
-		generateCollisionMap();
 		loaded = true;
 		return true;
 	}
@@ -120,46 +119,24 @@ public class Map {
 		loaded = false;
 	}
 	
-	private void generateCollisionMap () {
-		collisionMap = new boolean[getHeight() * TileData.COLLISION_MAP_SCALE][getWidth() * TileData.COLLISION_MAP_SCALE];
-		for (int row = 0; row < getHeight(); row++) {
-			for (int col = 0; col < getWidth(); col++) {
-				//Apply tile collision map
-				Tile tile = ArchipeloServer.getServer().getMapElementManager().getTile(getTile(col, row));
-				if (tile == null)
-					continue;
-				
-				for (int tileRow = 0; tileRow < tile.getCollisionTable().length; tileRow++) {
-					for (int tileCol = 0; tileCol < tile.getCollisionTable()[0].length; tileCol++) {
-						int x = col * TileData.COLLISION_MAP_SCALE + tileCol;
-						int y = row * TileData.COLLISION_MAP_SCALE + tileRow;
-						
-						//if it is out of bounds, don't apply it.
-						if (y < 0 || y >= collisionMap.length || x < 0 || x >= collisionMap[0].length)
-							continue;
-						
-						collisionMap[y][x] = (tile.getCollisionTable()[tileRow][tileCol] ? true: collisionMap[y][x]);
-					}
-				}
-				
-				MapElement element = ArchipeloServer.getServer().getMapElementManager().getElement(getElement(col, row));
-				
-				if (element != null) {
-					for (int elementRow = 0; elementRow < element.getCollisionTable().length; elementRow++) {
-						for (int elementCol = 0; elementCol < element.getCollisionTable()[0].length; elementCol++) {
-							int x = col * TileData.COLLISION_MAP_SCALE + elementCol + element.offsetX;
-							int y = row * TileData.COLLISION_MAP_SCALE + elementRow + element.offsetY - (element.getCollisionTable().length - 1) + 1;
-							
-							//If it is out of bounds, don't apply it.
-							if (y < 0 || y >= collisionMap.length || x < 0 || x >= collisionMap[0].length)
-								continue;
-							
-							collisionMap[y][x] = (element.getCollisionTable()[elementRow][elementCol] ? true: collisionMap[y][x]);
-						}
-					}
-				}
-			}
-		}
+	private boolean getTileCollisionAtPos(int x, int y) {
+		int chunkX = (int) Math.floor((float) x / (ChunkData.SIZE * TileData.COLLISION_MAP_SCALE));
+		int chunkY = (int) Math.floor((float) y / (ChunkData.SIZE * TileData.COLLISION_MAP_SCALE));
+		
+		int xWithinChunk = Math.abs(x) % (ChunkData.SIZE * TileData.COLLISION_MAP_SCALE);
+		if (x < 0)
+			xWithinChunk = (ChunkData.SIZE * TileData.COLLISION_MAP_SCALE) - xWithinChunk;
+		int yWithinChunk = Math.abs(y) % (ChunkData.SIZE * TileData.COLLISION_MAP_SCALE);
+		if (y < 0)
+			yWithinChunk = (ChunkData.SIZE * TileData.COLLISION_MAP_SCALE) - yWithinChunk;
+		
+		if (xWithinChunk == (ChunkData.SIZE * TileData.COLLISION_MAP_SCALE) || yWithinChunk == (ChunkData.SIZE * TileData.COLLISION_MAP_SCALE))
+			return false;
+		
+		Chunk chunk = getChunk(chunkX, chunkY);
+		if (chunk != null)
+			return chunk.getCollisionMap()[yWithinChunk][xWithinChunk];
+		return true;
 	}
 	
 	public boolean collidesWithMap (CollisionRect[] rects, Entity testEntity) {
@@ -180,10 +157,7 @@ public class Map {
 		//See if it collides with tiles and elements
 		for (int row = (int) (rect.yWithOffset() / collisionBoxSize); row < Math.ceil((rect.height + rect.yWithOffset()) / collisionBoxSize); row++) {
 			for (int col = (int) (rect.xWithOffset() / collisionBoxSize); col < Math.ceil((rect.width + rect.xWithOffset()) / collisionBoxSize); col++) {
-				if (row < 0 || row >= collisionMap.length || col < 0 || col >= collisionMap[0].length)//If out of bounds, continue to next
-					continue;
-				
-				if (collisionMap[collisionMap.length - row - 1][col])
+				if (getTileCollisionAtPos(col, row))
 						return true;
 			}
 		}

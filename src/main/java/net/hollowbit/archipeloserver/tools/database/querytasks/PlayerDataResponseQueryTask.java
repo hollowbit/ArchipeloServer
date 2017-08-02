@@ -46,14 +46,12 @@ public class PlayerDataResponseQueryTask extends ResponseQueryTask {
 			pd.bhUuid = rs.getString("hbUuid");
 			pd.x = rs.getFloat("x");
 			pd.y = rs.getFloat("y");
-			pd.island = rs.getString("island");
 			pd.map = rs.getString("map");
 			pd.lastPlayed = rs.getDate("lastPlayed");
 			pd.creationDate = rs.getDate("creationDate");
 			pd.health = rs.getFloat("health");
 			pd.respawnX = rs.getFloat("respawnX");
 			pd.respawnY = rs.getFloat("respawnY");
-			pd.respawnIsland = rs.getString("respawnIsland");
 			pd.respawnMap = rs.getString("respawnMap");
 			
 			Json json = new Json();

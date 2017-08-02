@@ -10,10 +10,10 @@ public class PlayerData {
 	public String name;
 	public String bhUuid;
 	public float x, y;
-	public String island, map;
+	public String map;
 	public float health;
 	public float respawnX, respawnY;
-	public String respawnIsland, respawnMap;
+	public String respawnMap;
 	public Item[] uneditableEquippedInventory;
 	public Item[] equippedInventory;
 	public Item[] cosmeticInventory;
