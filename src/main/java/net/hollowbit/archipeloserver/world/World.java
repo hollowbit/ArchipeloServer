@@ -31,12 +31,15 @@ import net.hollowbit.archipeloserver.tools.Configuration;
 import net.hollowbit.archipeloserver.tools.database.QueryTaskResponseHandler.PlayerCountQueryTaskResponseHandler;
 import net.hollowbit.archipeloserver.tools.database.QueryTaskResponseHandler.PlayerDataQueryTaskResponseHandler;
 import net.hollowbit.archipeloserver.tools.database.QueryTaskResponseHandler.PlayerListQueryTaskResponseHandler;
+import net.hollowbit.archipeloserver.tools.event.EventHandler;
+import net.hollowbit.archipeloserver.tools.event.EventType;
+import net.hollowbit.archipeloserver.tools.event.events.readonly.PlayerLeaveEvent;
 import net.hollowbit.archipeloserver.world.map.Chunk;
 import net.hollowbit.archipeloshared.ChunkData;
 import net.hollowbit.archipeloshared.EntitySnapshot;
 import net.hollowbit.archipeloshared.StringValidator;
 
-public class World implements PacketHandler {
+public class World implements PacketHandler, EventHandler {
 	
 	public static final int TICKS_PER_DAY = 36000;
 	
@@ -52,6 +55,7 @@ public class World implements PacketHandler {
 		ArchipeloServer.getServer().getNetworkManager().addPacketHandler(this);
 		
 		playerLoadedChunks = new HashMap<Player, HashSet<Chunk>>();
+		this.addToEventManager(EventType.PlayerLeave);
 	}
 	
 	public boolean isMapLoaded (String mapName) {
@@ -84,6 +88,12 @@ public class World implements PacketHandler {
 				return map;
 		}
 		return null;
+	}
+	
+	@Override
+	public boolean onPlayerLeave(PlayerLeaveEvent event) {
+		playerLoadedChunks.remove(event.getPlayer());//Remove player from chunks map if player has left.
+		return EventHandler.super.onPlayerLeave(event);
 	}
 	
 	public void tick20 (float deltaTime) {//Executed 20 times per second.

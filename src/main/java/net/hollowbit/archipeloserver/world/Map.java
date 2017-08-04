@@ -123,12 +123,13 @@ public class Map {
 		int chunkX = (int) Math.floor((float) x / (ChunkData.SIZE * TileData.COLLISION_MAP_SCALE));
 		int chunkY = (int) Math.floor((float) y / (ChunkData.SIZE * TileData.COLLISION_MAP_SCALE));
 		
-		int xWithinChunk = Math.abs(x) % (ChunkData.SIZE * TileData.COLLISION_MAP_SCALE);
+		int xWithinChunk = x % (ChunkData.SIZE * TileData.COLLISION_MAP_SCALE);
 		if (x < 0)
-			xWithinChunk = (ChunkData.SIZE * TileData.COLLISION_MAP_SCALE) - xWithinChunk;
-		int yWithinChunk = Math.abs(y) % (ChunkData.SIZE * TileData.COLLISION_MAP_SCALE);
+			xWithinChunk = (ChunkData.SIZE * TileData.COLLISION_MAP_SCALE) - (Math.abs(x) % ((ChunkData.SIZE) * TileData.COLLISION_MAP_SCALE));
+		
+		int yWithinChunk = y % (ChunkData.SIZE * TileData.COLLISION_MAP_SCALE);
 		if (y < 0)
-			yWithinChunk = (ChunkData.SIZE * TileData.COLLISION_MAP_SCALE) - yWithinChunk;
+			xWithinChunk = (ChunkData.SIZE * TileData.COLLISION_MAP_SCALE) - (Math.abs(y) % ((ChunkData.SIZE) * TileData.COLLISION_MAP_SCALE));
 		
 		if (xWithinChunk == (ChunkData.SIZE * TileData.COLLISION_MAP_SCALE) || yWithinChunk == (ChunkData.SIZE * TileData.COLLISION_MAP_SCALE))
 			return false;
@@ -151,8 +152,8 @@ public class Map {
 		int collisionBoxSize = (int) ArchipeloServer.TILE_SIZE / TileData.COLLISION_MAP_SCALE;
 		
 		//See if rect collides with map
-		if (rect.xWithOffset() < 0 || rect.yWithOffset() < 0 || rect.xWithOffset() + rect.width > getPixelWidth() || rect.yWithOffset() + rect.height > getPixelHeight())
-			return true;
+		/*if (rect.xWithOffset() < 0 || rect.yWithOffset() < 0 || rect.xWithOffset() + rect.width > getPixelWidth() || rect.yWithOffset() + rect.height > getPixelHeight())
+			return true;*/
 		
 		//See if it collides with tiles and elements
 		for (int row = (int) (rect.yWithOffset() / collisionBoxSize); row < Math.ceil((rect.height + rect.yWithOffset()) / collisionBoxSize); row++) {
@@ -417,6 +418,7 @@ public class Map {
 					
 					return chunk;
 				} catch (Exception e) {
+					ArchipeloServer.getServer().getLogger().caution("Could not load chunk " + x + "," + y + " of map " + this.name + ". Reason: " + e.getMessage());
 					return null;
 				} finally {
 					try {
