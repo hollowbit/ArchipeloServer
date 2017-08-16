@@ -125,14 +125,11 @@ public class Map {
 		
 		int xWithinChunk = x % (ChunkData.SIZE * TileData.COLLISION_MAP_SCALE);
 		if (x < 0)
-			xWithinChunk = (ChunkData.SIZE * TileData.COLLISION_MAP_SCALE) - (Math.abs(x) % ((ChunkData.SIZE) * TileData.COLLISION_MAP_SCALE));
+			xWithinChunk = (ChunkData.SIZE * TileData.COLLISION_MAP_SCALE) - (Math.abs(x + 1) % (ChunkData.SIZE * TileData.COLLISION_MAP_SCALE)) - 1;
 		
 		int yWithinChunk = y % (ChunkData.SIZE * TileData.COLLISION_MAP_SCALE);
 		if (y < 0)
-			xWithinChunk = (ChunkData.SIZE * TileData.COLLISION_MAP_SCALE) - (Math.abs(y) % ((ChunkData.SIZE) * TileData.COLLISION_MAP_SCALE));
-		
-		if (xWithinChunk == (ChunkData.SIZE * TileData.COLLISION_MAP_SCALE) || yWithinChunk == (ChunkData.SIZE * TileData.COLLISION_MAP_SCALE))
-			return false;
+			yWithinChunk = (ChunkData.SIZE * TileData.COLLISION_MAP_SCALE) - (Math.abs(y + 1) % (ChunkData.SIZE * TileData.COLLISION_MAP_SCALE)) - 1;
 		
 		Chunk chunk = getChunk(chunkX, chunkY);
 		if (chunk != null)
@@ -156,8 +153,8 @@ public class Map {
 			return true;*/
 		
 		//See if it collides with tiles and elements
-		for (int row = (int) (rect.yWithOffset() / collisionBoxSize); row < Math.ceil((rect.height + rect.yWithOffset()) / collisionBoxSize); row++) {
-			for (int col = (int) (rect.xWithOffset() / collisionBoxSize); col < Math.ceil((rect.width + rect.xWithOffset()) / collisionBoxSize); col++) {
+		for (int row = (int) (rect.yWithOffset() / collisionBoxSize); row < Math.ceil((rect.height + rect.yWithOffset()) / collisionBoxSize) - 1; row++) {
+			for (int col = (int) (rect.xWithOffset() / collisionBoxSize) - 1; col < Math.ceil((rect.width + rect.xWithOffset()) / collisionBoxSize); col++) {
 				if (getTileCollisionAtPos(col, row))
 						return true;
 			}
@@ -625,12 +622,12 @@ public class Map {
 		int chunkX = (int) Math.floor((float) tileX / ChunkData.SIZE);
 		int chunkY = (int) Math.floor((float) tileY / ChunkData.SIZE);
 		
-		int xWithinChunk = Math.abs(tileX) % ChunkData.SIZE;
+		int xWithinChunk = tileX % ChunkData.SIZE;
 		if (tileX < 0)
-			xWithinChunk = ChunkData.SIZE - xWithinChunk;
-		int yWithinChunk = Math.abs(tileY) % ChunkData.SIZE;
+			xWithinChunk = ChunkData.SIZE - (Math.abs(tileX + 1) % (ChunkData.SIZE)) - 1;
+		int yWithinChunk = tileY % ChunkData.SIZE;
 		if (tileY < 0)
-			yWithinChunk = ChunkData.SIZE - yWithinChunk;
+			yWithinChunk = ChunkData.SIZE - (Math.abs(tileY + 1) % (ChunkData.SIZE)) - 1;
 		
 		return getTile(chunkX, chunkY, xWithinChunk, yWithinChunk);
 	}
@@ -646,13 +643,13 @@ public class Map {
 	public String getElement(int tileX, int tileY) {
 		int chunkX = (int) Math.floor((float) tileX / ChunkData.SIZE);
 		int chunkY = (int) Math.floor((float) tileY / ChunkData.SIZE);
-		
-		int xWithinChunk = Math.abs(tileX) % ChunkData.SIZE;
+
+		int xWithinChunk = tileX % ChunkData.SIZE;
 		if (tileX < 0)
-			xWithinChunk = ChunkData.SIZE - xWithinChunk;
-		int yWithinChunk = Math.abs(tileY) % ChunkData.SIZE;
+			xWithinChunk = ChunkData.SIZE - (Math.abs(tileX + 1) % (ChunkData.SIZE)) - 1;
+		int yWithinChunk = tileY % ChunkData.SIZE;
 		if (tileY < 0)
-			yWithinChunk = ChunkData.SIZE - yWithinChunk;
+			yWithinChunk = ChunkData.SIZE - (Math.abs(tileY + 1) % (ChunkData.SIZE)) - 1;
 		
 		return getElement(chunkX, chunkY, xWithinChunk, yWithinChunk);
 	}

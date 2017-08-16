@@ -35,33 +35,19 @@ public class Chunk {
 		
 		this.collisionMap = new boolean[ChunkData.SIZE * TileData.COLLISION_MAP_SCALE][ChunkData.SIZE * TileData.COLLISION_MAP_SCALE];
 		if (data.collisionData != null && !data.collisionData.equals("") && data.overrideCollisionData != null && !data.overrideCollisionData.equals("")) {
-			char[] bytes = data.collisionData.toCharArray();
-			char[] overrideBytes = data.overrideCollisionData.toCharArray();
-			
 			int i = 0;
-			int i2 = 0;
 	        for (int r = 0; r < collisionMap.length; r++) {
 	            for (int c = 0; c < collisionMap[0].length; c++) {
-	            	byte val = (byte) overrideBytes[i / Byte.SIZE];
-	            	int pos = i % Byte.SIZE;
-	            	boolean tick1 = ((val >> pos) & 1) == 1;
-	            	i++;
+	            	byte override = Byte.parseByte("" + data.overrideCollisionData.charAt(i));
+	            	if (override == 0) {//Default
+	            		this.collisionMap[r][c] = data.collisionData.charAt(i) == '1';
+	            	} else if (override == 1) {//Override none
+	            		this.collisionMap[r][c] = false;
+	            	} else {//Override yes
+	            		this.collisionMap[r][c] = true;
+	            	}
 	            	
-	            	val = (byte) overrideBytes[i / Byte.SIZE];
-	            	pos = i % Byte.SIZE;
-	            	boolean tick2 = ((val >> pos) & 1) == 1;
 	            	i++;
-	            	
-	            	if (!tick1 && !tick2) {//0
-	            		val = (byte) bytes[i2 / Byte.SIZE];
-	                	pos = i2 % Byte.SIZE;
-	                	collisionMap[r][c] = ((val >> pos) & 1) == 1;
-	            	} else if (!tick1 && tick2)//1
-	            		collisionMap[r][c] = false;
-	            	else if (tick1 && !tick2)//2
-	            		collisionMap[r][c] = true;
-	                
-	                i2++;
 	            }
 	        }
 		}
@@ -93,23 +79,11 @@ public class Chunk {
 	
 	public String getSerializedCollisionData() {
 		String collisionData = "";
-        int i = 0;
-        byte accum = 0;
         for (int r = 0; r < collisionMap.length; r++) {
             for (int c = 0; c < collisionMap[0].length; c++) {
-                if (collisionMap[r][c])
-                    accum |= (1 << i);
-                else
-                	accum &= ~(1 << i);
-                    
-                i++;
-                if (i >= Byte.SIZE) {
-                    i = 0;
-                    collisionData += (char) accum;
-                }
+                collisionData += collisionMap[r][c] ? "1" : "0";
             }
         }
-        collisionData += (char) accum;
         return collisionData;
 	}
 	

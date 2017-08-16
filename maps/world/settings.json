@@ -1,19 +1,22 @@
 {
 name: "world",
-displayName: "world",
+displayName: "World",
 music: "",
 chunks: [
 	{ x: -2, y: -1 },
 	{ x: -1, y: -1 },
 	{ y: -1 },
 	{ x: 1, y: -1 },
+	{ x: 2, y: -1 },
 	{ x: -2 },
 	{ x: -1 },
 	{},
 	{ x: 1 },
+	{ x: 2 },
 	{ x: -2, y: 1 },
 	{ x: -1, y: 1 },
 	{ y: 1 },
-	{ x: 1, y: 1 }
+	{ x: 1, y: 1 },
+	{ x: 2, y: 1 }
 ]
 }
