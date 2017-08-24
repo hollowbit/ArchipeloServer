@@ -8,10 +8,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 
 import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.utils.Json;
 
 import net.hollowbit.archipeloserver.ArchipeloServer;
-import net.hollowbit.archipeloserver.entity.Entity;
 import net.hollowbit.archipeloserver.entity.living.Player;
 import net.hollowbit.archipeloserver.entity.living.player.PlayerData;
 import net.hollowbit.archipeloserver.entity.living.player.PlayerInventory;
@@ -26,8 +24,8 @@ import net.hollowbit.archipeloserver.network.packets.FlagsAddPacket;
 import net.hollowbit.archipeloserver.network.packets.PlayerDeletePacket;
 import net.hollowbit.archipeloserver.network.packets.PlayerListPacket;
 import net.hollowbit.archipeloserver.network.packets.PlayerPickPacket;
-import net.hollowbit.archipeloserver.network.packets.WorldSnapshotPacket;
 import net.hollowbit.archipeloserver.tools.Configuration;
+import net.hollowbit.archipeloserver.tools.SnapshotGenerator;
 import net.hollowbit.archipeloserver.tools.database.QueryTaskResponseHandler.PlayerCountQueryTaskResponseHandler;
 import net.hollowbit.archipeloserver.tools.database.QueryTaskResponseHandler.PlayerDataQueryTaskResponseHandler;
 import net.hollowbit.archipeloserver.tools.database.QueryTaskResponseHandler.PlayerListQueryTaskResponseHandler;
@@ -35,8 +33,6 @@ import net.hollowbit.archipeloserver.tools.event.EventHandler;
 import net.hollowbit.archipeloserver.tools.event.EventType;
 import net.hollowbit.archipeloserver.tools.event.events.readonly.PlayerLeaveEvent;
 import net.hollowbit.archipeloserver.world.map.Chunk;
-import net.hollowbit.archipeloshared.ChunkData;
-import net.hollowbit.archipeloshared.EntitySnapshot;
 import net.hollowbit.archipeloshared.StringValidator;
 
 public class World implements PacketHandler, EventHandler {
@@ -46,12 +42,12 @@ public class World implements PacketHandler, EventHandler {
 	private int time;
 	private ArrayList<Map> loadedMaps;
 	private HashMap<Player, HashSet<Chunk>> playerLoadedChunks;
-	private Json json;
+	private SnapshotGenerator snapshotGenerator;
 	
 	public World () {
 		time = 0;
 		loadedMaps = new ArrayList<Map>();
-		json = new Json();
+		this.snapshotGenerator = new SnapshotGenerator();
 		ArchipeloServer.getServer().getNetworkManager().addPacketHandler(this);
 		
 		playerLoadedChunks = new HashMap<Player, HashSet<Chunk>>();
@@ -108,167 +104,7 @@ public class World implements PacketHandler, EventHandler {
 		}
 		
 		//Create world snapshots and send them
-		for (Map map : duplicateMapList()) {
-			if (!map.isLoaded())
-				continue;
-			
-			HashSet<Chunk> chunksUsed = new HashSet<Chunk>();
-			
-			String mapSnapshot = json.toJson(map.getChangesSnapshot());
-			map.getChangesSnapshot().clear();
-			String fullMapSnapshot = json.toJson(map.getFullSnapshot());
-			
-			HashMap<Integer, HashMap<Integer, String>> chunks = new HashMap<Integer, HashMap<Integer, String>>();
-			HashMap<Integer, HashMap<Integer, String>> changesChunks = new HashMap<Integer, HashMap<Integer, String>>();
-			HashMap<Integer, HashMap<Integer, String>> fullChunks = new HashMap<Integer, HashMap<Integer, String>>();
-			
-			for (Player player : map.getPlayers()) {
-				long timeCreated = System.currentTimeMillis();
-				WorldSnapshotPacket packet = new WorldSnapshotPacket(timeCreated, time, WorldSnapshotPacket.TYPE_INTERP);
-				WorldSnapshotPacket changesPacket = new WorldSnapshotPacket(timeCreated, time, WorldSnapshotPacket.TYPE_CHANGES);
-				WorldSnapshotPacket fullPacket = null;
-				
-				changesPacket.mapSnapshot = mapSnapshot;
-				
-				fullPacket = new WorldSnapshotPacket(timeCreated, time, WorldSnapshotPacket.TYPE_FULL);
-				fullPacket.mapSnapshot = fullMapSnapshot;
-				
-				HashSet<Chunk> chunksForPlayer = new HashSet<Chunk>();
-				
-				boolean needsFullSnapshot = false;
-				
-				for (int r = -1 * (WorldSnapshotPacket.NUM_OF_CHUNKS_WIDE / 2); r <= WorldSnapshotPacket.NUM_OF_CHUNKS_WIDE / 2; r++) {
-					for (int c = -1 * (WorldSnapshotPacket.NUM_OF_CHUNKS_WIDE / 2); c <= WorldSnapshotPacket.NUM_OF_CHUNKS_WIDE / 2; c++) {
-						Chunk chunk = map.loadChunk(c + player.getLocation().getChunkX(), r + player.getLocation().getChunkY());
-						//System.out.println("World.java in chunk!  " + (c + player.getLocation().getChunkX()) + "   " + (r + player.getLocation().getChunkY()));
-						
-						if (chunk != null) {//Could still be null if chunk cannot be loaded
-							chunksForPlayer.add(chunk);
-							chunksUsed.add(chunk);
-							
-							//Determine if player needs full chunk data
-							boolean hasChunk = false;
-							HashSet<Chunk> chunksLoadedByPlayer = playerLoadedChunks.get(player);
-							if (chunksLoadedByPlayer != null)
-								hasChunk = chunksLoadedByPlayer.contains(chunk);
-							
-							boolean playerIsNew = player.isNewOnMap() || !hasChunk;
-							
-							if (playerIsNew)
-								needsFullSnapshot = true;
-							
-							int index = (r + WorldSnapshotPacket.NUM_OF_CHUNKS_WIDE / 2) * WorldSnapshotPacket.NUM_OF_CHUNKS_WIDE + (c + WorldSnapshotPacket.NUM_OF_CHUNKS_WIDE / 2);
-							
-							HashMap<Integer, String> row = chunks.get(chunk.getY());
-							if (row != null && row.containsKey(chunk.getX())) {//Check if chunk has already been loaded
-								//Use already loaded chunks
-								packet.chunks[index] = row.get(chunk.getX());
-								changesPacket.chunks[index] = changesChunks.get(chunk.getY()).get(chunk.getX());
-								
-								//If new on map and full chunks not loaded, then load them
-								if (playerIsNew) {
-									HashMap<Integer, String> fullRow = fullChunks.get(chunk.getY());
-									if (fullRow != null && fullRow.containsKey(chunk.getX())) {
-										fullPacket.chunks[index] = fullRow.get(chunk.getX());
-									} else {//Not loaded, so load it
-										ChunkData fullData = new ChunkData(chunk.getX(), chunk.getY());
-										fullData.tiles = chunk.getTiles();
-										fullData.elements = chunk.getElements();
-										
-										for (Entity entity : map.getEntities()) {
-											if (entity.getLocation().getChunkX() == chunk.getX() && entity.getLocation().getChunkY() == chunk.getY()) {
-												fullData.entities.put(entity.getName(), entity.getFullSnapshot());
-											}
-										}
-										
-										String fullDataText = json.toJson(fullData);
-										fullRow = chunks.get(chunk.getY());
-										if (fullRow == null) {
-											fullRow = new HashMap<Integer, String>();
-											fullChunks.put(chunk.getY(), fullRow);
-										}
-										fullRow.put(chunk.getX(), fullDataText);
-										fullPacket.chunks[index] = fullDataText;
-									}
-								}
-							} else {//If not loaded, load them
-								ChunkData data = new ChunkData(chunk.getX(), chunk.getY());
-								ChunkData changesData = new ChunkData(chunk.getX(), chunk.getY());
-								ChunkData fullData = new ChunkData(chunk.getX(), chunk.getY());
-								
-								ArrayList<EntitySnapshot> changesSnapshots = new ArrayList<EntitySnapshot>();
-								
-								for (Entity entity : map.getEntities()) {
-									if (entity.getLocation().getChunkX() == chunk.getX() && entity.getLocation().getChunkY() == chunk.getY()) {
-										data.entities.put(entity.getName(), entity.getInterpSnapshot());
-										if (!entity.getChangesSnapshot().isEmpty())
-											changesData.entities.put(entity.getName(), entity.getChangesSnapshot());
-										changesSnapshots.add(entity.getChangesSnapshot());
-										
-										if (playerIsNew) {
-											fullData.entities.put(entity.getName(), entity.getFullSnapshot());
-										}
-									}
-								}
-								
-								//Parse data to Strings and save them
-								String dataText = json.toJson(data);
-								HashMap<Integer, String> rowInterp = chunks.get(chunk.getY());
-								if (rowInterp == null) {
-									rowInterp = new HashMap<Integer, String>();
-									chunks.put(chunk.getY(), rowInterp);
-								}
-								rowInterp.put(chunk.getX(), dataText);
-								packet.chunks[index] = dataText;
-								
-								String changesDataText = json.toJson(changesData);
-								HashMap<Integer, String> rowChanges = chunks.get(chunk.getY());
-								if (rowChanges == null) {
-									rowChanges = new HashMap<Integer, String>();
-									changesChunks.put(chunk.getY(), rowChanges);
-								}
-								rowChanges.put(chunk.getX(), changesDataText);
-								changesPacket.chunks[index] = changesDataText;
-								
-								if (playerIsNew) {
-									fullData.tiles = chunk.getTiles();
-									fullData.elements = chunk.getElements();
-									fullData.collisionData = chunk.getSerializedCollisionData();
-									
-									String fullDataText = json.toJson(fullData);
-									HashMap<Integer, String> rowFull = chunks.get(chunk.getY());
-									if (rowFull == null) {
-										rowFull = new HashMap<Integer, String>();
-										fullChunks.put(chunk.getY(), rowFull);
-									}
-									rowFull.put(chunk.getX(), fullDataText);
-									fullPacket.chunks[index] = fullDataText;
-								}
-								
-								//Clear changes snapshots
-								for (EntitySnapshot snapshot : changesSnapshots)
-									snapshot.clear();
-							}
-						}
-					}
-				}
-				
-				//Send compiled packets
-				player.sendPacket(packet);
-				player.sendPacket(changesPacket);
-				
-				if (needsFullSnapshot) {
-					if (player.isNewOnMap())
-						fullPacket.newMap = true;
-					player.sendPacket(fullPacket);
-					player.setNewOnMap(false);
-				}
-				
-				playerLoadedChunks.put(player, chunksForPlayer);
-			}
-			
-			map.unloadChunksNotInSet(chunksUsed);
-		}
+		snapshotGenerator.generateAndSend(this.duplicateMapList(), time);
 	}
 	
 	public void tick60 (float deltaTime) {//Executed 60 times per second.

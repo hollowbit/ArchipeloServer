@@ -29,6 +29,7 @@ import net.hollowbit.archipeloserver.world.map.ChunkRow;
 import net.hollowbit.archipeloshared.ChunkData;
 import net.hollowbit.archipeloshared.ChunkLocation;
 import net.hollowbit.archipeloshared.CollisionRect;
+import net.hollowbit.archipeloshared.EntityData;
 import net.hollowbit.archipeloshared.EntitySnapshot;
 import net.hollowbit.archipeloshared.InvalidMapFolderException;
 import net.hollowbit.archipeloshared.MapData;
@@ -397,20 +398,33 @@ public class Map {
 		if (chunk != null) //Loaded so just return it
 			return chunk;	
 		else {//Not loaded so load it
-			File chunkFile = new File("maps/" + this.name + "/chunks/" + y + "/" + x + ".json");
-			if (!chunkFile.exists()) {
+			File chunkFile = new File("maps/" + this.name + "/chunks/" + y + "/" + x + "/data.json");
+			File entityFile = new File("maps/" + this.name + "/chunks/" + y + "/" + x + "/entities.json");
+			if (!chunkFile.exists())
 				return null;
-			} else {
+			else if (!entityFile.exists())
+				return null;
+			else {
 				FileReader reader = null;
+				FileReader entityReader = null;
 				try {
 					reader = new FileReader(chunkFile);
-					ChunkData data = json.fromJson(ChunkData.class, reader);
+					entityReader = new FileReader(entityFile);
 					
+					//Read entire chunk data file
+					String data = "";
+					int val = reader.read();
+					while (val != -1) {
+						data += (char) val;
+						val = reader.read();
+					}
+					
+					EntityData entityData = json.fromJson(EntityData.class, entityReader);
 					chunk = new Chunk(data, this);
 					row.getChunks().put(x, chunk);
 					
 					//Load entities
-					for (EntitySnapshot snapshot : data.entities.values())
+					for (EntitySnapshot snapshot : entityData.entities)
 						entityManager.addEntity(EntityType.createEntityBySnapshot(snapshot, this));
 					
 					return chunk;
@@ -453,24 +467,30 @@ public class Map {
 	 * Call this before removing the chunk from its row.
 	 */
 	protected void unloadChunk(Chunk chunk) {
-		ChunkData data = chunk.getSaveData();
+		String data = chunk.getGeneratedData();
+		EntityData entityData = new EntityData();
 		for (Entity entity : getEntitiesInChunk(chunk)) {
 			if (canSave)
-				data.entities.put(entity.getName(), entity.getSaveSnapshot());
+				entityData.entities.add(entity.getSaveSnapshot());
 			entity.remove();
 		}
 		
 		if (canSave) {
-			File chunkFile = new File("maps/" + name + "/" + chunk.getY() + "/" + chunk.getX() + ".json");
+			File chunkFile = new File("maps/" + name + "/" + chunk.getY() + "/" + chunk.getX() + "/data.json");
+			File entityFile = new File("maps/" + name + "/" + chunk.getY() + "/" + chunk.getX() + "/entities.json");
 			FileWriter writer = null;
+			FileWriter entityWriter = null;
 			try {
 				writer = new FileWriter(chunkFile);
-				json.toJson(data, writer);
+				entityWriter = new FileWriter(entityFile);
+				writer.write(data);
+				json.toJson(entityData, entityWriter);
 			} catch (IOException e) {
 				ArchipeloServer.getServer().getLogger().caution("Could not save map chunk of: " + name + ":" + chunk.getX() + ":" + chunk.getY());
 			} finally {
 				try {
 					writer.close();
+					entityWriter.close();
 				} catch (Exception e) {}
 			}
 		}
@@ -551,6 +571,13 @@ public class Map {
 		settingsWriter.write(json.prettyPrint(data, settings));
 		settingsWriter.close();
 		
+		File entityFile = new File(folder, "entities.json");
+		entityFile.createNewFile();
+		
+		FileWriter entityWriter = new FileWriter(entityFile);
+		json.toJson(entityManager.getDataToSave(), entityWriter);
+		entityWriter.close();
+		
 		File chunkFolder = new File(folder, "chunks/");
 		chunkFolder.mkdirs();
 		deleteFolderContents(chunkFolder);//Make sure chunk folder is empty before putting things in it
@@ -563,12 +590,7 @@ public class Map {
 			for (Chunk chunk : row.getChunks().values()) {
 				FileWriter chunkFileWriter = new FileWriter(new File(rowFolder, chunk.getX() + ".json"));
 				
-				ChunkData chunkData = chunk.getSaveData();
-				//Get entity save data
-				for (Entity entity : getEntitiesInChunk(chunk))
-					chunkData.entities.put(entity.getName(), entity.getSaveSnapshot());
-				
-				chunkFileWriter.write(json.prettyPrint(chunkData, settings));
+				chunkFileWriter.write(chunk.getGeneratedData());
 				chunkFileWriter.close();
 			}
 		}

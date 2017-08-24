@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.HashMap;
 
 import net.hollowbit.archipeloserver.entity.living.Player;
+import net.hollowbit.archipeloshared.EntityData;
 
 public class EntityManager {
 	
@@ -75,6 +76,13 @@ public class EntityManager {
 	
 	public boolean noPlayersInList() {
 		return numPlayers <= 0;
+	}
+	
+	public EntityData getDataToSave() {
+		EntityData data = new EntityData();
+		for (Entity entity : entitiesList)
+			data.entities.add(entity.getSaveSnapshot());
+		return data;
 	}
 	
 }
