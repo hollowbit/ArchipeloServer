@@ -116,7 +116,7 @@ public class SnapshotGenerator {
 								entityDataString = json.toJson(entityData);
 								putDataAtPosition(entityDataString, chunk.getX(), chunk.getY(), entityChangesSnapshots);
 							}
-							packetChanges.entities[index] = (fullMapSnapshot);
+							packetChanges.entities[index] = entityDataString;
 						}
 					}
 				}

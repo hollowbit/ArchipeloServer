@@ -412,15 +412,15 @@ public class Map {
 					entityReader = new FileReader(entityFile);
 					
 					//Read entire chunk data file
-					String data = "";
+					StringBuilder data = new StringBuilder("");
 					int val = reader.read();
 					while (val != -1) {
-						data += (char) val;
+						data.append((char) val);
 						val = reader.read();
 					}
 					
 					EntityData entityData = json.fromJson(EntityData.class, entityReader);
-					chunk = new Chunk(data, this);
+					chunk = new Chunk(data.toString(), this);
 					row.getChunks().put(x, chunk);
 					
 					//Load entities
