@@ -4,6 +4,7 @@ import java.util.LinkedList;
 
 import com.badlogic.gdx.math.Vector2;
 
+import net.hollowbit.archipeloserver.ArchipeloServer;
 import net.hollowbit.archipeloserver.entity.Entity;
 import net.hollowbit.archipeloserver.entity.EntityAnimationManager.EntityAnimationObject;
 import net.hollowbit.archipeloserver.entity.EntityType;
@@ -15,12 +16,13 @@ import net.hollowbit.archipeloserver.tools.event.events.editable.EntityDeathEven
 import net.hollowbit.archipeloserver.world.Map;
 import net.hollowbit.archipeloshared.EntitySnapshot;
 import net.hollowbit.archipeloshared.Point;
+import net.hollowbit.archipeloshared.SavedRectangle;
 
 public class Spawner extends LifelessEntity implements EventHandler {
 	
 	private int nextSpawnId;
 	private EntitySnapshot spawnSnapshot;
-	private int spawnWidth, spawnHeight;
+	private SavedRectangle spawnRect;
 	private int spawnAmount;
 	private float spawnRate;
 	private float timer;
@@ -33,8 +35,7 @@ public class Spawner extends LifelessEntity implements EventHandler {
 		this.spawnedEntities = new LinkedList<Entity>();
 		this.nextSpawnId = 0;
 		this.spawnSnapshot = fullSnapshot.getObject("spawnSnapshot", null, EntitySnapshot.class);
-		this.spawnWidth = fullSnapshot.getInt("spawnWidth", 100);
-		this.spawnHeight = fullSnapshot.getInt("spawnHeight", 100);
+		this.spawnRect = fullSnapshot.getObject("spawnRect", new SavedRectangle((int) this.location.getX(), (int) this.location.getY(), ArchipeloServer.TILE_SIZE, ArchipeloServer.TILE_SIZE), SavedRectangle.class);
 		this.spawnAmount = fullSnapshot.getInt("spawnAmount", 4);
 		this.spawnRate = fullSnapshot.getFloat("spawnRate", 3f);
 		this.timer = 0;
@@ -79,8 +80,8 @@ public class Spawner extends LifelessEntity implements EventHandler {
 		EntitySnapshot duplicate = new EntitySnapshot(spawnSnapshot);
 		duplicate.name = name;
 		
-		float x = StaticTools.getRandom().nextInt(spawnWidth) + this.getX();
-		float y = StaticTools.getRandom().nextInt(spawnHeight) + this.getY();
+		float x = StaticTools.getRandom().nextInt(spawnRect.getWidth()) + spawnRect.getX();
+		float y = StaticTools.getRandom().nextInt(spawnRect.getHeight()) + spawnRect.getY();
 		duplicate.putObject("pos", new Point(x, y));
 		Entity entity = EntityType.createEntityBySnapshot(duplicate, getMap());
 		
