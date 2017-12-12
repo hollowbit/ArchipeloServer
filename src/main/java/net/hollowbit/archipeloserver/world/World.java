@@ -174,15 +174,22 @@ public class World implements PacketHandler, EventHandler {
 			if (!loadMap(pd.map)) {
 				//If map didn't load, send player to (their) spawn
 				if (!isMapLoaded(config.spawnMap)) {
-					loadMap(config.spawnMap);
+					
+					if (!loadMap(config.spawnMap)) {
+						ArchipeloServer.getServer().getLogger().error("Could not load the spawn map!");
+					}
 				}
 				mapName = config.spawnMap;
+				ArchipeloServer.getServer().getLogger().error("A player could not spawn in on the map they were on: " + mapName);
 			} else {
 				mapName = pd.map;
 			}
 		} else {
 			mapName = pd.map;
 		}
+		
+		for (Map mapN : loadedMaps)
+			System.out.println(mapN.getName());
 		
 		map = getMap(mapName);
 		

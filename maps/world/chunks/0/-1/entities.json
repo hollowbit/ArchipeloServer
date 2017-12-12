@@ -1,1 +1,1 @@
-{}
+{entities:[{name:slime-spawner2,type:spawner,properties:{spawnSnapshot:"{name:slime-spawn,type:slime,properties:{deactivationZoneDistance:60,pos:\"{}\",health:1,style:0,anim:\"\",activationZoneDistance:32,direction:2}}",pos:"{x:-445,y:1891}",spawnRate:0.5,health:1,style:0,anim:"",spawnRect:"{x:-445,y:1891,width:32,height:32}",direction:2}}]}
