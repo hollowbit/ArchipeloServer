@@ -16,7 +16,6 @@ public class HollowBitUser {
 	private boolean loggedIn = false;
 	private WebSocket conn;
 	private volatile boolean pointsUpToDate = true;
-	private int ping = 0;
 	
 	public long timePingSent = System.currentTimeMillis();
 	
@@ -74,14 +73,6 @@ public class HollowBitUser {
 	
 	public String getEmailAddress () {
 		return email;
-	}
-	
-	public int getPing() {
-		return ping;
-	}
-
-	public void setPing(int ping) {
-		this.ping = ping;
 	}
 
 	/**

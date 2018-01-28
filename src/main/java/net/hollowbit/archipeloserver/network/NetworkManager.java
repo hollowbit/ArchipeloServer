@@ -2,6 +2,7 @@ package net.hollowbit.archipeloserver.network;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.security.KeyStore;
@@ -27,13 +28,10 @@ import net.hollowbit.archipeloserver.network.serialization.Serializer;
 public class NetworkManager extends WebSocketServer {
 	
 	private static final int PACKET_LIFESPAN = 5000;//ms
-	private static final int PING_SEND_INTERVAL = 500;//ms
 	
 	private ArrayList<PacketHandler> packetHandlers;
 	
 	private ArrayList<PacketWrapper> packets;
-	private Thread pingThread;
-	private boolean runPingThread = true;
 	
 	private HashMap<String, HollowBitUser> users;
 	
@@ -72,35 +70,15 @@ public class NetworkManager extends WebSocketServer {
 		
 		//Initialize serializer to Json
 		serializer = new JsonSerializer();
-		
-		pingThread = new Thread(new Runnable() {
-			@Override
-			public void run() {
-				long startTime = System.currentTimeMillis();
-				while (runPingThread) {
-					long deltaTime = System.currentTimeMillis() - startTime;
-					if (deltaTime >= PING_SEND_INTERVAL) {
-						startTime = System.currentTimeMillis() - (deltaTime - PING_SEND_INTERVAL);
-						
-						//Send ping to all clients
-						for (HollowBitUser user : getUsersClone()) {
-							user.getConnection().send("ping");
-							user.timePingSent = System.currentTimeMillis();
-						}
-					}
-				}
-			}
-		});
-		pingThread.start();
 	}
 	
 	public void stop() {
-		runPingThread = false;
 		try {
 			super.stop();
-			pingThread.join();
-		} catch (Exception e) {
-			System.out.println("Could not stop network ping thread.");
+		} catch (IOException e) {
+			e.printStackTrace();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
 		}
 	}
 	
@@ -160,7 +138,7 @@ public class NetworkManager extends WebSocketServer {
 		return users.get(address);
 	}
 	
-	private synchronized ArrayList<HollowBitUser> getUsersClone () {
+	public synchronized ArrayList<HollowBitUser> getUsersClone () {
 		ArrayList<HollowBitUser> usersClone = new ArrayList<HollowBitUser>();
 		usersClone.addAll(users.values());
 		return usersClone;
@@ -179,23 +157,11 @@ public class NetworkManager extends WebSocketServer {
 	
 	@Override
 	public void onMessage(WebSocket conn, String message) {
-		//Used for ping getter
-		if (message.equals("ping")) {
-			conn.send("pong");
-			return;
-		}
-		
-		if (message.equals("pong") && containsUser(getAddress(conn))) {
-			conn.send("pang");
-			HollowBitUser user = getUser(getAddress(conn));
-			user.setPing((int) (System.currentTimeMillis() - user.timePingSent));
-			return;
-		}
 	}
 	
 	@Override
 	public void onMessage(WebSocket conn, ByteBuffer message) {
-		Packet packet = (Packet) serializer.deserialize(message.array());
+		Packet packet = serializer.deserialize(message.array());
 		
 		//Handle login/logoff packets
 		if (packet.packetType == PacketType.LOGIN) {
@@ -218,7 +184,7 @@ public class NetworkManager extends WebSocketServer {
 				return;
 			}
 			
-			//Add user is version is valid
+			//Add user if version is valid
 			HollowBitUser hollowBitUser = users.get(getAddress(conn));
 			hollowBitUser.login(loginPacket.email, loginPacket.password);
 		} else if (packet.packetType == PacketType.LOGOUT)

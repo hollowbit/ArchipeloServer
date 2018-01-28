@@ -111,6 +111,7 @@ public class Player extends LivingEntity implements PacketHandler, RollableEntit
 	EventHandler respawner;
 	boolean movementEnabled = true;
 	float timeAttackHeld = 0;
+	int ping = 0;
 	
 	Thread controlsUpdater;
 	boolean running = true;
@@ -123,6 +124,7 @@ public class Player extends LivingEntity implements PacketHandler, RollableEntit
 			@Override
 			public void run() {
 				while (running) {
+					System.out.println("Player.java   " + ping);
 					long startTime = System.currentTimeMillis();
 					LinkedList<ControlsPacket> packetsToRemove = new LinkedList<ControlsPacket>();
 					for (ControlsPacket cPacket : getCommandsClone()) {
@@ -428,7 +430,7 @@ public class Player extends LivingEntity implements PacketHandler, RollableEntit
 	
 	
 	private void controlUp (int control) {
-		long time = System.currentTimeMillis() - CONTROLS_UPDATE_DELAY - WORLD_SNAPSHOT_DELAY - hbUser.getPing();
+		long time = System.currentTimeMillis() - CONTROLS_UPDATE_DELAY - WORLD_SNAPSHOT_DELAY - ping;
 		switch (control) {
 		case Controls.ATTACK:
 			if (isCurrentlyUsingAnItem()) {
@@ -468,7 +470,7 @@ public class Player extends LivingEntity implements PacketHandler, RollableEntit
 	}
 	
 	private void controlDown (int control) {
-		long time = System.currentTimeMillis() - CONTROLS_UPDATE_DELAY - WORLD_SNAPSHOT_DELAY - hbUser.getPing();
+		long time = System.currentTimeMillis() - CONTROLS_UPDATE_DELAY - WORLD_SNAPSHOT_DELAY - ping;
 		switch (control) {
 		case Controls.ROLL:
 			if (!isCurrentlyUsingAnItem() && isMoving()) {
@@ -626,7 +628,9 @@ public class Player extends LivingEntity implements PacketHandler, RollableEntit
 			switch (packet.packetType) {
 			case PacketType.CONTROLS:
 				ControlsPacket cPacket = (ControlsPacket) packet;
-				cPacket.time = System.currentTimeMillis();
+				long currentTime = System.currentTimeMillis();
+				ping = (int) (currentTime - cPacket.time);
+				cPacket.time = currentTime;
 				addCommand(cPacket);
 				return true;
 			case PacketType.CHAT_MESSAGE:
@@ -667,7 +671,7 @@ public class Player extends LivingEntity implements PacketHandler, RollableEntit
 			}
 			ArchipeloServer.getServer().getLogger().broadcastAsServer("", this.getName() + text);
 		} else if (label.equalsIgnoreCase("ping")) {
-			this.sendPacket(new ChatMessagePacket("", "{pong} " + hbUser.getPing() + "ms", "server"));
+			this.sendPacket(new ChatMessagePacket("", "{pong} " + ping + "ms", "server"));
 		} else if (label.equalsIgnoreCase("logoff") || label.equalsIgnoreCase("exit") || label.equalsIgnoreCase("logout")) {
 			this.remove(LogoutReason.LEAVE, "");
 		} else if (label.equalsIgnoreCase("give")) {//give items to a player
