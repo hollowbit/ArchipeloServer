@@ -36,9 +36,9 @@ public class Door extends LifelessEntity {
 	}
 	
 	@Override
-	public void interactFrom(Entity entity, String collisionRectName, EntityInteractionType interactionType) {
-		super.interactFrom(entity, collisionRectName, interactionType);
-		switch (collisionRectName) {
+	public void interactFrom(Entity entity, String yourCollisionRectName, String theirCollisionRectName, EntityInteractionType interactionType) {
+		super.interactFrom(entity, yourCollisionRectName, theirCollisionRectName, interactionType);
+		switch (yourCollisionRectName) {
 		case "bottom":
 			if (interactionType == EntityInteractionType.STEP_ON)
 				openDoor();

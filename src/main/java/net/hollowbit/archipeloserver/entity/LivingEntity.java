@@ -1,7 +1,6 @@
 package net.hollowbit.archipeloserver.entity;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.LinkedList;
 
 import com.badlogic.gdx.math.Vector2;
@@ -22,7 +21,7 @@ import net.hollowbit.archipeloshared.EntitySnapshot;
 
 public abstract class LivingEntity extends Entity implements EventHandler {
 	
-	private HashSet<EntityStepOnData> entitiesSteppedOn;
+	private LinkedList<EntityStepOnData> entitiesSteppedOn;
 	public static final float DIAGONAL_FACTOR = (float) Math.sqrt(2);
 	private float lastSpeed;
 	protected MovementAnimationManager movementAnimationManager;
@@ -30,7 +29,7 @@ public abstract class LivingEntity extends Entity implements EventHandler {
 	@Override
 	public void create(String name, int style, Location location, EntityType entityType) {
 		super.create(name, style, location, entityType);
-		entitiesSteppedOn = new HashSet<EntityStepOnData>();
+		entitiesSteppedOn = new LinkedList<EntityStepOnData>();
 		lastSpeed = entityType.getSpeed();
 		this.movementAnimationManager = new MovementAnimationManager();
 		this.addToEventManager(EventType.EntityTeleport, EventType.EntityMove, EventType.EntityDeath);
@@ -39,7 +38,7 @@ public abstract class LivingEntity extends Entity implements EventHandler {
 	@Override
 	public void create(EntitySnapshot fullSnapshot, Map map, EntityType entityType) {
 		super.create(fullSnapshot, map, entityType);
-		entitiesSteppedOn = new HashSet<EntityStepOnData>();
+		entitiesSteppedOn = new LinkedList<EntityStepOnData>();
 		lastSpeed = entityType.getSpeed();
 		this.movementAnimationManager = new MovementAnimationManager();
 		this.addToEventManager(EventType.EntityTeleport, EventType.EntityMove);
@@ -49,7 +48,7 @@ public abstract class LivingEntity extends Entity implements EventHandler {
 	public void tick20(float deltaTime) {
 		super.tick20(deltaTime);
 		for (EntityStepOnData entityStepOnData : duplicateEntitiesStepList()) {
-			this.interactWith(entityStepOnData.entity, entityStepOnData.collisionRectName, EntityInteractionType.STEP_CONTINUAL);
+			this.interactWith(entityStepOnData.entity, entityStepOnData.theirCollisionRectName, entityStepOnData.yourCollisionRectName, EntityInteractionType.STEP_CONTINUAL);
 		}
 		
 		//If the speed changes, update it on the clients
@@ -81,6 +80,10 @@ public abstract class LivingEntity extends Entity implements EventHandler {
 	
 	private synchronized void removeAllEntityFromStepList (LinkedList<EntityStepOnData> entityStepOnDatas) {
 		entitiesSteppedOn.removeAll(entityStepOnDatas);
+	}
+	
+	private synchronized void removeEntityFromStepList (EntityStepOnData entityStepOnData) {
+		entitiesSteppedOn.remove(entityStepOnData);
 	}
 	
 	private synchronized ArrayList<EntityStepOnData> duplicateEntitiesStepList () {
@@ -230,7 +233,7 @@ public abstract class LivingEntity extends Entity implements EventHandler {
 				for (CollisionRect entityRect : entity.getCollisionRects()) {
 					for (CollisionRect thisRect : this.getCollisionRects(event.getNewPos())) {
 						if (thisRect.collidesWith(entityRect)) {
-							rectsSteppedOn.add(new EntityStepOnData(entityRect.name, entity));
+							rectsSteppedOn.add(new EntityStepOnData(entityRect.name, thisRect.name, entity));
 						}
 					}
 				}
@@ -240,7 +243,7 @@ public abstract class LivingEntity extends Entity implements EventHandler {
 				for (EntityStepOnData data : rectsSteppedOn) {
 					boolean contains = false;
 					for (EntityStepOnData data2 : entitiesSteppedOn) {
-						if (data.entity == data2.entity && data.collisionRectName.equals(data2.collisionRectName)) {
+						if (data.entity == data2.entity && data.theirCollisionRectName.equals(data2.theirCollisionRectName)) {
 							contains = true;
 							break;
 						}
@@ -248,7 +251,7 @@ public abstract class LivingEntity extends Entity implements EventHandler {
 					
 					if (!contains) {
 						addEntityToStepList(data);
-						this.interactWith(data.entity, data.collisionRectName, EntityInteractionType.STEP_ON);
+						this.interactWith(data.entity, data.theirCollisionRectName, data.yourCollisionRectName, EntityInteractionType.STEP_ON);
 					}
 				}
 				
@@ -260,7 +263,7 @@ public abstract class LivingEntity extends Entity implements EventHandler {
 					
 					boolean contains = false;
 					for (EntityStepOnData data2 : rectsSteppedOn) {
-						if (data.entity == data2.entity && data.collisionRectName.equals(data2.collisionRectName)) {
+						if (data.entity == data2.entity && data.theirCollisionRectName.equals(data2.theirCollisionRectName)) {
 							contains = true;
 							break;
 						}
@@ -268,7 +271,7 @@ public abstract class LivingEntity extends Entity implements EventHandler {
 					
 					if (!contains || entity.getMap() != this.getMap()) {//If there is an entry for the same entity that is not in rectsSteppedOn, remove it and do a step off event
 						entitiesStepOnToRemove.add(data);
-						this.interactWith(data.entity, data.collisionRectName, EntityInteractionType.STEP_OFF);
+						this.interactWith(data.entity, data.theirCollisionRectName, data.yourCollisionRectName, EntityInteractionType.STEP_OFF);
 					}
 				}
 				removeAllEntityFromStepList(entitiesStepOnToRemove);
@@ -276,6 +279,37 @@ public abstract class LivingEntity extends Entity implements EventHandler {
 			return true;
 		}
 		return EventHandler.super.onEntityMove(event);
+	}
+	
+	@Override
+	protected void interactFrom(Entity entity, String yourCollisionRectName, String theirCollisionRectName, EntityInteractionType interactionType) {
+		super.interactFrom(entity, yourCollisionRectName, theirCollisionRectName, interactionType);
+		
+		if (interactionType == EntityInteractionType.STEP_OFF) {
+			
+			//Find the entity step data and remove it since the entity and its collision no longer collides with ours
+			for (EntityStepOnData entityStepData : entitiesSteppedOn) {
+				if (entity == entityStepData.entity && yourCollisionRectName.equals(entityStepData.yourCollisionRectName) && theirCollisionRectName.equals(entityStepData.theirCollisionRectName)) {
+					this.removeEntityFromStepList(entityStepData);
+					break;
+				}
+			}
+			
+		} else if (interactionType == EntityInteractionType.STEP_ON) {
+			
+			//Find if there is no entity step data and add it if it doesn't already exist
+			boolean found = false;
+			for (EntityStepOnData entityStepData : entitiesSteppedOn) {
+				if (entity == entityStepData.entity && yourCollisionRectName.equals(entityStepData.yourCollisionRectName) && theirCollisionRectName.equals(entityStepData.theirCollisionRectName)) {
+					found = true;
+					break;
+				}
+			}
+			
+			if (!found) {
+				this.addEntityToStepList(new EntityStepOnData(theirCollisionRectName, yourCollisionRectName, entity));
+			}
+		}
 	}
 	
 	@Override

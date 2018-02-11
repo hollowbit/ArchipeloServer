@@ -101,16 +101,16 @@ public abstract class Entity {
 			component.tick60(deltaTime);
 	}
 	
-	protected void interactWith (Entity target, String collisionRectName, EntityInteractionType interactionType) {
-		EntityInteractionEvent event = new EntityInteractionEvent(this, target, collisionRectName, interactionType);
+	protected void interactWith (Entity target, String theirCollisionRectName, String yourCollisionRectName, EntityInteractionType interactionType) {
+		EntityInteractionEvent event = new EntityInteractionEvent(this, target, theirCollisionRectName, yourCollisionRectName, interactionType);
 		event.trigger();
 		
 		if (!event.wasCancelled())
-			target.interactFrom(this, collisionRectName, interactionType);
+			target.interactFrom(this, theirCollisionRectName, yourCollisionRectName, interactionType);
 		event.close();
 	}
 	
-	protected void interactFrom (Entity entity, String collisionRectName, EntityInteractionType interactionType) {}
+	protected void interactFrom (Entity entity, String yourCollisionRectName, String theirCollisionRectName, EntityInteractionType interactionType) {}
 	
 	public String getName () {
 		return name;

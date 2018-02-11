@@ -33,8 +33,8 @@ public class Teleporter extends LifelessEntity {
 	}
 	
 	@Override
-	public void interactFrom(Entity entity, String collisionRectName, EntityInteractionType interactionType) {
-		super.interactFrom(entity, collisionRectName, interactionType);
+	public void interactFrom(Entity entity, String yourCollisionRectName, String theirCollisionRectName, EntityInteractionType interactionType) {
+		super.interactFrom(entity, yourCollisionRectName, theirCollisionRectName, interactionType);
 		if (interactionType == EntityInteractionType.STEP_ON) {
 			if (this.teleportLocation == null || !entity.isPlayer())
 				return;

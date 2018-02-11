@@ -19,10 +19,10 @@ public class DoorLocked extends Door {
 	}
 	
 	@Override
-	public void interactFrom(Entity entity, String collisionRectName, EntityInteractionType interactionType) {
-		super.interactFrom(entity, collisionRectName, interactionType);
+	public void interactFrom(Entity entity, String yourCollisionRectName, String theirCollisionRectName, EntityInteractionType interactionType) {
+		super.interactFrom(entity, yourCollisionRectName, theirCollisionRectName, interactionType);
 		
-		switch(collisionRectName) {
+		switch(yourCollisionRectName) {
 		case "bottom":
 			if (interactionType == EntityInteractionType.HIT && entity instanceof Player) {
 				Player player = (Player) entity;

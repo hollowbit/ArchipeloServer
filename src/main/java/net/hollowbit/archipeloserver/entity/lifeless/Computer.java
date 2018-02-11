@@ -27,7 +27,8 @@ public class Computer extends LifelessEntity implements EventHandler {
 	}
 	
 	@Override
-	public void interactFrom(Entity entity, String collisionRectName, EntityInteractionType interactionType) {
+	public void interactFrom(Entity entity, String yourCollisionRectName, String theirCollisionRectName, EntityInteractionType interactionType) {
+		super.interactFrom(entity, yourCollisionRectName, theirCollisionRectName, interactionType);
 		if (entity instanceof Player) {
 			Player p = (Player) entity;
 			if (interactionType == EntityInteractionType.HIT) {
@@ -37,7 +38,6 @@ public class Computer extends LifelessEntity implements EventHandler {
 					turnOff();
 			}
 		}
-		super.interactFrom(entity, collisionRectName, interactionType);
 	}
 	
 	@Override

@@ -9,8 +9,8 @@ import net.hollowbit.archipeloserver.entity.living.Player;
 public class BlobbyGrave extends LifelessEntity {
 	
 	@Override
-	public void interactFrom(Entity entity, String collisionRectName, EntityInteractionType interactionType) {
-		super.interactFrom(entity, collisionRectName, interactionType);
+	public void interactFrom(Entity entity, String yourCollisionRectName, String theirCollisionRectName, EntityInteractionType interactionType) {
+		super.interactFrom(entity, yourCollisionRectName, theirCollisionRectName, interactionType);
 
 		if (entity instanceof Player) {
 			Player player = (Player) entity;

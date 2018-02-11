@@ -9,14 +9,16 @@ public class EntityInteractionEvent extends EditableEvent {
 
 	private Entity executor;
 	private Entity target;
-	private String rectName;
+	private String rectNameWith;
+	private String rectNameFrom;
 	private EntityInteractionType type;
 	
-	public EntityInteractionEvent(Entity executor, Entity target, String rectName, EntityInteractionType type) {
+	public EntityInteractionEvent(Entity executor, Entity target, String rectNameWith, String rectNameFrom, EntityInteractionType type) {
 		super(EventType.EntityInteraction);
 		this.executor = executor;
 		this.target = target;
-		this.rectName = rectName;
+		this.rectNameWith = rectNameWith;
+		this.rectNameFrom = rectNameFrom;
 		this.type = type;
 	}
 
@@ -28,8 +30,12 @@ public class EntityInteractionEvent extends EditableEvent {
 		return target;
 	}
 
-	public String getTargetRectName() {
-		return rectName;
+	public String getTargetRectNameWith() {
+		return rectNameWith;
+	}
+
+	public String getTargetRectNameFrom() {
+		return rectNameFrom;
 	}
 
 	public EntityInteractionType getInteractionType() {

@@ -114,6 +114,7 @@ public class SnapshotGenerator {
 									entityData.entities.add(entity.getChangesSnapshot());
 								}
 								entityDataString = json.toJson(entityData);
+								entityData.clear();
 								putDataAtPosition(entityDataString, chunk.getX(), chunk.getY(), entityChangesSnapshots);
 							}
 							packetChanges.entities[index] = entityDataString;

@@ -124,7 +124,6 @@ public class Player extends LivingEntity implements PacketHandler, RollableEntit
 			@Override
 			public void run() {
 				while (running) {
-					System.out.println("Player.java   " + ping);
 					long startTime = System.currentTimeMillis();
 					LinkedList<ControlsPacket> packetsToRemove = new LinkedList<ControlsPacket>();
 					for (ControlsPacket cPacket : getCommandsClone()) {
@@ -348,8 +347,8 @@ public class Player extends LivingEntity implements PacketHandler, RollableEntit
 	}
 	
 	@Override
-	public void interactFrom (Entity entity, String collisionRectName, EntityInteractionType interactionType) {
-		super.interactFrom(entity, collisionRectName, interactionType);
+	public void interactFrom (Entity entity, String yourCollisionRectName, String theirCollisionRectName, EntityInteractionType interactionType) {
+		super.interactFrom(entity, yourCollisionRectName, theirCollisionRectName, interactionType);
 		
 		//Handle interaction with other player
 		if (entity.isPlayer()) {
@@ -503,7 +502,7 @@ public class Player extends LivingEntity implements PacketHandler, RollableEntit
 					
 					//Run hit event for every collision rect hit on entity
 					for (String rectHit : HitCalculator.getCollRectsHit(this.getCenterPoint().x, this.getCenterPoint().y, entity.getCollisionRects(time), DEFAULT_HIT_RANGE, location.getDirection())) {
-						this.interactWith(entity, rectHit, EntityInteractionType.HIT);
+						this.interactWith(entity, rectHit, null, EntityInteractionType.HIT);
 						
 						//If the entity is not hittable, don't use the animation
 						if (!entity.getEntityType().isHittable())
